@@ -5,8 +5,8 @@
 set -euo pipefail
 
 KEDA_IDENTITY_CLIENT_ID="${1:-<keda_identity_client_id>}"
-REPO_URL="${REPO_URL:-https://github.com/imtarget05/Harness-of-Target.git}"
-APP_PATH="01-FlashSale-Backend/infrastructure/kubernetes/overlays/prod"
+REPO_URL="${REPO_URL:-https://github.com/imtarget05/FlashSale-Backend.git}"
+APP_PATH="infrastructure/kubernetes/overlays/prod"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
