@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flash-sale-prod
+  labels:
+    env: prod
+    part-of: flash-sale-order-platform

@@ -1,0 +1,11 @@
+# Giữ tối thiểu 1 API pod khi node pool drains (pod disruption budget).
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: order-api-pdb
+  namespace: flash-sale-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: order-api

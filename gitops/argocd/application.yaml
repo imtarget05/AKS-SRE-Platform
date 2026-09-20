@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: flash-sale-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    # Monorepo portfolio: manifests kustomize của Project 01 được GitOps sync.
+    # SỬA cho đúng repo/org của bạn trước khi apply.
+    repoURL: 'https://github.com/imtarget05/FlashSale-Backend.git'
+    path: 'infrastructure/kubernetes/overlays/prod'
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: flash-sale-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+

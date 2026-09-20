@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: order-worker-scaler
+  namespace: flashsale
+spec:
+  scaleTargetRef:
+    name: order-worker
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  triggers:
+  - type: rabbitmq
+    metadata:
+      queueName: orders
+      mode: QueueLength
+      value: "50"
+    authenticationRef:
+      name: rabbitmq-trigger-auth
