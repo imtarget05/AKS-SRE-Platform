@@ -26,7 +26,7 @@ is SUPERSEDED by that plan — master file rewrite follows as a separate step.
 HARD SEQUENCING GATE: no Phase 9+ implementation before baseline AKS + GitOps +
 basic observability (7A→8) is green. Current execution focus is UNCHANGED:
 
-- 7A.1 system-only apply (APPROVED, D4s_v6) per sections below — STOP gate still holds.
+- 7A.1 system-only apply (APPROVED, D4s_v6) — **DONE + STOPPED 2026-09-21**; next is 7A.2 (locked) per sections below.
 - `.ai/harness/handoff/resume.md`: absent (checked 2026-09-21) — no pending handoff;
   `tasks/current.md` files remain the authority.
 
