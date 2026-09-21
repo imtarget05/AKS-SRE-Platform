@@ -1,0 +1,11 @@
+# Terraform (never commit state or provider binaries; lock file IS committed)
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+*.tfplan
+**/plan.out
+**/plan.json
+**/tfplan*
+**/*.auto.tfvars
+crash.log

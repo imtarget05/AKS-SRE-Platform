@@ -1,0 +1,150 @@
+Acquiring state lock. This may take a few moments...
+data.azurerm_container_registry.shared: Reading...
+data.azurerm_container_registry.shared: Read complete after 2s [id=/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-flashsale-release/providers/Microsoft.ContainerRegistry/registries/acrflashsalep6]
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+Terraform will perform the following actions:
+
+  # azurerm_kubernetes_cluster.aks will be created
+  + resource "azurerm_kubernetes_cluster" "aks" {
+      + ai_toolchain_operator_enabled       = false
+      + current_kubernetes_version          = (known after apply)
+      + dns_prefix                          = "aksportfoliodev"
+      + fqdn                                = (known after apply)
+      + http_application_routing_zone_name  = (known after apply)
+      + id                                  = (known after apply)
+      + kube_admin_config                   = (sensitive value)
+      + kube_admin_config_raw               = (sensitive value)
+      + kube_config                         = (sensitive value)
+      + kube_config_raw                     = (sensitive value)
+      + kubernetes_version                  = "1.36"
+      + location                            = "eastasia"
+      + name                                = "aks-portfolio-dev"
+      + node_os_upgrade_channel             = "NodeImage"
+      + node_resource_group                 = (known after apply)
+      + node_resource_group_id              = (known after apply)
+      + oidc_issuer_enabled                 = true
+      + oidc_issuer_url                     = (known after apply)
+      + portal_fqdn                         = (known after apply)
+      + private_cluster_enabled             = false
+      + private_cluster_public_fqdn_enabled = false
+      + private_dns_zone_id                 = (known after apply)
+      + private_fqdn                        = (known after apply)
+      + resource_group_name                 = "rg-aks-platform-dev"
+      + role_based_access_control_enabled   = true
+      + run_command_enabled                 = true
+      + sku_tier                            = "Free"
+      + support_plan                        = "KubernetesOfficial"
+      + tags                                = {
+          + "cost-mode"   = "temporary"
+          + "environment" = "portfolio"
+          + "owner"       = "student"
+          + "purpose"     = "phase-7a"
+        }
+      + workload_identity_enabled           = true
+
+      + auto_scaler_profile (known after apply)
+
+      + bootstrap_profile (known after apply)
+
+      + default_node_pool {
+          + auto_scaling_enabled         = false
+          + kubelet_disk_type            = (known after apply)
+          + max_pods                     = (known after apply)
+          + name                         = "sys"
+          + node_count                   = 2
+          + node_labels                  = (known after apply)
+          + only_critical_addons_enabled = true
+          + orchestrator_version         = (known after apply)
+          + os_disk_size_gb              = (known after apply)
+          + os_disk_type                 = "Managed"
+          + os_sku                       = (known after apply)
+          + scale_down_mode              = "Delete"
+          + type                         = "VirtualMachineScaleSets"
+          + ultra_ssd_enabled            = false
+          + vm_size                      = "Standard_D4as_v5"
+          + workload_runtime             = (known after apply)
+        }
+
+      + identity {
+          + principal_id = (known after apply)
+          + tenant_id    = (known after apply)
+          + type         = "SystemAssigned"
+        }
+
+      + kubelet_identity (known after apply)
+
+      + network_profile {
+          + dns_service_ip     = (known after apply)
+          + ip_versions        = (known after apply)
+          + load_balancer_sku  = "standard"
+          + network_data_plane = "azure"
+          + network_mode       = (known after apply)
+          + network_plugin     = "azure"
+          + network_policy     = "azure"
+          + outbound_type      = "loadBalancer"
+          + pod_cidr           = (known after apply)
+          + pod_cidrs          = (known after apply)
+          + service_cidr       = (known after apply)
+          + service_cidrs      = (known after apply)
+
+          + load_balancer_profile (known after apply)
+
+          + nat_gateway_profile (known after apply)
+        }
+
+      + node_provisioning_profile {
+          + default_node_pools = "Auto"
+          + mode               = "Manual"
+        }
+
+      + windows_profile (known after apply)
+    }
+
+  # azurerm_resource_group.aks will be created
+  + resource "azurerm_resource_group" "aks" {
+      + id       = (known after apply)
+      + location = "eastasia"
+      + name     = "rg-aks-platform-dev"
+      + tags     = {
+          + "cost-mode"   = "temporary"
+          + "created-at"  = "2026-09-21"
+          + "environment" = "portfolio"
+          + "owner"       = "student"
+          + "purpose"     = "phase-7a"
+        }
+    }
+
+  # azurerm_role_assignment.aks_acr_pull will be created
+  + resource "azurerm_role_assignment" "aks_acr_pull" {
+      + condition_version                = (known after apply)
+      + id                               = (known after apply)
+      + name                             = (known after apply)
+      + principal_id                     = (known after apply)
+      + principal_type                   = (known after apply)
+      + role_definition_id               = (known after apply)
+      + role_definition_name             = "AcrPull"
+      + scope                            = "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-flashsale-release/providers/Microsoft.ContainerRegistry/registries/acrflashsalep6"
+      + skip_service_principal_aad_check = true
+    }
+
+Plan: 3 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + cluster_id                 = (known after apply)
+  + cluster_name               = "aks-portfolio-dev"
+  + get_credentials_command    = "az aks get-credentials --resource-group rg-aks-platform-dev --name aks-portfolio-dev --overwrite-existing"
+  + kubelet_identity_object_id = (known after apply)
+  + kubernetes_version         = "1.36"
+  + oidc_issuer_url            = (known after apply)
+  + resource_group_name        = "rg-aks-platform-dev"
+  + workload_pool_enabled      = false
+
+─────────────────────────────────────────────────────────────────────────────
+
+Note: You didn't use the -out option to save this plan, so Terraform can't
+guarantee to take exactly these actions if you run "terraform apply" now.
+Releasing state lock. This may take a few moments...
