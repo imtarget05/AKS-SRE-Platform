@@ -1,6 +1,19 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-21 | Active Goal: **Mandatory microservices roadmap filed (Phases 9–18) — execution still gated behind 7A–8 baseline**
+> Updated: 2026-09-21 | Active Goal: **Phase 7A.2 — temp user pool + private ACR pull + WI runtime proof (7A.1 PASS frozen first)**
+
+## ACTIVE GOAL 2026-09-21 — Phase 7A.2 (AUTHORIZED live run, strict gates)
+
+STATUS: ▶️ IN PROGRESS — user directive 2026-09-21 authorizes the full 7A.2 flow
+(Steps 1–19 + FINAL REPORT, then STOP, no 7B). Focus plan:
+`plans/2026-09-21-phase7a2-userpool-acrpull-wi-proof.md`.
+
+Order: (1) freeze 7A.1 PASS commit (evidence untracked → committed, record SHA);
+(2) start → fresh quota gate (regional/Dsv6 ≥2 free, D2s_v6 Restrictions==[], else STOP);
+(3) temp `work` pool 1×D2s_v6 → placement proof → private `legacy-app:<SHA>` pull
+(kubelet+AcrPull, NOT WI) → temp UAMI+FIC+Reader → WI pod federated `az acr show`
+→ full cleanup (ns → WI resources → pool) → stop → 4 evidence files → FINAL REPORT.
+Budget ≈ $0.693/h proof window, keep short. `.ai/harness/handoff/resume.md`: absent.
 
 ## ACTIVE GOAL 2026-09-21 — Microservices/Saga/Kafka/Loki/Tempo/Mesh MANDATORY (plan filed, NOT started)
 
@@ -28,11 +41,12 @@ Next steps:
 ## ACTIVE GOAL 2026-09-21 — Phase 7A.1 apply (master roadmap 7A→13 filed)
 
 STATUS: ✅ **7A.1 PASS 2026-09-21** — AKS live verified (2×D4s_v6 Ready, kube-system healthy, OIDC+WI, AcrPull), then `Stopped`. Cost ≈ $0.19. Evidence: `docs/evidence/phase7a/system-foundation-PASS.md`. 7A.2+ locked.
-Next: freeze → refresh → saved plan `.local/phase7a-apply.tfplan` (expect 2/0/0) → apply exact → verify → stop → `system-foundation-PASS.md` → STOP (7A.2 locked).
+Next: 7A.2 only after explicit approval — re-check BOTH quota tiers → enable temporary `D2s_v6` user pool → placement + private ACR-pull proof → delete pool same session → re-check quota → STOP cluster. Meanwhile the cluster stays Stopped (quota returned to `0/10`, no compute burn).
+Note: post-apply `terraform plan` = **0/1/0** (no-op in-place drift from provider-block null/empty fields; no replace, no destroy) — Phase 8 debt, not actioned while stopped.
 
-## ACTIVE GOAL 2026-09-21 — Phase 7A quota recovery (Dsv6 preflight DONE)
+## SUPERSEDED — Phase 7A quota recovery (Dsv6 preflight DONE → led to the 7A.1 apply)
 
-STATUS: ⛔ STOP — PRE-APPLY REVIEW issued, **no apply until explicit approval**.
+STATUS: ✅ **completed** — this preflight passed and produced the successful 7A.1 apply/stop above. Kept for history; do not read this section as a live gate.
 Decision: Option 2 — SKU-only switch (D4as_v5 BLOCKED DASv5 0/0 → **Standard_D4s_v6**, Dsv6 quota 10, $0.277/h). No quota request, no RG destroy, no stale-plan reuse.
 
 Round 2 preflight (fresh live eastasia, source commit `e9d086c`) — ALL GATES PASS:
