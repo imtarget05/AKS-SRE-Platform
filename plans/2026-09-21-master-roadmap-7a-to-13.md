@@ -18,7 +18,7 @@ Hard gate: no Phase 9+ before 7A→8 baseline green.
 |---|---|---|---|
 | 7A.1 | AKS system foundation (D4s_v6) | live AKS + 2 sys nodes + ACR RBAC | Nodes Ready |
 | 7A.2 | User-pool proof | private ACR pull + WI proof, pool deleted | runtime proof |
-| 7B | Platform bootstrap | user pool + ingress-nginx + Argo CD | Platform Healthy |
+| 7B | Platform bootstrap | persistent user pool + Gateway API/Envoy Gateway + Argo CD | Platform Healthy |
 | 7C | Deploy P01 | FlashSale E2E on AKS | Order Completed |
 | 7D | Deploy P02 | LegacyApp via shared ingress | Healthy/Synced |
 | 7E | GitOps E2E | CI→ACR→GitOps→Argo + rollback both | proven |
@@ -47,7 +47,7 @@ Limits: RG+AKS+role only. No user pool/proofs/Argo/ingress/P01/P02.
 ## 7A.2+ (locked, separate approvals)
 
 7A.2: temp D2s_v6 pool (10/10) → placement + private pull (`legacy-app:<SHA>`, no secret) + WI harmless read → delete pool → 8/10 → stop.
-7B: request quota ~16 first; 1 ingress-nginx, Argo CD (port-forward), namespaces argocd/ingress-nginx/flashsale/legacyapp(+monitoring reserved).
+7B: request quota ~16 first (7B.0 gate; API auto-approve failed 2026-09-21 → portal/support manual path, see `docs/evidence/phase7b/quota-7b0-gate.md`); NO ingress-nginx (upstream retired Mar 2026) — Gateway API + Envoy Gateway v1.9.1 north-south instead; Argo CD v3.5.3 non-HA (port-forward), namespaces argocd/envoy-gateway-system/platform-gateway/flashsale/legacyapp(+monitoring reserved).
 7C: P01 via GitOps (PG stateful+PVC, Redis reconstructable, RabbitMQ durable+Secret, PreSync migration Job, Kafka OFF) → E2E order proof.
 7D: P02 second workload (non-root 1000, SHA pin, shared ingress).
 7E: forward deploy + revert rollback per project, artifact traceability (source=ACR=GitOps=pod).
@@ -58,7 +58,7 @@ DP: off-host Blob backup + clean restore + rabbit/redis rebuild + remote state �
 10: Kafka KRaft single-broker NON-HA, domain topics, transactional outbox + consumer inbox, at-least-once + idempotent consumers (dup ×5 → one transition proof).
 11: Saga happy path + inventory-reject / payment-decline / payment-timeout / compensation-failure paths; durable saga state, idempotent commands, `MANUAL_INTERVENTION_REQUIRED` escape hatch.
 12: Alloy collector → Prometheus/Loki/Tempo; single-traceId checkout across Order→Kafka→Saga→Inventory→Payment; structured logs; no public Loki.
-13: Istio ambient (`istio.io/dataplane-mode: ambient`), ztunnel mTLS, AuthorizationPolicy allow/deny matrix, waypoint only on L7 demand, before/after latency numbers; ingress-nginx stays north-south.
+13: Istio ambient (`istio.io/dataplane-mode: ambient`), ztunnel mTLS, AuthorizationPolicy allow/deny matrix, waypoint only on L7 demand, before/after latency numbers; Envoy Gateway stays north-south (ingress-nginx retired Mar 2026, never install).
 14: controlled experiments incl. Kafka/Saga/payment/mesh/Loki/Tempo outages (obs outage must NOT break checkout) with Hypothesis→TTR incident files. 15: full rebuild drill with actual RPO/RTO + authoritative-vs-rebuildable ADR.
 16: KEDA RabbitMQ queue (P01) + KEDA Kafka lag + HPA (P02); cluster autoscaler only after quota+approval. 17: decision table + 4 profiles conditional.
 18: 3-repo narrative (build/productionize/operate), READMEs, diagrams, 10–15min distributed demo (push→Saga→trace→mTLS→compensation→rollback), EVIDENCE.md claim table, Sonar truthful (NOT enforced until CI gate real).

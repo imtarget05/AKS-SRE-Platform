@@ -1,6 +1,24 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-21 | Active Goal: **Phase 7A.2 — temp user pool + private ACR pull + WI runtime proof (7A.1 PASS frozen first)**
+> Updated: 2026-09-21 | Active Goal: **Phase 7B.0 capacity gate — BLOCKED on manual quota approval (arch corrected to Gateway API)**
+
+## ACTIVE GOAL 2026-09-21 — Phase 7B.0 (EXECUTED, DECISION: BLOCKED)
+
+STATUS: 🛑 **BLOCKED on quota** — fresh quota live (stopped: 0/10+0/10; running math
+8+2=10/10 zero headroom). `az quota update` →16 for `cores` + `StandardDsv6Family`:
+both **FAILED (`ContactSupport`)** — subscription needs manual portal/support approval.
+Exact portal steps: `docs/evidence/phase7b/quota-7b0-gate.md`. $0 spent, nothing created.
+
+Architecture corrected (no platform installed): **NO ingress-nginx** (upstream retired
+Mar 2026) → north-south = **Gateway API + Envoy Gateway v1.9.1** (v1.8 line lacks K8s 1.36;
+EOL Feb 2027); future east-west = Istio Ambient (no AKS App Routing — embeds own Istio,
+no Ambient support). **Argo CD v3.5.3** non-HA pinned. Cost plan: steady-state
+2×D4s_v6+1×D2s_v6 ≈ **$0.693/h** (≈$1.39/2h, ≈$16.63/24h accidental) + persistent
+public-IP/LB networking (unverified, not claimed exact).
+Focus plan: `plans/2026-09-21-phase7b0-capacity-gate.md`.
+
+Next: user completes portal quota increase → verify 16/16 live → authorize 7B.1.
+7B.1 NOT started — STOP.
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7A.2 (AUTHORIZED live run, strict gates)
 
