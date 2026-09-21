@@ -4,16 +4,13 @@
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7A.2 (AUTHORIZED live run, strict gates)
 
-STATUS: ▶️ IN PROGRESS — user directive 2026-09-21 authorizes the full 7A.2 flow
-(Steps 1–19 + FINAL REPORT, then STOP, no 7B). Focus plan:
-`plans/2026-09-21-phase7a2-userpool-acrpull-wi-proof.md`.
-
-Order: (1) freeze 7A.1 PASS commit (evidence untracked → committed, record SHA);
-(2) start → fresh quota gate (regional/Dsv6 ≥2 free, D2s_v6 Restrictions==[], else STOP);
-(3) temp `work` pool 1×D2s_v6 → placement proof → private `legacy-app:<SHA>` pull
-(kubelet+AcrPull, NOT WI) → temp UAMI+FIC+Reader → WI pod federated `az acr show`
-→ full cleanup (ns → WI resources → pool) → stop → 4 evidence files → FINAL REPORT.
-Budget ≈ $0.693/h proof window, keep short. `.ai/harness/handoff/resume.md`: absent.
+STATUS: ✅ **7A FINAL PASS 2026-09-21** — temp `work` pool (1×D2s_v6) created + placement
+proven + private `legacy-app:2d5d07…` pull (digest match, no secret, kubelet+AcrPull, NOT WI) +
+WI federated `az acr show` (Reader-only temp UAMI, no secret) + full cleanup (ns → WI
+resources → pool deleted, quota 8/10, cluster Stopped). Compute ≈$0.20 (16:16:59Z→16:35:45Z).
+Evidence: `docs/evidence/phase7a/{user-pool-placement,private-acr-pull,workload-identity-runtime,phase7a-FINAL-PASS}.md`.
+Code: `terraform/aks-foundation/wi-proof.tf` (+`enable_wi_proof`, default false).
+Focus plan: `plans/2026-09-21-phase7a2-userpool-acrpull-wi-proof.md`. 7B NOT started — STOP.
 
 ## ACTIVE GOAL 2026-09-21 — Microservices/Saga/Kafka/Loki/Tempo/Mesh MANDATORY (plan filed, NOT started)
 

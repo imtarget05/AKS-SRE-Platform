@@ -52,3 +52,11 @@ variable "workload_identity_client_id" {
   default     = ""
   description = "Set from a later phase: reserved for the future ACR-pull/workload identity wiring. Empty = skip federated wiring here."
 }
+
+# TEMPORARY 7A.2 WI-proof safety: default false (no identity resources).
+# true creates ONLY the temp UAMI + FIC + Reader-on-ACR in wi-proof.tf.
+variable "enable_wi_proof" {
+  type        = bool
+  default     = false
+  description = "Temporary Workload Identity proof identity (7A.2 only; destroyed same session)."
+}
