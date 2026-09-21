@@ -42,12 +42,12 @@ RG rg-aks-platform-dev               (new, eastasia, non-prod name)
                OIDC issuer + Workload Identity)
                     │
               ┌─────┴──────────────────────────┐
-              │  system pool "sys"             │  2 × Standard_D4as_v5 (4 vCPU/16 GiB each)
+              │  system pool "sys"             │  2 × Standard_D4s_v6 (4 vCPU/16 GiB each)
               │  regular · mode=System         │  system components only
               └─────┬──────────────────────────┘
                     │
               ┌─────┴──────────────────────────┐
-              │  user pool "work" (TEMPORARY)  │  1 × Standard_D2as_v5 (2 vCPU/8 GiB)
+              │  user pool "work" (TEMPORARY)  │  1 × Standard_D2s_v6 (2 vCPU/8 GiB)
               │  regular · mode=User           │  placement + private ACR pull proof,
               │  deleted same-session          │  then az aks nodepool delete
               └────────────────────────────────┘
@@ -55,15 +55,16 @@ RG rg-aks-platform-dev               (new, eastasia, non-prod name)
 
 ## Load balancer + networking notes
 
-- `load_balancer_sku = "standard"` explicit — Basic LB retired 2025-09-30;
-  AKS creates a Standard LB + one public IP for the API server (documented
-  Portfolio setting; private cluster is an enterprise reference).
+- `load_balancer_sku = "standard"` explicit — Basic LB retired 2025-09-30.
+  With `outbound_type = "loadBalancer"` AKS creates a **Standard Load Balancer
+  plus a public IP for cluster egress**, not merely an "API server public IP";
+  the API server endpoint is a separate AKS-managed FQDN.
 - No application LoadBalancers/Ingress in 7A (they belong to 7B).
 
 
 └── AKS aks-portfolio-dev             (k8s 1.36.x pinned, Free tier, OIDC + WI enabled)
-    ├── system pool "sys"             Standard_D4as_v5, 2 nodes, regular, mode=System
-    └── user pool "work" (TEMPORARY)  Standard_D2as_v5, 1 node, regular, mode=User,
+    ├── system pool "sys"             Standard_D4s_v6, 2 nodes, regular, mode=System
+    └── user pool "work" (TEMPORARY)  Standard_D2s_v6, 1 node, regular, mode=User,
                                       created ONLY for the 7A placement + pull tests,
                                       deleted immediately after evidence is captured
 ```
@@ -161,6 +162,46 @@ az aks nodepool delete -g rg-aks-platform-dev --cluster-name aks-portfolio-dev -
 az aks stop  -g rg-aks-platform-dev -n aks-portfolio-dev
 az aks start -g rg-aks-platform-dev -n aks-portfolio-dev
 ```
+
+## Recovery v3 (2026-09-21) — SKU family switch after the quota block
+
+The v2 SKU (`Standard_D4as_v5`) **failed at apply**: `ErrCode_InsufficientVCPUQuota`
+— "requested 8, remaining 0 for family `standardDASv5Family` for region eastasia".
+The RG was created, the cluster was not; ~$0 was spent. This section is appended,
+not a rewrite: **v2's decision was correct on the evidence available at the time**
+(`Restrictions=[]` + regional `0/10`), and the failure exposed a gap in that evidence.
+
+| Field | v2 (failed) | v3 (recovery, approved shape) |
+|---|---|---|
+| System SKU | `Standard_D4as_v5` | **`Standard_D4s_v6`** |
+| Family | `standardDASv5Family` | `StandardDsv6Family` |
+| Family quota | **0 / 0** | 0 / 10 |
+| Regional quota | 0 / 10 | 0 / 10 |
+| Price (Linux, eastasia) | 0.422 USD/h | **0.277 USD/h** |
+| Temporary user pool | `Standard_D2as_v5` | **`Standard_D2s_v6`** (0.139 USD/h, not created yet) |
+| Steady burn | 0.844 USD/h | **0.554 USD/h** |
+
+Why v6 and not another v5 member: **every v5 D-family is `0/0` in eastasia on this
+subscription** (DASv5, DSv5, DDSv5, DDv5, Dv5, DPSv5, …), so a v5 sibling would fail
+identically. Eastasia offers no v4 D-series, so the cheapest eligible family is v6.
+
+### The lesson this ADR now encodes
+
+```text
+az vm list-skus  Restrictions=[]   ≠   deployment guaranteed
+
+Deployment feasibility =
+    SKU availability
+  + VM-family quota          ← what blocked v2
+  + regional quota
+  + regional/zone capacity   ← quota ≠ capacity; can still AllocationFailed
+  + AKS support
+```
+
+Future preflights must verify **both** quota tiers before planning, and the evidence
+was updated accordingly (`docs/evidence/phase7a/quota-recovery-dsv6-preflight.md`).
+If a later create returns `AllocationFailed`, **do not** auto-bump SKU or change
+region — STOP and re-review.
 
 ## Alternatives rejected
 

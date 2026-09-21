@@ -1,12 +1,28 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-21 | Active Goal: **Phase 7A QUOTA RECOVERY (Option 2, NOT YET APPROVED FOR APPLY)**
+> Updated: 2026-09-21 | Active Goal: **Phase 7A.1 APPLY (APPROVED system-only, D4s_v6)**
 
-## ACTIVE GOAL 2026-09-21 — Phase 7A quota recovery
+## ACTIVE GOAL 2026-09-21 — Phase 7A.1 apply (master roadmap 7A→13 filed)
 
-STATUS: NOT YET APPROVED FOR APPLY — ⛔ STOP, no apply until recovery REVIEW passes.
+STATUS: 🟢 APPROVED system-only — RG + AKS (2×D4s_v6) + AcrPull. Preflight fresh PASS (Dsv6 0/10, regional 0/10, SKU verified, IP allowlisted).
+Next: freeze → refresh → saved plan `.local/phase7a-apply.tfplan` (expect 2/0/0) → apply exact → verify → stop → `system-foundation-PASS.md` → STOP (7A.2 locked).
+
+## ACTIVE GOAL 2026-09-21 — Phase 7A quota recovery (Dsv6 preflight DONE)
+
+STATUS: ⛔ STOP — PRE-APPLY REVIEW issued, **no apply until explicit approval**.
 Decision: Option 2 — SKU-only switch (D4as_v5 BLOCKED DASv5 0/0 → **Standard_D4s_v6**, Dsv6 quota 10, $0.277/h). No quota request, no RG destroy, no stale-plan reuse.
-Next: refresh state → SKU change → replan `.local/phase7a-quota-recovery.tfplan` (expect 2/0/0) → REVIEW → STOP.
+
+Round 2 preflight (fresh live eastasia, source commit `e9d086c`) — ALL GATES PASS:
+- Regional vCPU `0/10` (remaining 10 ≥ 8) · `StandardDsv6Family` `0/10` (remaining 10 ≥ 8)
+- `Standard_D4s_v6`: `Restrictions=[]`, 4 vCPU / 16 GiB, zones 1/2/3
+- AKS `1.36` available · `aks-portfolio-dev` absent (`az aks list` = 0) · RG `rg-aks-platform-dev` exists, empty
+- `terraform state list` = `data.azurerm_container_registry.shared` + `azurerm_resource_group.aks`; AKS + role assignment ABSENT
+- `terraform plan -refresh-only` = **zero resource drift** (outputs only)
+- `fmt -check -recursive` clean · `validate` Success · azurerm **5.6.0** locked, no `-upgrade`
+- New saved plan `.local/phase7a-dsv6.tfplan` (gitignored): **2 to add, 0 to change, 0 to destroy** → creates `azurerm_kubernetes_cluster.aks` + `azurerm_role_assignment.aks_acr_pull`; RG unchanged; no Helm/app/monitoring/`work` pool resources
+Evidence: `docs/evidence/phase7a/quota-recovery-dsv6-preflight.md`, `plan-summary.md`, `cost.md`.
+Next: user approval → apply system-only → verify → STOP (user pool still 🔒).
+
 
 ## SUPERSEDED — Phase 7A SYSTEM-ONLY APPLY (APPROVED, strictly limited)
 

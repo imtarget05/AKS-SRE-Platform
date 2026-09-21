@@ -8,6 +8,7 @@ Source: Retail Prices API (`AP East` = eastasia, Consumption, Linux) queried liv
 - User pool `work`: gated `enable_workload_pool=false` → count 0 in this plan
 - Tier: AKS Free. LB: Standard. Monitoring: OFF.
 - History: `Standard_D4as_v5` BLOCKED at apply (`ErrCode_InsufficientVCPUQuota`, DASv5 family 0/0) — see `apply-2026-09-21-BLOCKED.md`. Eastasia offers no v4 D-series (only v5/v6), so v6 selected.
+- Recovery re-check 2026-09-21: regional `0/10`, `StandardDsv6Family` `0/10`, `D4s_v6` `Restrictions=[]`, 4 vCPU / 16 GiB, AKS 1.36 available — see `quota-recovery-dsv6-preflight.md`. Unit prices below re-confirmed against the Retail Prices API the same day (`D4s v6` Windows meter $0.461 is excluded; Linux $0.277 is the applicable line).
 
 ## Unit prices (Consumption, AP East / eastasia, live 2026-09-21)
 
