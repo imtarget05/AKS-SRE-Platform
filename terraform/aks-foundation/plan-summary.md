@@ -1,10 +1,11 @@
-# AKS Foundation — plan summary (sanitized, quota recovery)
+# AKS Foundation — plan summary (sanitized, quota recovery → Dsv6)
 
 - Date: 2026-09-21 (recovery replan)
+- Source commit: `e9d086c`
 - Dir: `terraform/aks-foundation`
-- Commands: `terraform fmt` (clean), `terraform validate` (Success), `terraform plan -no-color -input=false -out=.local/phase7a-quota-recovery.tfplan` (gitignored, NOT committed)
+- Commands: `terraform init -input=false` (no `-upgrade`, reviewed lock kept — azurerm 5.6.0), `terraform fmt -check -recursive` (clean), `terraform validate` (Success), `terraform plan -refresh-only` (outputs only, **zero resource drift**), `terraform plan -no-color -input=false -out=.local/phase7a-dsv6.tfplan` (gitignored, NOT committed)
 - Result: **Plan: 2 to add, 0 to change, 0 to destroy**
-- Sanitization: subscription ID redacted to `<subscription-id>` in committed `plan.txt`; full IDs only in gitignored `.local/*.tfplan`.
+- Sanitization: subscription ID redacted to `<subscription-id>` in the committed `plan.txt`; full IDs only in gitignored `.local/*.tfplan`.
 
 ## Resources
 
@@ -15,8 +16,8 @@
 | Already in state (no change) | `azurerm_resource_group.aks` | `rg-aks-platform-dev`, eastasia — preserved from partial apply |
 | Read-only (no count) | `data.azurerm_container_registry.shared` | `acrflashsalep6` in `rg-flashsale-release` — read, not managed |
 
-- `azurerm_kubernetes_cluster_node_pool.work` count = 0 (`enable_workload_pool=false`), absent from plan.
-- Stale `.local/phase7a-system.tfplan` (D4as_v5, 3/0/0) deleted, never reused.
+- Stale `.local/phase7a-system.tfplan` (D4as_v5, 3/0/0) **deleted**, never reused. Recovery plan is `.local/phase7a-dsv6.tfplan` (fresh, gitignored).
+- `azurerm_kubernetes_cluster_node_pool.work` count = 0 (`enable_workload_pool=false`) → absent from plan. Cold D2s_v6 user pool belongs to a later, separately authorized step.
 
 ## SKU / shape
 
@@ -42,3 +43,5 @@
 - Role: `AcrPull`, `skip_service_principal_aad_check = true` (kubelet MSI propagation).
 - Registry mode untouched (classic LegacyRegistryPermissions, verified live); no new registry; admin stays disabled.
 - No credentials in this file: kubeconfig outputs are `(sensitive value)` and omitted.
+
+> Canonical copy: `docs/evidence/phase7a/plan-summary.md`. This file is a mirror for the Terraform root; update both or point here instead of duplicating.

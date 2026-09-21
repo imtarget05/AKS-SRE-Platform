@@ -1,10 +1,33 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-21 | Active Goal: **Phase 7A.1 APPLY (APPROVED system-only, D4s_v6)**
+> Updated: 2026-09-21 | Active Goal: **Mandatory microservices roadmap filed (Phases 9–18) — execution still gated behind 7A–8 baseline**
+
+## ACTIVE GOAL 2026-09-21 — Microservices/Saga/Kafka/Loki/Tempo/Mesh MANDATORY (plan filed, NOT started)
+
+STATUS: 📋 PLAN FILED — user directive 2026-09-21 promotes microservices, Payment Service, Saga,
+Kafka, Loki, Tempo, Service Mesh from "future optional" to **mandatory completion**
+(phases 9–18). Focus plan: `plans/2026-09-21-microservices-mandatory-roadmap-9-to-18.md`.
+Master roadmap `plans/2026-09-21-master-roadmap-7a-to-13.md` line 4 ("Out of scope…")
+is SUPERSEDED by that plan — master file rewrite follows as a separate step.
+
+HARD SEQUENCING GATE: no Phase 9+ implementation before baseline AKS + GitOps +
+basic observability (7A→8) is green. Current execution focus is UNCHANGED:
+
+- 7A.1 system-only apply (APPROVED, D4s_v6) per sections below — STOP gate still holds.
+- `.ai/harness/handoff/resume.md`: absent (checked 2026-09-21) — no pending handoff;
+  `tasks/current.md` files remain the authority.
+
+Next steps:
+1. Rewrite master roadmap phases 9–18 (table + gates + DoD) from the focus plan.
+2. Mirror Phase 9 decomposition targets into FlashSale-Backend `tasks/current.md` + roadmap.
+3. Continue 7A.1 → 7B → … → 8 in order; open Phase 9 only after Phase 8 green.
+4. Per-phase evidence dirs (`docs/evidence/kafka|...`) created at phase start, never retrofilled.
+
+## ACTIVE GOAL 2026-09-21 — Phase 7A.1 APPLY (APPROVED system-only, D4s_v6)
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7A.1 apply (master roadmap 7A→13 filed)
 
-STATUS: 🟢 APPROVED system-only — RG + AKS (2×D4s_v6) + AcrPull. Preflight fresh PASS (Dsv6 0/10, regional 0/10, SKU verified, IP allowlisted).
+STATUS: ✅ **7A.1 PASS 2026-09-21** — AKS live verified (2×D4s_v6 Ready, kube-system healthy, OIDC+WI, AcrPull), then `Stopped`. Cost ≈ $0.19. Evidence: `docs/evidence/phase7a/system-foundation-PASS.md`. 7A.2+ locked.
 Next: freeze → refresh → saved plan `.local/phase7a-apply.tfplan` (expect 2/0/0) → apply exact → verify → stop → `system-foundation-PASS.md` → STOP (7A.2 locked).
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7A quota recovery (Dsv6 preflight DONE)
@@ -84,4 +107,6 @@ Next steps (in order):
 
 - `main.tf` cũ **superseded** — đã archive về `terraform/legacy/main.tf.disabled` (P0.1, 2026-09-21): không còn `.tf` runnable ở đó, secret đã xoá khỏi HEAD (P0.2). Active roots: `terraform/aks-foundation` + `terraform/data-protection` (con trỏ, root thật ở P01 `backup-storage`). Xem `terraform/README.md`.
 - Helm `admin123` **đã xoá khỏi HEAD** (P0.2, 2026-09-21) — kể cả Secret plaintext trong `kubernetes/keda-trigger-auth.yaml`. Không commit password plaintext; dùng secret reference (Key Vault / External Secrets / Sealed Secrets). Credential cũ nếu từng dùng thật ở env nào → rotate.
+- ⚠️ **KEDA scope (7A)**: `kubernetes/keda-trigger-auth.yaml` giờ chỉ reference secret do External Secrets tạo, nhưng điều đó **không** cho phép cài External Secrets Operator / KEDA / RabbitMQ trong Phase 7A. Manifest này **không** thuộc deployment 7A — ghi nhận như future workload/scaling concern; secret delivery mechanism sẽ quyết định ở scaling phase.
+- ⚠️ **Cost safety**: cluster phải được stop sau khi lấy evidence: `az aks stop -g rg-aks-platform-dev -n aks-portfolio-dev`. Quota dự kiến 8/10 sau apply; proof window (user pool) sẽ chạm 10/10 trong vài phút.
 - Mọi `apply` đều yêu cầu approval explícit sau 7A.5.

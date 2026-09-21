@@ -120,3 +120,5 @@ Changes to Outputs:
   + cluster_id                 = (known after apply)
   + kubelet_identity_object_id = (known after apply)
   + oidc_issuer_url            = (known after apply)
+
+> Canonical copy: `docs/evidence/phase7a/plan.txt`. Byte-identical to the sanitized output of `.local/phase7a-dsv6.tfplan` (verified by diff, 0 lines).
