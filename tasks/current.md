@@ -66,6 +66,6 @@ Next steps (in order):
 
 ## Notes
 
-- `main.tf` cũ **superseded** — không dùng trực tiếp nữa.
-- Helm `admin123` **deprecated** — xóa khỏi mọi values/examples, thay bằng secret reference (Key Vault / Sealed Secrets / External Secrets). Không commit password plaintext.
+- `main.tf` cũ **superseded** — đã archive về `terraform/legacy/main.tf.disabled` (P0.1, 2026-09-21): không còn `.tf` runnable ở đó, secret đã xoá khỏi HEAD (P0.2). Active roots: `terraform/aks-foundation` + `terraform/data-protection` (con trỏ, root thật ở P01 `backup-storage`). Xem `terraform/README.md`.
+- Helm `admin123` **đã xoá khỏi HEAD** (P0.2, 2026-09-21) — kể cả Secret plaintext trong `kubernetes/keda-trigger-auth.yaml`. Không commit password plaintext; dùng secret reference (Key Vault / External Secrets / Sealed Secrets). Credential cũ nếu từng dùng thật ở env nào → rotate.
 - Mọi `apply` đều yêu cầu approval explícit sau 7A.5.

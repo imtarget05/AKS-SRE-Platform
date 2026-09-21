@@ -1,72 +1,41 @@
-# AKS SRE Platform
+# AKS / SRE Platform Blueprint (In Progress)
 
-Nền tảng vận hành cho hệ thống flash sale: **AKS + GitOps (ArgoCD) + event-driven
-autoscaling (KEDA) + Azure Monitor**. Project 01 deploy app lên Container Apps;
-project này là bản nâng cấp "platform engineering" — cluster, GitOps và autoscaling
-theo backlog hàng đợi.
+[![Azure](https://img.shields.io/badge/Microsoft_Azure-Platform-0089D6?logo=microsoft-azure)](https://azure.com/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-AKS-326CE5?logo=kubernetes)](https://kubernetes.io/)
+[![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform)](https://terraform.io/)
+[![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?logo=argo)](https://argoproj.github.io/cd/)
 
-## Kiến trúc
+This repository is the central infrastructure blueprint for a shared Azure Kubernetes platform designed to run multiple portfolio workloads (like the Flash-Sale backend). It demonstrates **Platform Engineering**, **GitOps**, and **SRE** principles applied to Azure.
 
-```text
-GitHub (main) ──▶ ArgoCD (self-heal + auto sync) ──▶ AKS namespace flash-sale-prod
-                                                        ├── order-api        (Deployment, 2 replicas, probes, PDB)
-                                                        └── order-worker     (Deployment, KEDA scale 0..50)
+*Note: This project is currently in the "Blueprint" phase, following an evidence-gated roadmap towards live provisioning.*
 
-Service Bus queue "orders" ──▶ KEDA ScaledObject (azure-workload-identity, không secret trong cluster)
-Azure Monitor / Container Insights (Log Analytics, Terraform provisioned)
-```
+## 📐 Architecture & Platform Model
 
-## SLO (service level objectives)
+The platform strictly separates infrastructure provisioning from application deployment to establish a clear ownership model:
 
-| SLO | Mục tiêu | Cách đo |
-|---|---|---|
-| API availability | 99.9% | probe `/healthz`, PDB giữ ≥1 pod khi drain |
-| Reservation p95 latency | < 250 ms | k6 threshold (Project 01 `load-tests/k6/`) |
-| Order backlog | < 500 messages trong 5 phút | KEDA metric + Service Bus queue length alert |
-| Zero oversell | stock luôn ≥ 0 | audit harness của Project 01 (chạy định kỳ) |
+1. **Terraform (Infrastructure):** Manages the Azure boundaries for the platform itself (AKS cluster, node pools, networking foundation). Active roots and rules: [`terraform/README.md`](terraform/README.md). Application infrastructure (ACR, Service Bus, storage) lives with the owning workload repo.
 
-## Cấu trúc
+2. **Helm / Bootstrap (Platform Components):** Manages foundational cluster services (Ingress Controllers, KEDA, external-secrets).
+3. **Argo CD (GitOps):** Reconciles the desired application state from Git directly into the cluster, providing self-healing and drift detection.
 
-```
-terraform/            AKS + Log Analytics + KEDA identity (workload identity, OIDC federated)
-kubernetes/           namespace, KEDA TriggerAuth + ScaledObject, worker, PDB
-gitops/argocd/        Application trỏ về overlays/prod của Project 01 (kustomize)
-scripts/bootstrap.sh  Cài ArgoCD + KEDA, apply manifest, đăng ký Application
-```
+## 🚀 Key Platform Features
 
-## Triển khai (theo thứ tự)
+- **Strategic Compute:** Defined a clear System vs. User node-pool strategy with specific taints/tolerations to protect control-plane addons from noisy neighbor application workloads.
+- **Event-Driven Autoscaling (KEDA):** Designed KEDA ScaledObjects to dynamically scale background workers (0 to 50) based on Azure Service Bus queue depth, decoupling scaling from simple CPU metrics.
+- **Resiliency Primitives:** Defined `PodDisruptionBudgets` (PDBs), anti-affinity rules, and liveness/readiness probes to ensure application survivability during cluster upgrades or node failures.
+- **Workload Identity:** Designed the security posture to eliminate static secrets (connection strings) in the cluster, utilizing Azure AD Workload Identity for seamless, credential-free access to Azure resources (Service Bus, Key Vault).
 
-```bash
-# 0. Provision cluster + identity
-cd terraform && terraform init && terraform apply \
-  -var servicebus_namespace_name=<sb-từ-project-01>
-# lấy kubeconfig + client id của KEDA identity (terraform outputs)
+## 🗺️ Where the work actually stands
 
-# 1. Bootstrap platform
-chmod +x ../scripts/bootstrap.sh
-../scripts/bootstrap.sh <keda_identity_client_id>
+This README is a narrative only — it deliberately does **not** carry a live
+phase checklist. The single source of truth for execution state is:
 
-# 2. Secrets cho app (Key Vault CSI là bước nâng cấp tiếp theo)
-kubectl -n flash-sale-prod create secret generic flashsale-secrets \
-  --from-literal=pg-connection="Host=...;..." \
-  --from-literal=redis-connection="...:6380,password=...,ssl=true" \
-  --from-literal=servicebus-connection="Endpoint=sb://..."
+→ [`tasks/current.md`](tasks/current.md) — current phase, gates, and STOP conditions
+→ [`plans/`](plans/) — dated planning/decision documents (historical)
+→ [`docs/evidence/`](docs/evidence/) — sanitized per-phase evidence (plans, cost, apply reports)
+→ [`docs/adr/`](docs/adr/) — architecture decision records (e.g. ADR-012, AKS foundation cost-safe design)
 
-# 3. Sửa image trong 01-FlashSale-Backend/infrastructure/kubernetes/overlays/prod/kustomization.yaml
-#    thành ACR thật, commit & push → ArgoCD tự sync.
-```
+As of the last update this repo is in **Phase 7A (AKS foundation, quota
+recovery)** under Cost Safety Mode: no cluster has been successfully applied
+yet. Read `tasks/current.md` before touching anything.
 
-## Runbook
-
-| Tình huống | Hành động |
-|---|---|
-| Queue backlog tăng đột biến | KEDA tự scale worker (1 replica/100 msg, max 50). Nếu kẹt ở max → tăng `maxReplicaCount` qua Git |
-| Message vào DLQ | Kiểm tra Service Bus DLQ; drift Redis/DB → chạy `POST /internal/resync-stock/{id}` của Project 01 |
-| API pod crashed | ArgoCD selfHeal khôi phục; xem Container Insights logs |
-| Cluster upgrade | `az aks upgrade`; PDB + probes bảo đảm rolling an toàn |
-
-## Best practices đã áp dụng
-- **Workload Identity**: KEDA dùng federated credential — không connection string trong cluster.
-- **Scale-to-zero** cho worker (tiết phí, phù hợp flash sale theo đợt).
-- **Least privilege**: KEDA chỉ có role `Azure Service Bus Data Receiver`.
-- **GitOps**: mọi thay đổi hạ tầng app qua Git; ArgoCD prune + selfHeal.

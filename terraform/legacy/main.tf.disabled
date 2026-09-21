@@ -34,9 +34,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix          = "aksplatform"
 
   default_node_pool {
-    name       = "default"
-    node_count = 2
-    vm_size    = "Standard_D2s_v3"
+    name                = "default"
+    node_count          = 2
+    vm_size             = "Standard_D2s_v3"
     enable_auto_scaling = true
     min_count           = 1
     max_count           = 5
@@ -75,28 +75,32 @@ provider "helm" {
 
 # 4. Deploy RabbitMQ via Helm
 resource "helm_release" "rabbitmq" {
-  name       = "rabbitmq"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "rabbitmq"
-  namespace  = "messaging"
+  name             = "rabbitmq"
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "rabbitmq"
+  namespace        = "messaging"
   create_namespace = true
 
   set {
     name  = "auth.username"
-    value = "admin"
+    value = "REMOVED-PLACEHOLDER-not-a-real-credential"
   }
+  # P0.2 secret hygiene: the original literal credential that stood here was
+  # removed from HEAD (2026-09-21). It must never be restored. Workloads get
+  # credentials via secret references (Key Vault / External Secrets / Sealed
+  # Secrets) — see ADR-012 and tasks/current.md Notes.
   set {
     name  = "auth.password"
-    value = "admin123"
+    value = "REMOVED-PLACEHOLDER-not-a-real-credential"
   }
 }
 
 # 5. Deploy Kafka via Helm (KRaft mode)
 resource "helm_release" "kafka" {
-  name       = "kafka"
-  repository = "https://charts.bitnami.com/bitnami"
-  chart      = "kafka"
-  namespace  = "messaging"
+  name             = "kafka"
+  repository       = "https://charts.bitnami.com/bitnami"
+  chart            = "kafka"
+  namespace        = "messaging"
   create_namespace = true
 
   set {

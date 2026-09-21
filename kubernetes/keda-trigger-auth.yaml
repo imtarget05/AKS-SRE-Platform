@@ -1,12 +1,8 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: rabbitmq-secret
-  namespace: flashsale
-type: Opaque
-stringData:
-  host: "amqp://admin:admin123@rabbitmq.messaging.svc.cluster.local:5672/"
----
+# NOTE (P0.2 secret hygiene, 2026-09-21): the plaintext rabbitmq Secret that
+# used to live at the top of this file was removed from git HEAD. Cluster
+# secrets must not be committed; TriggerAuthentication consumes a Secret
+# created out-of-band by External Secrets / Key Vault provider in a later
+# phase (same pattern as keda-trigger-auth Service Bus target).
 apiVersion: keda.sh/v1alpha1
 kind: TriggerAuthentication
 metadata:
@@ -15,5 +11,6 @@ metadata:
 spec:
   secretTargetRef:
   - parameter: host
-    name: rabbitmq-secret
+    name: rabbitmq-secret   # created at deploy time by External Secrets — never committed
     key: host
+

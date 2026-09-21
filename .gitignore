@@ -9,3 +9,6 @@
 **/tfplan*
 **/*.auto.tfvars
 crash.log
+
+# Raw local artifacts (terraform plans, scratch) — never commit; sanitized evidence goes to docs/evidence/
+**/.local/
