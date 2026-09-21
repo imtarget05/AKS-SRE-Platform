@@ -21,7 +21,7 @@ variable "kubernetes_version" {
 
 variable "system_pool_vm_size" {
   type        = string
-  default     = "Standard_D4as_v5" # cheapest live 4-vCPU SKU, unrestricted in eastasia
+  default     = "Standard_D4s_v6" # quota recovery 2026-09-21: D4as_v5 BLOCKED (DASv5 family 0/0 eastasia); D4s_v6 cheapest eligible (Dsv6 quota 10, $0.277/h, 4vCPU/16GiB premiumIO)
   description = "System pool SKU: must satisfy ≥ 4 vCPU / 4 GB (docs minimum)."
 }
 
@@ -43,7 +43,7 @@ variable "enable_workload_pool" {
 
 variable "workload_pool_vm_size" {
   type        = string
-  default     = "Standard_D2as_v5"
+  default     = "Standard_D2s_v6" # quota recovery 2026-09-21: D2as_v5 shares blocked DASv5 family; D2s_v6 same v6 gen/family as system pool (Dsv6 quota 10, $0.139/h)
   description = "Temporary user pool SKU (2 vCPU; a different SKU hedges capacity)."
 }
 

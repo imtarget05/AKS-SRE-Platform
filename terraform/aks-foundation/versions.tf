@@ -1,7 +1,7 @@
 # Phase 7A — AKS Foundation root (CLOUD FOUNDATION ONLY).
 # Approved scope: eastasia, aks-portfolio-dev in rg-aks-platform-dev,
-# system pool 2× D4as_v5 (min docs requirement), OPTIONAL temporary user pool
-# D2as_v5 gated by enable_workload_pool (default false).
+# system pool 2× D4s_v6 (min docs requirement; D4as_v5 BLOCKED 2026-09-21, DASv5 quota 0),
+# OPTIONAL temporary user pool D2s_v6 gated by enable_workload_pool (default false).
 # NOT owned here: Helm releases, KEDA, apps, ingress, ArgoCD, monitoring.
 terraform {
   required_version = ">= 1.5"

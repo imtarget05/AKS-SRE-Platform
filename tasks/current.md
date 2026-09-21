@@ -1,10 +1,22 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-21 | Active Goal: **Phase 7A SYSTEM-ONLY APPLY (APPROVED, strictly limited)**
+> Updated: 2026-09-21 | Active Goal: **Phase 7A QUOTA RECOVERY (Option 2, NOT YET APPROVED FOR APPLY)**
+
+## ACTIVE GOAL 2026-09-21 — Phase 7A quota recovery
+
+STATUS: NOT YET APPROVED FOR APPLY — ⛔ STOP, no apply until recovery REVIEW passes.
+Decision: Option 2 — SKU-only switch (D4as_v5 BLOCKED DASv5 0/0 → **Standard_D4s_v6**, Dsv6 quota 10, $0.277/h). No quota request, no RG destroy, no stale-plan reuse.
+Next: refresh state → SKU change → replan `.local/phase7a-quota-recovery.tfplan` (expect 2/0/0) → REVIEW → STOP.
+
+## SUPERSEDED — Phase 7A SYSTEM-ONLY APPLY (APPROVED, strictly limited)
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7A SYSTEM-ONLY APPLY
 
 STATUS: 🟢 APPROVED — strictly limited to RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev` + Terraform-managed AcrPull. User pool / proofs / Argo CD / ingress / P01-P02 🔒.
+
+APPLY ATTEMPT 2026-09-21T07:59Z: **BLOCKED** — `ErrCode_InsufficientVCPUQuota` (standardDASv5Family 0/0 eastasia).
+Partial state: RG created (empty, ~0 cost), AKS absent. No rerun, no destroy, no VM auto-switch per gate G.
+Evidence: `docs/evidence/phase7a/apply-2026-09-21-BLOCKED.md`. Next: user picks quota-increase retry vs SKU-family switch vs RG cleanup.
 
 Next steps: A freeze commit → B live safety → C init (no -upgrade) → D saved plan `.local/phase7a-system.tfplan` → E gate 3/0/0 → F apply exact plan → H–M verify/stop → FINAL REPORT → STOP (no user pool).
 

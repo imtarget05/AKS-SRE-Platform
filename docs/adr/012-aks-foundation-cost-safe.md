@@ -170,3 +170,18 @@ az aks start -g rg-aks-platform-dev -n aks-portfolio-dev
   credit; the docs minimum (≥ 2) is honoured.
 - Spot user pool now: belongs to Phase 11 cost experiments, not a correctness baseline.
 - Premium/burstable SKUs, extra pools, autoscaler: credit-inefficient for the proof.
+
+## Addendum 2026-09-21 — quota recovery (D4as_v5 → D4s_v6)
+
+- D4as_v5 attempt **BLOCKED** at apply: `ErrCode_InsufficientVCPUQuota` — quota is two-tier
+  (regional total AND per-family); regional was 0/10 but `standardDASv5Family` = 0/0 eastasia.
+  Evidence: `docs/evidence/phase7a/apply-2026-09-21-BLOCKED.md`.
+- Eastasia offers **no v4 D-series** for this subscription (`list-skus --size D4s/D4as` → v5/v6 only),
+  so all four v4 candidates were ineligible at the region level.
+- Replacement: **`Standard_D4s_v6`** — cheapest eligible (Dsv6 family quota 10, AKS-allowlisted,
+  Restrictions None, 4 vCPU / 16 GiB, premiumIO, $0.277/h AP East Consumption vs $0.422/h D4as_v5).
+  System steady state drops 0.844 → **0.554 USD/h** (−34%).
+- Pre-existing condition found during refresh: `stflashs3ctfbk01` firewall is Deny with a stale
+  single-IP allowlist; residential IP rotation caused 403 on state load. Added current IP only
+  (auditable, reversible). Residual risk: recurring on every IP change — consider VPN/allowlist
+  automation or private endpoint before Phase 10.

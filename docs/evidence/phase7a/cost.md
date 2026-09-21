@@ -1,26 +1,30 @@
 # Phase 7A Cost Evidence — 2026-09-21
 
-Source: `docs/adr/012-aks-foundation-cost-safe.md:112-152` (Azure Retail Prices API, eastasia, Consumption) + `docs/evidence/phase7a/plan.txt:134` (3 adds: RG + AKS + ACR role assignment; data source là read).
+Source: Retail Prices API (`AP East` = eastasia, Consumption, Linux) queried live 2026-09-21 + `docs/evidence/phase7a/plan.txt` (2 adds: AKS + ACR role assignment; RG already in state; data source read).
 
 ## SKUs (verified in plan)
 
-- System pool `sys`: 2 × `Standard_D4as_v5` (4 vCPU / 16 GiB), regular, autoscaling OFF
+- System pool `sys`: 2 × `Standard_D4s_v6` (4 vCPU / 16 GiB, premiumIO, x64), regular, autoscaling OFF
 - User pool `work`: gated `enable_workload_pool=false` → count 0 in this plan
 - Tier: AKS Free. LB: Standard. Monitoring: OFF.
+- History: `Standard_D4as_v5` BLOCKED at apply (`ErrCode_InsufficientVCPUQuota`, DASv5 family 0/0) — see `apply-2026-09-21-BLOCKED.md`. Eastasia offers no v4 D-series (only v5/v6), so v6 selected.
 
-## Unit prices (Consumption, eastasia)
+## Unit prices (Consumption, AP East / eastasia, live 2026-09-21)
 
 | SKU | USD/h |
 |---|---|
-| Standard_D4as_v5 | 0.422 |
-| Standard_D2as_v5 | 0.211 |
+| Standard_D4s_v6 | 0.277 |
+| Standard_D4ads_v6 | 0.316 |
+| Standard_D4ds_v6 | 0.343 |
+| Standard_D4as_v5 (blocked) | 0.422 |
+| Standard_D2s_v6 (future proof pool) | 0.139 |
 
 ## Burn math
 
 | Phase | Compute |
 |---|---|
-| Steady state (this plan: 2×0.422) | **0.844 USD/h** ≈ 20.3 USD/day if left running |
-| Proof window (later, +1×0.211 temporary) | **1.055 USD/h** for minutes only, then delete pool same session |
+| Steady state (this plan: 2×0.277) | **0.554 USD/h** ≈ 13.3 USD/day if left running (−34% vs D4as_v5) |
+| Proof window (later, +1×0.211 temporary) | **0.765 USD/h** for minutes only, then delete pool same session |
 | Stopped (`az aks stop`) | compute ≈ 0; disks + public IP + Standard LB remain (small, ongoing) |
 
 ## Guardrails
