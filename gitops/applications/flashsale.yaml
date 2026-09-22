@@ -1,21 +1,22 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: flash-sale-app
+  name: flashsale
   namespace: argocd
-  finalizers:
-    - resources-finalizer.argocd.argoproj.io
+  # Single overlay per app: prod. No dev/staging overlays exist in P01 — the
+  # Application must not invent a path that has no source of truth.
 spec:
-  project: default
+  project: portfolio
   source:
-# Monorepo comment removed: repoURL points to imtarget05/FlashSale-Backend (source of truth).
     repoURL: 'https://github.com/imtarget05/FlashSale-Backend.git'
     path: 'infrastructure/kubernetes/overlays/prod'
     targetRevision: main
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: flash-sale-prod
+    namespace: flashsale
   syncPolicy:
+    # Sync-waves order the rollout INSIDE this Application: schema first, then
+    # workloads. Without the hook, Deployment replicas race the migration.
     automated:
       prune: true
       selfHeal: true
@@ -27,4 +28,3 @@ spec:
         duration: 10s
         factor: 2
         maxDuration: 3m
-

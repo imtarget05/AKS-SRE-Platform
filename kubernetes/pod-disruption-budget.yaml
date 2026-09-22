@@ -3,7 +3,7 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: order-api-pdb
-  namespace: flash-sale-prod
+  namespace: flashsale
 spec:
   minAvailable: 1
   selector:

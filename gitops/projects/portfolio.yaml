@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portfolio
+  namespace: argocd
+  # Single portfolio project for BOTH apps. Namespaces are whitelisted per
+  # cluster role — nothing outside them can be synced, so a bad manifest path
+  # cannot touch kube-system or argocd itself.
+spec:
+  description: Portfolio GitOps (P01 FlashSale + P02 LegacyApp, prod only)
+  sourceRepos:
+    - 'https://github.com/imtarget05/FlashSale-Backend.git'
+    - 'https://github.com/imtarget05/Productionized-LegacyApp.git'
+  destinations:
+    - namespace: flashsale
+      server: 'https://kubernetes.default.svc'
+    - namespace: legacyapp
+      server: 'https://kubernetes.default.svc'
+  # DESIGN NOTES (offline artifact — no live Argo CD yet):
+  # - clusterResourceWhitelist deliberately ABSENT: these apps deploy no
+  #   cluster-scoped resources, so nothing to allow. Namespaces themselves are
+  #   created via syncOptions CreateNamespace; NetworkPolicy/GatewayClasses
+  #   are platform concerns owned by P03 manifests, not the apps.
+  # - namespaceResourceBlacklist intentionally NOT used: the DENY list is the
+  #   safer shape here only if future apps need cluster scope; revisit when
+  #   Envoy Gateway (GatewayClass, shared) lands.
+  # - roles[] intentionally ABSENT: single-operator portfolio, no team RBAC to
+  #   model yet. Add per-team roles only when a second operator exists.

@@ -1,0 +1,32 @@
+# ARCHIVED / DISABLED: This legacy manifest is superseded by gitops/applications/flashsale.yaml.
+# Retained for historical reference only. Do not apply.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: flash-sale-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+# Monorepo comment removed: repoURL points to imtarget05/FlashSale-Backend (source of truth).
+    repoURL: 'https://github.com/imtarget05/FlashSale-Backend.git'
+    path: 'infrastructure/kubernetes/overlays/prod'
+    targetRevision: main
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: flash-sale-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+
