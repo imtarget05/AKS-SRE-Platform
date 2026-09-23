@@ -1,0 +1,37 @@
+# L9 — Productionized-LegacyApp (P02) under GitOps.
+#
+# Same contract as the flashsale Application: the repository's local overlay is
+# the desired state, Argo reconciles it, and no credential is stored for the
+# public repository.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: legacyapp
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: portfolio
+
+  source:
+    repoURL: https://github.com/imtarget05/Productionized-LegacyApp.git
+    targetRevision: main
+    path: infrastructure/kubernetes/overlays/local
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: legacyapp
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true

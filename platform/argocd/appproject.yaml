@@ -1,0 +1,53 @@
+# L9 — the ONE AppProject both portfolio applications live in.
+#
+# Least privilege on purpose: no `*` sourceRepos, no `*` destinations. An
+# Application in this project can only deploy the two portfolio repositories
+# into their own namespaces on the in-cluster API server. Anything else is
+# rejected by the Application controller, not by convention.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portfolio
+  namespace: argocd
+  annotations:
+    # Keep the project itself out of the "orphan" cleanup window during
+    # bootstrap ordering (project must exist before its Applications).
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Local-platform portfolio (FlashSale-Backend + Productionized-LegacyApp) on kind.
+
+  # P01 owns the flashsale namespace, P02 owns legacyapp. P03 (this repo)
+  # owns the cluster-scoped platform (Envoy Gateway, AppProject, Applications).
+  sourceRepos:
+    - https://github.com/imtarget05/FlashSale-Backend.git
+    - https://github.com/imtarget05/Productionized-LegacyApp.git
+
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: flashsale
+    - server: https://kubernetes.default.svc
+      namespace: legacyapp
+
+  # Namespaced resources only: the two repos carry Deployments, StatefulSets,
+  # Jobs, Services, ConfigMaps, Secrets and HTTPRoutes — no cluster-scoped
+  # objects, so no clusterResourceWhitelist entry is needed.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: batch
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: networking.k8s.io
+      kind: "*"
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+
+  # A local kind cluster has no LoadBalancer/Ingress controller to hand out
+  # cluster-scoped objects from these repos; deny them explicitly rather than
+  # leaving the door open.
+  clusterResourceBlacklist:
+    - group: "*"
+      kind: "*"

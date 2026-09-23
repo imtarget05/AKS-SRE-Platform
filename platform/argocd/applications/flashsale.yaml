@@ -1,0 +1,52 @@
+# L9 — FlashSale-Backend (P01) under GitOps.
+#
+# Source of truth is the repository, not this laptop: Argo builds
+# infrastructure/kubernetes/overlays/local with Kustomize and reconciles the
+# flashsale namespace. The repository is public, so no repository credential
+# is stored anywhere in the cluster.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: flashsale
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: portfolio
+
+  source:
+    repoURL: https://github.com/imtarget05/FlashSale-Backend.git
+    targetRevision: main
+    path: infrastructure/kubernetes/overlays/local
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: flashsale
+
+  syncPolicy:
+    # Real reconciliation: a commit on main is the only thing that changes the
+    # running state, and a manual kubectl edit is reverted by selfHeal.
+    # prune is OFF deliberately — this is a laptop cluster and a mis-typed
+    # prune would delete the PostgreSQL PVC evidence.
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    # The migration Job is a PreSync hook with a fixed name; a completed Job
+    # must not be recreated on every sync just because its generated
+    # pod-template-hash label differs.
+    - group: batch
+      kind: Job
+      jsonPointers:
+        - /spec/selector
+        - /spec/template/metadata/labels/controller-uid
+        - /spec/template/metadata/labels/batch.kubernetes.io~1controller-uid
