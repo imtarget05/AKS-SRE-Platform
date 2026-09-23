@@ -34,6 +34,8 @@ phase checklist. The single source of truth for execution state is:
 → [`plans/`](plans/) — dated planning/decision documents (historical)
 → [`docs/evidence/`](docs/evidence/) — sanitized per-phase evidence (plans, cost, apply reports)
 → [`docs/adr/`](docs/adr/) — architecture decision records (e.g. ADR-012, AKS foundation cost-safe design)
+→ [`local/kind/`](local/kind/) — **local** portfolio platform cluster (kind), so work
+   continues without Azure runtime spend
 
 As of the last update this repo is in **Phase 7A (AKS foundation, quota
 recovery)** under Cost Safety Mode: no cluster has been successfully applied

@@ -1,0 +1,57 @@
+# L2 — LOCAL portfolio platform cluster (kind). NO Azure dependency.
+#
+# Why kind: the Azure portfolio runtime is being torn down (see
+# docs/evidence/azure-teardown/), so the interview/portfolio platform must run
+# on the workstation. This cluster is the LOCAL equivalent of the AKS
+# foundation: same Gateway API + Argo CD + workload model, no cloud cost.
+#
+# Sizing rationale (measured 2026-09-23 on the Apple Silicon host):
+#   host RAM = 16 GiB, Docker Desktop VM = 7.75 GiB -> 1 control-plane + 2
+#   workers is the largest topology that fits the L3-L10 stack (Envoy Gateway +
+#   Argo CD + Order API/Worker + PostgreSQL + Redis + RabbitMQ + Prometheus +
+#   Grafana) without swap. Scaling this to 4+ nodes needs the Docker Desktop
+#   memory slider raised FIRST (see README).
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: local-platform
+
+nodes:
+  - role: control-plane
+    # Pinned, not "latest": the tag was verified available in the registry
+    # before this file was written (`docker manifest inspect`), and it matches
+    # the kubectl client (v1.36.1) plus the AKS 1.36 line the manifests target.
+    image: kindest/node:v1.36.1
+    # Inert until L3: the shared Gateway will be exposed as a NodePort service
+    # (30080/30443) instead of a pending LoadBalancer, so the host ports below
+    # are ready WITHOUT recreating the cluster. Bound to 127.0.0.1 on purpose —
+    # this is a workstation, not a public endpoint.
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 8080
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+      - containerPort: 30443
+        hostPort: 8443
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+    # NOTE: no `ingress-ready=true` label. That label existed for the
+    # ingress-nginx kind deployment, and ingress-nginx was retired in favour of
+    # Gateway API + Envoy Gateway (AKS-SRE-Platform tasks/current.md, Phase 7B.0).
+  - role: worker
+    image: kindest/node:v1.36.1
+  - role: worker
+    image: kindest/node:v1.36.1
+
+networking:
+  ipFamily: ipv4
+  # Pinned so the kubeconfig context is reproducible across machines; the port
+  # was verified free on the host before writing this file.
+  apiServerAddress: "127.0.0.1"
+  apiServerPort: 6443
+  podSubnet: "10.244.0.0/16"
+  serviceSubnet: "10.96.0.0/12"
+  # Default kindnet CNI is kept ON purpose: it is enough for Envoy Gateway +
+  # Argo CD + observability, and it removes one moving part. NetworkPolicy
+  # enforcement is therefore NOT claimed locally (documented limitation).
+  disableDefaultCNI: false
+  kubeProxyMode: "iptables"
