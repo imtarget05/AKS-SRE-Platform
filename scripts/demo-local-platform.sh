@@ -7,6 +7,7 @@ BASE_URL="http://127.0.0.1:8088"
 PASS="Password123!@#"
 EMAIL="interview_$(date +%s)@example.com"
 IDEM="demo_$(date +%s)"
+CTX="--context kind-local-platform"
 
 PIDS=()
 cleanup() {
@@ -21,7 +22,7 @@ echo "      LOCAL PLATFORM v1.1 — INTERVIEW DEMO RUNNER"
 echo "=========================================================="
 
 echo "==> Step 1: Checking Kubernetes Nodes & Pods..."
-kubectl get nodes -o wide
+kubectl $CTX get nodes -o wide
 echo ""
 echo "Pod counts by namespace:"
 kubectl get pods -A --no-headers | awk '{print $1}' | sort | uniq -c
