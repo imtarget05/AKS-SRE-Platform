@@ -25,16 +25,16 @@ echo "==> Step 1: Checking Kubernetes Nodes & Pods..."
 kubectl $CTX get nodes -o wide
 echo ""
 echo "Pod counts by namespace:"
-kubectl get pods -A --no-headers | awk '{print $1}' | sort | uniq -c
+kubectl $CTX get pods -A --no-headers | awk '{print $1}' | sort | uniq -c
 
 echo ""
 echo "==> Step 2: Ensuring port-forward for Envoy Gateway, Prometheus, and Grafana..."
 # Start port-forwards
-kubectl -n envoy-gateway-system port-forward svc/envoy-platform-gateway-portfolio-gateway-d6017b10 8088:80 >/dev/null 2>&1 &
+kubectl $CTX -n envoy-gateway-system port-forward svc/envoy-platform-gateway-portfolio-gateway-d6017b10 8088:80 >/dev/null 2>&1 &
 PIDS+=($!)
-kubectl -n monitoring port-forward svc/kps-kube-prometheus-stack-prometheus 9090:9090 >/dev/null 2>&1 &
+kubectl $CTX -n monitoring port-forward svc/kps-kube-prometheus-stack-prometheus 9090:9090 >/dev/null 2>&1 &
 PIDS+=($!)
-kubectl -n monitoring port-forward svc/kps-grafana 3000:80 >/dev/null 2>&1 &
+kubectl $CTX -n monitoring port-forward svc/kps-grafana 3000:80 >/dev/null 2>&1 &
 PIDS+=($!)
 
 sleep 2
@@ -88,7 +88,7 @@ echo "   Payment Response: $PAY_OUT"
 
 echo ""
 echo "==> Step 5: Verifying Argo CD GitOps Applications..."
-kubectl -n argocd get applications
+kubectl $CTX -n argocd get applications
 
 echo ""
 echo "==> Step 6: Verifying Observability Stack..."
@@ -96,7 +96,7 @@ echo "Prometheus Active Targets Count:"
 curl -s http://127.0.0.1:9090/api/v1/targets | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log('Total active targets:', JSON.parse(d).data.activeTargets.length))"
 
 echo "Grafana Dashboard List:"
-GF_PASS=$(kubectl -n monitoring get secret grafana-admin -o jsonpath="{.data.admin-password}" | base64 -d)
+GF_PASS=$(kubectl $CTX -n monitoring get secret grafana-admin -o jsonpath="{.data.admin-password}" | base64 -d)
 curl -s http://admin:"$GF_PASS"@127.0.0.1:3000/api/search | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>JSON.parse(d).filter(x=>x.type==='dash-db').forEach(x=>console.log(' - ' + x.title)))"
 
 echo ""

@@ -38,7 +38,7 @@ Repository: `Productionized-LegacyApp` @ `41ecc9a` (`main`). Namespace: `legacya
 | Requests/limits | present in base manifest (unchanged) |
 | Liveness / readiness | both defined and passing (pod is Ready) |
 | Health endpoint | `GET /health` → `{"status":"healthy"}` (verified in-cluster and through the Gateway) |
-| Business endpoint | served on `/` (verified through the shared Gateway, HTTP 200) |
+| Business endpoint | `POST /sync` → 200 `{"message":"Inventory synced successfully"}`; bare `/` is a deliberate 404 (`{"error":"not found"}`) from the `notFound` middleware |
 
 No secret values are committed: the repo's manifests reference no literal credentials, and no Secret
 was needed for this service.
