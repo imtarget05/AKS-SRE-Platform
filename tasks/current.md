@@ -1,33 +1,41 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-23 | Active Goal: **LOCAL PLATFORM L0–L2 DONE (kind `local-platform` live) — Azure Phase 7B.0 still BLOCKED on manual quota approval; Azure teardown decision recorded in `docs/evidence/azure-teardown/`**
+> Updated: 2026-09-23 | Active Goal: **LOCAL PLATFORM L0–L3 + L1 PASS (Envoy Gateway v1.9.1 traffic-proven, arm64 app images loaded) — next gate is L4 (Argo CD), NOT started. Azure: Phase 7B.0 still BLOCKED on manual quota approval; teardown not executed (`docs/evidence/azure-teardown/`)**
 
-## ACTIVE GOAL 2026-09-23 — LOCAL PLATFORM L0–L2 (DONE, local only)
+## ACTIVE GOAL 2026-09-23 — LOCAL PLATFORM (L0–L3 + L1 DONE, local only)
 
-STATUS: ✅ **L0–L2 PASS** — development moved to a **local** Kubernetes runtime; no
-Azure resource created, read, or destroyed by this work.
+STATUS: ✅ **L0–L2 PASS · L3 PASS · L1 PASS** — development runs on a **local**
+Kubernetes runtime; no Azure resource was created, read for mutation, or destroyed.
 
-- Tooling verified/installed: `kind v0.33.0` + `helm v4.3.0` (brew, 2026-09-23);
-  `kubectl v1.36.1`, `docker 29.6.1` (context `desktop-linux`) already present;
-  `argocd` CLI intentionally NOT installed (ClusterIP + `kubectl port-forward`).
-- Host: arm64 (Apple Silicon), 16 GiB RAM, ~314 GiB free. **Docker VM = 7.75 GiB**
-  → the binding capacity constraint; raising it is manual (Docker Desktop >
-  Settings > Resources > Memory) because `settings-store.json` is macOS-protected.
-- Cluster `local-platform`: **1 control-plane + 2 workers**, `kindest/node:v1.36.1`
-  (pin probed, not assumed), kindnet CNI, StorageClass `standard` (local-path).
-  Verified live: 3/3 nodes `Ready` (server v1.36.1, containerd 2.3.1), 13/13
-  system pods Running 0 restarts, idle VM usage ≈ 867 MiB.
-- Code: `local/kind/{cluster.yaml,create.sh,destroy.sh,load-image.sh,README.md}`
-  — idempotent create (verified: re-run reuses, never recreates).
-- Image delivery verified end-to-end: `kind load docker-image` **fails** here
-  (containerd image store + `--all-platforms`, reproduced twice), so
-  `load-image.sh` imports the same tar per node without that flag; proof = a pod
-  with `imagePullPolicy: Never` ran (`LOCAL-IMAGE-DELIVERY-OK`, arm64).
-- Measured L1 constraint: ACR-pinned FlashSale images are **amd64**, host/nodes
-  are **arm64** ⇒ L1 must build from source for arm64 (data-tier images already
-  arm64 locally).
-- HARD STOP for this goal: L3+ (Gateway API/Envoy Gateway, Argo CD apps,
-  `overlays/local`, observability, demo doc) is NOT started yet.
+- Tooling: `kind v0.33.0` + `helm v4.3.0` (brew, 2026-09-23); `kubectl v1.36.1`,
+  `docker 29.6.1` (context `desktop-linux`); `argocd` CLI intentionally NOT installed.
+- Host: arm64 (Apple Silicon), 16 GiB RAM. **Docker VM = 7.75 GiB** → the binding
+  constraint; raising it is manual (macOS protects `settings-store.json`).
+- Cluster `local-platform`: 1 control-plane + 2 workers, `kindest/node:v1.36.1`,
+  kindnet CNI, StorageClass `standard`. Code:
+  `local/kind/{cluster.yaml,create.sh,destroy.sh,load-image.sh,README.md}`.
+- **L3 PASS** — Envoy Gateway **v1.9.1** (chart digest `sha256:91bae9ae…`) in
+  `envoy-gateway-system`, `GatewayClass/portfolio-gatewayclass Accepted=True`,
+  `Gateway/portfolio-gateway Accepted=True + Programmed=True`; `/proof` returned
+  **200** with `LOCAL-ENVOY-GATEWAY-OK` and `/` returned **404** (control), with the
+  Envoy access log + backend log proving the hop. MetalLB deliberately NOT installed
+  (data plane is `ClusterIP` + `kubectl port-forward`). Code:
+  `platform/envoy-gateway/`; evidence:
+  `docs/evidence/local-platform/l3-envoy-gateway-PASS.md`.
+- **L1 PASS** — `flashsale/order-api:local` + `flashsale/order-worker:local` built
+  from source as **arm64** (103 289 453 / 101 153 927 bytes) and loaded to 3/3 nodes;
+  `imagePullPolicy: Never` pods started natively (`RID: linux-arm64`) and failed only
+  with the *expected* fail-closed config errors (`Auth:Jwt:SigningKey` /
+  `MessagingConfigurationException`); **0** `exec format error`. No P01 source change.
+- Image delivery: `kind load docker-image` **fails** here (containerd image store →
+  nested index in the archive). `load-image.sh` now uses kind's documented
+  workaround — single-platform export + `kind load image-archive` — verified on all
+  nodes plus a `Never`-pull pod.
+- Measured footprint after L3: **≈ 2.12 GiB of 7.75 GiB** (control-plane 1.377 GiB,
+  workers 388/355 MiB) → ≈ 5.6 GiB headroom. Docker memory bump to 10 GiB is NOT
+  needed for L4; schedule it **before L5**.
+- HARD STOP: **L4 (Argo CD) is NOT started.** Do not install Argo CD, P01/P02, or
+  observability without the next explicit go-ahead.
 
 
 ## ACTIVE GOAL 2026-09-21 — Phase 7B.0 (EXECUTED, DECISION: BLOCKED)

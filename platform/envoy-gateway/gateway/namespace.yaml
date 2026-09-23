@@ -1,0 +1,9 @@
+# L3 — Gateway-owning namespace. Also the L8 shared-Gateway namespace, so both
+# P01 and P02 HTTPRoutes can attach to the same Gateway without recreating it.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: platform-gateway
+  labels:
+    # Keep this namespace non-privileged by default; app pods never land here.
+    app.kubernetes.io/part-of: local-platform

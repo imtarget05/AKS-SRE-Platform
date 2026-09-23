@@ -1,0 +1,57 @@
+# L3 temporary proof backend (deleted after evidence — see README).
+# The platform-gateway namespace is applied first (../gateway/namespace.yaml).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-proof
+  namespace: platform-gateway
+  labels:
+    app: gateway-proof
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-proof
+  template:
+    metadata:
+      labels:
+        app: gateway-proof
+    spec:
+      containers:
+        - name: gateway-proof
+          image: flashsale/gateway-proof:local
+          # Never: proves the image came from `local/kind/load-image.sh`, not
+          # from any registry. A missing image would surface as
+          # ErrImageNeverPull instead of silently pulling something else.
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-proof
+  namespace: platform-gateway
+  labels:
+    app: gateway-proof
+spec:
+  type: ClusterIP
+  selector:
+    app: gateway-proof
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

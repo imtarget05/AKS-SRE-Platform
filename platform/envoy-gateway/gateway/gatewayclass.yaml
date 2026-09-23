@@ -1,0 +1,16 @@
+# L3 — portfolio-owned GatewayClass, wired to Envoy Gateway's controller.
+#
+# Why not rely on a default class: an explicit class keeps the controller name
+# and the data-plane parametersRef in Git, so the platform's own behaviour is
+# reviewable instead of inherited from an installation default.
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: portfolio-gatewayclass
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: portfolio-proxy-config
+    namespace: platform-gateway

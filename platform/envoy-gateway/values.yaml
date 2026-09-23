@@ -1,0 +1,23 @@
+# L3 — Envoy Gateway values for the LOCAL kind cluster.
+# Chart: oci://docker.io/envoyproxy/gateway-helm  (pinned version v1.9.1)
+# Every key below was confirmed with
+#   helm show values oci://docker.io/envoyproxy/gateway-helm --version v1.9.1
+# before use — no keys are invented.
+#
+# Why override anything at all: the Docker Desktop VM has 7.75 GiB and the
+# chart's default control-plane memory limit is 1024Mi. Capping it keeps the
+# local footprint honest while the data-plane budget is set separately through
+# the EnvoyProxy CRD (see gateway/envoyproxy.yaml).
+crds:
+  # Installs Envoy Gateway CRDs + Gateway API CRDs (incl. safe-upgrade policy).
+  # Kept true: the point of L3 is a real Gateway API north-south path.
+  enabled: true
+
+deployment:
+  envoyGateway:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 512Mi

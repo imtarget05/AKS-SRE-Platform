@@ -105,16 +105,23 @@ ERROR: failed to load image: command "docker exec --privileged -i
 Command Output: ctr: content digest sha256:d56c3…395: not found
 ```
 
-- `kind load image-archive` (after `docker save -o`) fails with the **same**
-  error, so the archive is not the problem — the **`--all-platforms` flag** is.
-- Cause: this Docker daemon uses the **containerd image store**, so `docker save`
-  emits an OCI *index*; with `--all-platforms` ctr looks for per-platform
-  manifests that are not present in the archive. Importing the identical tar
-  **without** that flag succeeds (exit 0 on every node) and a pod with
-  `imagePullPolicy: Never` then starts — i.e. the image really came from the
-  local build, not from a registry cache.
-- `load-image.sh` therefore mirrors kind's own import args minus
-  `--all-platforms`, and prints the per-node `crictl images` inventory as proof.
+- `kind load image-archive` with a **plain** `docker save` archive fails the same
+  way, so the archive's *shape* is the problem, not the load path.
+- Measured root cause — `index.json` parsed inside both archives:
+  - plain `docker save` → the index references a nested OCI **index**
+    (`mediaType: …image.index.v1+json`, no platform), so ctr's `--all-platforms`
+    resolution never finds a concrete platform manifest → `content digest …: not
+    found`;
+  - `docker image save --platform linux/arm64` → the index carries concrete
+    `…image.manifest.v1+json` entries → `kind load image-archive` succeeds.
+- `load-image.sh` therefore exports **one platform** and imports the archive
+  (kind's documented workaround). It does **not** disable the containerd image
+  store and does **not** call kind internals (`docker exec … ctr`), and it verifies
+  presence on every node with an exact ref match (`grep -Fx`), because BSD
+  sed/grep do not handle the regex escaping the first version relied on.
+- Verified both ways: image present on all 3 nodes
+  (`ctr -n k8s.io images ls -q`) **and** a pod with `imagePullPolicy: Never` ran
+  from the loaded image.
 - Alternative fixes, if the script is ever replaced: turn off the containerd
   image store in Docker Desktop, or run a local `registry:2` and push/pull.
 

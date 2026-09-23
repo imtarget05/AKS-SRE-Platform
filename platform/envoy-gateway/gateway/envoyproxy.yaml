@@ -1,0 +1,32 @@
+# L3 — data-plane shape for the LOCAL kind cluster.
+#
+# Two deliberate choices, both driven by "no MetalLB, no cloud":
+#   1. envoyService.type = ClusterIP. A LoadBalancer Service on kind has no
+#      implementation, so it would sit pending and give a misleading EXTERNAL-IP.
+#      ClusterIP + `kubectl port-forward` is deterministic and is the documented
+#      L3 proof path.
+#   2. explicit data-plane resources, so the Envoy proxy cannot eat the 7.75 GiB
+#      Docker VM while later phases (Argo CD, Prometheus) are added.
+#
+# Field paths verified with `kubectl explain envoyproxy.spec.provider.kubernetes`
+# on the live cluster (EG v1.9.1) before writing this file.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: portfolio-proxy-config
+  namespace: platform-gateway
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: ClusterIP
+      envoyDeployment:
+        replicas: 1
+        container:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              memory: 256Mi
