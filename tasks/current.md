@@ -1,10 +1,11 @@
 # AKS-SRE-Platform — Current Tasks
 
-> Updated: 2026-09-23 | Active Goal: **LOCAL PLATFORM L0–L3 + L1 PASS (Envoy Gateway v1.9.1 traffic-proven, arm64 app images loaded) — next gate is L4 (Argo CD), NOT started. Azure: Phase 7B.0 still BLOCKED on manual quota approval; teardown not executed (`docs/evidence/azure-teardown/`)**
+> Updated: 2026-09-23 | Active Goal: **LOCAL PLATFORM v1.1 = PASS (L0–L11, execution marathon complete). Azure untouched throughout. Next: LOCAL v2 (NOT started, NOT committed to).**
 
-## ACTIVE GOAL 2026-09-23 — LOCAL PLATFORM (L0–L3 + L1 DONE, local only)
+## ACTIVE GOAL 2026-09-23 — LOCAL PLATFORM v1.1 = PASS (L0–L11 marathon complete)
 
-STATUS: ✅ **L0–L2 PASS · L3 PASS · L1 PASS** — development runs on a **local**
+STATUS: ✅ **L0 PASS · L1 PASS · L2 PASS · L3 PASS · L4 PASS · L5 PASS · L6 PASS ·
+L7 PASS · L8 PASS · L9 PASS · L10 PASS · L11 PASS** — development runs on a **local**
 Kubernetes runtime; no Azure resource was created, read for mutation, or destroyed.
 
 - Tooling: `kind v0.33.0` + `helm v4.3.0` (brew, 2026-09-23); `kubectl v1.36.1`,
@@ -14,14 +15,48 @@ Kubernetes runtime; no Azure resource was created, read for mutation, or destroy
 - Cluster `local-platform`: 1 control-plane + 2 workers, `kindest/node:v1.36.1`,
   kindnet CNI, StorageClass `standard`. Code:
   `local/kind/{cluster.yaml,create.sh,destroy.sh,load-image.sh,README.md}`.
-- **L3 PASS** — Envoy Gateway **v1.9.1** (chart digest `sha256:91bae9ae…`) in
-  `envoy-gateway-system`, `GatewayClass/portfolio-gatewayclass Accepted=True`,
-  `Gateway/portfolio-gateway Accepted=True + Programmed=True`; `/proof` returned
-  **200** with `LOCAL-ENVOY-GATEWAY-OK` and `/` returned **404** (control), with the
-  Envoy access log + backend log proving the hop. MetalLB deliberately NOT installed
-  (data plane is `ClusterIP` + `kubectl port-forward`). Code:
-  `platform/envoy-gateway/`; evidence:
-  `docs/evidence/local-platform/l3-envoy-gateway-PASS.md`.
+- **L4 PASS** — Argo CD **v3.5.3** non-HA (7/7 components Running), `argocd-server`
+  = `ClusterIP` (port-forward only); `AppProject/portfolio` denies wildcards (no `*`
+  in sourceRepos/destinations, cluster resources blacklisted). Code:
+  `platform/argocd/`; evidence: `docs/evidence/local-platform/l4-argocd-PASS.md`.
+- **L5 PASS** — P01 on kind: Postgres StatefulSet+PVC, Redis, RabbitMQ, migration Job
+  (Completed), order-api ×2, order-worker ×1; security bar intact (non-root, read-only
+  root FS, no privilege escalation, ALL capabilities dropped). Secrets generated outside
+  Git. Evidence: `docs/evidence/local-platform/l5-l6-flashsale-kind-PASS.md` §1.
+- **L6 PASS** — full business E2E (register→login→202→RabbitMQ→worker→Postgres→
+  `completed`→`/pay`→`confirmed`→`/orders/me`; duplicate pay/submit = 409; anonymous 202;
+  openapi 200; swagger 200 after redirect) **and** the oversell proof
+  (`accepted=10, settled=10/10, final_stock=0`). Six inconclusive runs preceded it; the
+  root cause was RabbitMQ.Client 7.2.2 delivery-body memory lifetime, confirmed against
+  the upstream migration guide and fixed by an owned copy inside the handler. Full story:
+  `docs/evidence/local-platform/l5-l6-flashsale-kind-PASS.md` §§2–6.
+- **L7 PASS** — P02 on kind from a new `overlays/local` (image `legacy-app:local` arm64,
+  `pullPolicy: Never`); prod security context untouched; `/health` → `healthy`, business
+  endpoint 200. Evidence: `docs/evidence/local-platform/l7-legacyapp-kind-PASS.md`.
+- **L8 PASS** — one shared Gateway, hostname routes, no base-path rewrite:
+  `flashsale.local` → 200, `legacy.local` → 200, unmatched host → 404. Routes are inside
+  each repo's overlay, so GitOps manages them. Evidence:
+  `docs/evidence/local-platform/l8-shared-gateway-PASS.md`.
+- **L9 PASS** — real GitOps, no kubectl on workloads: forward deploy by commit (P01 `0ccb6f2`,
+  P02 `9461c7a` — new ReplicaSet/pods, Synced/Healthy), rollback by `git revert` (P01 `308e042`,
+  P02 `9c51e4f` — annotation removed, Healthy). Evidence:
+  `docs/evidence/local-platform/l9-gitops-PASS.md`.
+- **L10 PASS** — kube-prometheus-stack **91.5.0** (Prometheus 2/2, Grafana 3/3, operator/ksm 1/1,
+  node-exporter 3/3); 14 scrape jobs including 7 Argo ones (`argocd_app_info` shows both apps
+  Synced/Healthy); 3 dashboards provisioned from Git; `LocalPlatformMetricSourceDown` fired 91s
+  after a safe failure injection and resolved 51s after restore. Honest limits (no Alertmanager,
+  no `/metrics` on the app → 404, emptyDir history) stated in
+  `docs/evidence/local-platform/l10-observability-PASS.md`.
+- **L11 PASS** — `docs/interview-demo/local-platform.md` (setup, bindings, 12-step ≤10-minute run,
+  Mermaid architecture, five talking points) + `docs/EVIDENCE.md` (20 claims, each mapped to
+  file/command/commit) + this tracker entry.
+- Measured footprint at the end: kind = **5.14 GiB of 7.75 GiB** (66%); **0** non-Running pods,
+  **0** restarts >0 across 37 pods / 11 namespaces.
+- HARD STOP: **LOCAL v2 is NOT started** (no GraphQL, Kafka/Saga, Loki/Tempo, Istio, Ollama/Qwen,
+  TTS). Nothing v2 was designed, installed, or committed.
+
+> The three L0–L3/L1 bullets below are the original foundation notes, kept for history; the PASS
+> lines above describe the final state.
 - **L1 PASS** — `flashsale/order-api:local` + `flashsale/order-worker:local` built
   from source as **arm64** (103 289 453 / 101 153 927 bytes) and loaded to 3/3 nodes;
   `imagePullPolicy: Never` pods started natively (`RID: linux-arm64`) and failed only

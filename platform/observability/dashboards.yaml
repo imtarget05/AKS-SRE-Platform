@@ -1,0 +1,273 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-local-platform
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  local-platform.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Cluster Nodes Ready",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
+              "legendFormat": "Ready Nodes",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Total Running Pods",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_phase{phase=\"Running\"} == 1)",
+              "legendFormat": "Running Pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Cluster CPU Usage (Cores)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[1m]))",
+              "legendFormat": "CPU Cores",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Cluster Memory Usage (GiB)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1073741824",
+              "legendFormat": "Used RAM (GiB)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Node CPU Usage Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Node Memory Usage (%)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            {
+              "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["platform", "local"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Local Platform Overview",
+      "uid": "local-platform-overview",
+      "version": 1
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-argocd
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  argocd-gitops.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Argo CD Applications",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(argocd_app_info)",
+              "legendFormat": "Total Managed Apps",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Synced Applications",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(argocd_app_info{sync_status=\"Synced\"})",
+              "legendFormat": "Synced Apps",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Healthy Applications",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(argocd_app_info{health_status=\"Healthy\"})",
+              "legendFormat": "Healthy Apps",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Application Sync Status Table",
+          "type": "table",
+          "gridPos": { "h": 8, "w": 24, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "argocd_app_info",
+              "format": "table",
+              "instant": true,
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["argocd", "gitops"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Argo CD GitOps Overview",
+      "uid": "argocd-gitops-overview",
+      "version": 1
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-workloads
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  workloads.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Workload Pods Running",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_phase{namespace=~\"flashsale|legacyapp\",phase=\"Running\"} == 1)",
+              "legendFormat": "Workload Pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Total Pod Restarts (Workloads)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 8, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_container_status_restarts_total{namespace=~\"flashsale|legacyapp\"})",
+              "legendFormat": "Restarts",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Envoy Gateway Upstream Requests",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 8, "x": 16, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(kube_pod_status_phase{namespace=\"envoy-gateway-system\",phase=\"Running\"})",
+              "legendFormat": "Gateway System Pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "FlashSale & LegacyApp Pod CPU Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum by (pod, namespace) (rate(container_cpu_usage_seconds_total{namespace=~\"flashsale|legacyapp\",container!=\"\"}[1m]))",
+              "legendFormat": "{{namespace}}/{{pod}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "FlashSale & LegacyApp Pod Memory Usage",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            {
+              "expr": "sum by (pod, namespace) (container_memory_working_set_bytes{namespace=~\"flashsale|legacyapp\",container!=\"\"}) / 1048576",
+              "legendFormat": "{{namespace}}/{{pod}} (MiB)",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["workloads", "flashsale", "legacyapp"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Portfolio Workloads (P01 & P02)",
+      "uid": "portfolio-workloads-overview",
+      "version": 1
+    }

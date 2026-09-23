@@ -1,0 +1,88 @@
+# L10.2 — dashboard 3/3: the FlashSale workload (P01) as Kubernetes sees it.
+#
+# Honest scope note: these panels come from kube-state-metrics / cAdvisor, not
+# from the application itself. FlashSale does not expose Prometheus-format
+# metrics yet (its observability endpoint is diagnostic), so an
+# application-level dashboard is listed as pending work in the L10 evidence
+# instead of being faked here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-flashsale
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    platform.local/component: observability
+data:
+  flashsale.json: |
+    {
+      "uid": "flashsale",
+      "title": "FlashSale (P01)",
+      "tags": ["local-platform", "flashsale"],
+      "schemaVersion": 39,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "panels": [
+        {
+          "id": 1,
+          "type": "timeseries",
+          "title": "Ready pods in namespace flashsale",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "count by (pod) (kube_pod_status_ready{namespace=\"flashsale\", condition=\"true\"} == 1)",
+              "legendFormat": "{{pod}}"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "type": "stat",
+          "title": "Container restarts (30m)",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "orange", "value": 1 } ] } }, "overrides": [] },
+          "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum(increase(kube_pod_container_status_restarts_total{namespace=\"flashsale\"}[30m]))",
+              "legendFormat": "restarts"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "type": "timeseries",
+          "title": "CPU usage by pod (cores)",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"flashsale\", container!=\"\"}[5m]))",
+              "legendFormat": "{{pod}}"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "type": "timeseries",
+          "title": "Working set memory by pod",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"flashsale\", container!=\"\"})",
+              "legendFormat": "{{pod}}"
+            }
+          ]
+        }
+      ]
+    }

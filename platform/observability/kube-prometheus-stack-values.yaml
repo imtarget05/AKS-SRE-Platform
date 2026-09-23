@@ -1,0 +1,111 @@
+# L10 — LOCAL observability (kube-prometheus-stack, pinned chart version).
+#
+# Sizing is laptop-sized, not "production weakened": there is no production
+# deployment in scope for the local platform, and the measured footprint of
+# this file is recorded in the L10 evidence. Everything here is a deliberate
+# local decision:
+#
+#   * alertmanager disabled — no receiver is configured on a laptop, and the
+#     alert proof is read from the Prometheus rule state (ALERTS), which is
+#     the source of truth. Documented, not pretended.
+#   * control-plane component scrapes disabled — kind binds
+#     kube-controller-manager / kube-scheduler / etcd to 127.0.0.1, so those
+#     jobs can never be up. Leaving them enabled would make the
+#     `absent(up{job=...})` default alerts fire permanently and drown the
+#     one real alert this phase proves.
+#   * admission webhooks disabled — the operator works without them and the
+#     kind API server does not need the extra patch job.
+#
+# Grafana's admin password is NOT in this file: it comes from the
+# `grafana-admin` Secret, created by the local bootstrap script and never
+# committed.
+
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeScheduler: false
+    kubeProxy: false
+
+alertmanager:
+  enabled: false
+
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeApiServer:
+  enabled: true
+kubelet:
+  enabled: true
+
+prometheus:
+  prometheusSpec:
+    retention: 6h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 400Mi
+      limits:
+        memory: 1200Mi
+    # Select every ServiceMonitor / PodMonitor / PrometheusRule in the
+    # cluster, not only the ones carrying this chart's release label — the
+    # Argo CD and Envoy Gateway monitors live in other namespaces and are
+    # owned by this project, not by the chart.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+
+grafana:
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  service:
+    type: ClusterIP
+  resources:
+    requests:
+      cpu: 100m
+      memory: 200Mi
+    limits:
+      memory: 400Mi
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: monitoring
+  defaultDashboardsEnabled: true
+
+kubeStateMetrics:
+  enabled: true
+  # Pre-pulled on the host and loaded into every kind node with
+  # local/kind/load-image.sh: registry.k8s.io answered with EOF on this
+  # network (twice), so the pull is done once, deliberately, and the node
+  # uses the local copy instead of retrying forever inside containerd.
+  image:
+    repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+    tag: v2.20.0
+    pullPolicy: IfNotPresent
+nodeExporter:
+  enabled: true
+
+prometheusOperator:
+  admissionWebhooks:
+    enabled: false
+  # The operator mounts its webhook TLS secret only when TLS is enabled. With
+  # admission webhooks off, the cert job never runs, so the volume would wait
+  # forever on a Secret that does not exist (observed: FailedMount x10 on
+  # "kps-kube-prometheus-stack-admission").
+  tls:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 300Mi
