@@ -16,13 +16,23 @@ spec:
       server: 'https://kubernetes.default.svc'
     - namespace: legacyapp
       server: 'https://kubernetes.default.svc'
-  # DESIGN NOTES (offline artifact — no live Argo CD yet):
-  # - clusterResourceWhitelist deliberately ABSENT: these apps deploy no
-  #   cluster-scoped resources, so nothing to allow. Namespaces themselves are
-  #   created via syncOptions CreateNamespace; NetworkPolicy/GatewayClasses
-  #   are platform concerns owned by P03 manifests, not the apps.
-  # - namespaceResourceBlacklist intentionally NOT used: the DENY list is the
-  #   safer shape here only if future apps need cluster scope; revisit when
-  #   Envoy Gateway (GatewayClass, shared) lands.
+  # Explicit namespaced allowlist. KEDA's ScaledObject is local-only but remains
+  # constrained to the two destination namespaces above. No cluster-scoped app
+  # resources are permitted.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: "*"
+    - group: apps
+      kind: "*"
+    - group: batch
+      kind: "*"
+    - group: autoscaling
+      kind: "*"
+    - group: networking.k8s.io
+      kind: HTTPRoute
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: keda.sh
+      kind: ScaledObject
   # - roles[] intentionally ABSENT: single-operator portfolio, no team RBAC to
   #   model yet. Add per-team roles only when a second operator exists.

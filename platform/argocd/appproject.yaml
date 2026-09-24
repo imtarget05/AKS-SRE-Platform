@@ -44,6 +44,8 @@ spec:
       kind: "*"
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
+    - group: keda.sh
+      kind: ScaledObject
 
   # A local kind cluster has no LoadBalancer/Ingress controller to hand out
   # cluster-scoped objects from these repos; deny them explicitly rather than
