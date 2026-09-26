@@ -8,7 +8,7 @@ metadata:
     app: order-worker
     project: flash-sale
 spec:
-  replicas: 1   # KEDA điều khiển (min 0, max 50 — xem keda-autoscaler.yaml)
+  replicas: 1   # KEDA controls this (min 0, max 10 - see keda-autoscaler.yaml:9-10)
   selector:
     matchLabels:
       app: order-worker
