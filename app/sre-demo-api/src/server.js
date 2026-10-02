@@ -31,7 +31,13 @@ export function createServer({ metrics, state, logger }) {
 
   const server = http.createServer(async (req, res) => {
     const started = process.hrtime.bigint();
-    const url = new URL(req.url, `http://${req.headers.host ?? 'localhost'}`);
+    // The base URL is parsed for its PATH component only, so the Host header
+    // cannot influence routing. Using `req.headers.host` as the base (the
+    // obvious one-liner) lets a client supply the authority the URL is parsed
+    // against, which is a Host-header injection surface even when the base is
+    // discarded — and it makes behaviour depend on a client-controlled value
+    // for no benefit, since only the path is read below.
+    const url = new URL(req.url ?? '/', 'http://workload.invalid');
     const route = url.pathname;
     const method = req.method ?? 'GET';
     metrics.inFlight.inc();
