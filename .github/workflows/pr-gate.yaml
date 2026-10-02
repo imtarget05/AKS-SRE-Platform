@@ -33,9 +33,9 @@ jobs:
       run:
         working-directory: terraform/aks-foundation
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
@@ -58,7 +58,7 @@ jobs:
       # controls after it: with the original order the tflint steps were reported
       # as "skipped" on every run, so a lint regression would have been invisible
       # for as long as the test step stayed red.
-      - uses: terraform-linters/setup-tflint@v5
+      - uses: terraform-linters/setup-tflint@6770de8d186019a148cc2b144e8bfa627f7d4aa8 # v5
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
@@ -105,7 +105,7 @@ jobs:
     name: kubernetes (render, schema, inventory, policy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       # -f so a 404 or an HTML error page is a hard failure instead of a
       # tarball-shaped file that fails two lines later with a confusing message.
@@ -167,7 +167,7 @@ jobs:
     name: security (trivy config + filesystem)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       # The action bundled an install script that fetched trivy v0.65.0 from its
       # own source and failed on the runner three runs in a row before any scan
@@ -226,12 +226,12 @@ jobs:
     name: python gates (validator test matrix)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       # Explicit interpreter and explicit dependency install. The workflow never
       # inherits a developer's virtualenv: on the authoring machine `python3`
       # resolves into a sibling project's .venv.
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -242,7 +242,7 @@ jobs:
 
       - name: upload terraform test log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: terraform-test-log
           path: terraform/aks-foundation/terraform-test.log

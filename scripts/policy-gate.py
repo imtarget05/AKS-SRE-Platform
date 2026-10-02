@@ -62,8 +62,18 @@ def kustomize_dirs(scope):
 
 
 def render(directory):
+    # shell=False is explicit rather than implicit: these are hot-spots, not
+    # findings, but a future refactor that reaches for shell=True should have to
+    # delete this argument to do it — which is a reviewable diff instead of a
+    # silent injection surface. The argument list is fixed and contains no
+    # caller-supplied shell string.
     r = subprocess.run(
-        ["kubectl", "kustomize", directory], capture_output=True, text=True, timeout=120
+        ["kubectl", "kustomize", directory],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        shell=False,
+        check=False,
     )
     if r.returncode != 0:
         fail(rel(directory), "render", f"kubectl kustomize failed: {r.stderr.strip()[:200]}")

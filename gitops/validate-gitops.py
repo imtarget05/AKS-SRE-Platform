@@ -283,8 +283,17 @@ def check_applications(rep, projects, repo_map):
                 "external-render", target, FAIL, f"overlay path {subpath!r} missing in {tail}"
             )
             continue
+        # Explicit shell=False / check=False: the argument list is fixed and holds
+        # no caller-supplied shell string, so this is a documented hot-spot
+        # rather than a finding — but making it explicit means switching it on is
+        # a reviewable diff instead of a silent injection surface.
         r = subprocess.run(
-            ["kubectl", "kustomize", overlay], capture_output=True, text=True, timeout=120
+            ["kubectl", "kustomize", overlay],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            shell=False,
+            check=False,
         )
         if r.returncode != 0:
             rep.add(
