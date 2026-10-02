@@ -1,0 +1,190 @@
+name: pr-gate
+
+# Pull requests and pushes to main run the same gates: a control that only runs
+# on PR can be bypassed by pushing directly to main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-gate-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TERRAFORM_VERSION: "1.13.5"
+  TFLINT_VERSION: "v0.59.1"
+  KUBECONFORM_VERSION: "v0.7.0"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  terraform:
+    name: terraform (fmt, init, validate, test, tflint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/aks-foundation
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      # fmt runs across the WHOLE repository, so a new root outside
+      # terraform/aks-foundation cannot dodge formatting.
+      - name: fmt (whole repo, recursive)
+        working-directory: .
+        run: terraform fmt -check -recursive
+
+      # -backend=false keeps PR validation offline: no remote state, no Azure
+      # credentials, no dependency on a storage account being reachable.
+      - name: init (backend disabled, offline-safe)
+        run: terraform init -backend=false -input=false
+
+      - name: validate
+        run: terraform validate
+
+      # Truthful native-test accounting. Zero tests is reported as
+      # NOT_IMPLEMENTED and fails this step on purpose: `terraform test` exiting 0
+      # with "0 passed, 0 failed" is not verification, and letting it through is
+      # how an empty suite gets mistaken for a green one.
+      #
+      # KNOWN BLOCKER as of 2026-10-02: this step fails until Phase D lands.
+      # `terraform test` cannot evaluate `terraform/aks-foundation` offline:
+      # `main.tf:112` and `outputs.tf:22` index
+      # `azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested
+      # block that `mock_provider` returns empty, and `override_resource` cannot
+      # populate a computed block. The root therefore cannot be planned without
+      # real Azure credentials. Resolution belongs in Phase D (module split, or
+      # a `try()`-guarded reference), not in weakening this check.
+      - name: terraform test
+        run: |
+          set -o pipefail
+          terraform test 2>&1 | tee terraform-test.log
+          echo "::group::test output"
+          cat terraform-test.log
+          echo "::endgroup::"
+          TOTAL=$(grep -oE '[0-9]+ passed' terraform-test.log | head -1 | grep -oE '[0-9]+' || echo 0)
+          echo "TERRAFORM_TEST_PASSED=$TOTAL" >> "$GITHUB_ENV"
+          if [ "${TOTAL:-0}" -eq 0 ]; then
+            echo "::error title=TERRAFORM_NATIVE_TESTS=NOT_IMPLEMENTED::"
+            echo "terraform test collected 0 passing assertions. Terraform behaviour is"
+            echo "NOT VERIFIED and must not be claimed. Phase D adds the suite."
+            exit 1
+          fi
+
+      - uses: terraform-linters/setup-tflint@v5
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint (recursive)
+        run: tflint --recursive --format=compact
+
+
+  kubernetes:
+    name: kubernetes (render, schema, inventory, policy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: install kubeconform (pinned)
+        run: |
+          set -euo pipefail
+          curl -sSL -o kubeconform.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          tar xzf kubeconform.tar.gz kubeconform
+          sudo mv kubeconform /usr/local/bin/kubeconform
+          kubeconform -v
+
+      - name: render every maintained kustomize root
+        run: |
+          set -euo pipefail
+          found=0
+          while read -r f; do
+            found=1
+            d="$(dirname "$f")"
+            echo "::group::kustomize build $d"
+            kubectl kustomize "$d"
+            echo "::endgroup::"
+          done < <(find . -name kustomization.yaml -not -path './.git/*' | sort)
+          if [ "$found" -eq 0 ]; then
+            echo "::error::no kustomization.yaml found anywhere in the repository"
+            exit 1
+          fi
+
+      # Schema validation on the same rendered roots. CRD and add-on kinds are
+      # skipped because they have no schema at a fixed Kubernetes version; the
+      # Argo and KEDA contract is covered by the gitops-validate workflow.
+      - name: kubeconform
+        run: |
+          set -euo pipefail
+          while read -r f; do
+            d="$(dirname "$f")"
+            echo "::group::kubeconform $d"
+            kubectl kustomize "$d" | kubeconform \
+              -kubernetes-version 1.36.0 \
+              -strict -summary \
+              -skip ServiceMonitor,PrometheusRule,GrafanaDashboard,EnvoyProxy,GatewayClass,ScaledObject,TriggerAuthentication,AppProject,Application
+            echo "::endgroup::"
+          done < <(find . -name kustomization.yaml -not -path './.git/*' | sort)
+
+      - name: manifest inventory (no orphans)
+        run: python3 gitops/validate-gitops.py
+
+      - name: static policy and image gate
+        run: python3 scripts/policy-gate.py
+
+  security:
+    name: security (trivy config + filesystem)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Pinned by tag. This is an IaC/config scan only: no container image is
+      # built in Phase B, so an image scan would be scanning nothing.
+      - uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - uses: aquasecurity/trivy-action@0.32.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          skip-dirs: .git
+
+  python:
+    name: python gates (validator test matrix)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Explicit interpreter and explicit dependency install. The workflow never
+      # inherits a developer's virtualenv: on the authoring machine `python3`
+      # resolves into a sibling project's .venv.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install --require-hashes -r requirements.lock
+
+      - name: gate test matrix (G1-G9)
+        run: python3 tests/test_gates.py
+
+      - name: upload terraform test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-test-log
+          path: terraform/aks-foundation/terraform-test.log
+          if-no-files-found: ignore

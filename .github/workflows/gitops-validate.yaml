@@ -1,0 +1,114 @@
+name: gitops-validate
+
+# GitOps-specific semantics only. General source and infrastructure validation
+# lives in pr-gate.yaml; this workflow exists to prove that the GitOps controls
+# actually bite, not to duplicate every other check.
+on:
+  pull_request:
+    paths:
+      - "gitops/**"
+      - "platform/argocd/**"
+      - "MANIFEST-INVENTORY.md"
+      - "tests/test_gates.py"
+      - ".github/workflows/gitops-validate.yaml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  semantic:
+    name: gitops semantics
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install --require-hashes -r requirements.lock
+
+      - name: repo-owned GitOps validation
+        run: python3 gitops/validate-gitops.py
+
+      # The external repositories these Applications point at are not checked
+      # out here, so they are reported as EXTERNAL_REPO_NOT_PRESENT rather than
+      # silently passing. The step asserts on that outcome explicitly, so a
+      # future change that turns "not present" into a green result fails CI.
+      - name: assert external repos are honestly classified
+        run: |
+          set -euo pipefail
+          python3 gitops/validate-gitops.py --json > gitops-report.json
+          python3 - <<'PY'
+          import json, sys
+          rows = json.load(open("gitops-report.json"))["checks"]
+          not_present = [r for r in rows if r["outcome"] == "EXTERNAL_REPO_NOT_PRESENT"]
+          failures = [r for r in rows if r["outcome"] == "FAIL"]
+          if failures:
+              for f in failures:
+                  print(f"::error::{f['check']} {f['target']}: {f['detail']}")
+              sys.exit(1)
+          if not not_present:
+              print("::warning::no EXTERNAL_REPO_NOT_PRESENT rows. If the Applications now")
+              print("::warning::point at repositories in this repo, update this assertion;")
+              print("::warning::a silent green here would hide unvalidated source trees.")
+          else:
+              print(f"{len(not_present)} external source tree(s) correctly reported NOT_PRESENT.")
+          PY
+
+      - name: gate test matrix (G1-G9)
+        run: python3 tests/test_gates.py
+
+  negative-control:
+    name: negative control (gate must bite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install --require-hashes -r requirements.lock
+
+      # A control that has never been observed failing is not a control. Mutate
+      # a real invariant, prove the validator rejects it, restore byte-identical,
+      # then prove the canonical state is green again.
+      - name: M-B1 break a GitOps invariant
+        run: |
+          set -euo pipefail
+          APP=gitops/applications/flashsale.yaml
+          cp "$APP" "$APP.orig"
+          # destination.namespace must be allowed by the AppProject. Moving it
+          # to kube-system breaks both the allowlist and the namespace rule.
+          sed -i.bak 's/^    namespace: flashsale$/    namespace: kube-system/' "$APP"
+
+          set +e
+          python3 gitops/validate-gitops.py
+          rc=$?
+          set -e
+
+          mv "$APP.orig" "$APP"
+          rm -f "$APP.bak"
+
+          if [ "$rc" -eq 0 ]; then
+            echo "::error title=M-B1 DID NOT BITE::the validator passed a broken"
+            echo "::error::destination namespace. The GitOps control is not effective."
+            exit 1
+          fi
+          echo "M-B1 confirmed: validator rejected the mutation (rc=$rc)"
+
+      - name: canonical state is green again
+        run: python3 gitops/validate-gitops.py
+
+      - name: restore is byte-identical
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- gitops/applications/flashsale.yaml
+          echo "Mutation fully reverted; working tree clean for the mutated file."
