@@ -92,8 +92,23 @@ class Report:
         return 0
 
 
+# The .yaml/.yml suffixes appear in several listdir filters below. One constant
+# keeps them from drifting apart, which is what the duplication rule is for.
+YAML_SUFFIXES = (".yaml", ".yml")
+
+
 def load(path):
-    with open(path) as fh:
+    # WHY THIS IS NOT ONLY A SONAR FIX. `load()` is reached with paths assembled
+    # from directory listings and from --repo-map, which are operator-supplied.
+    # Resolving to an absolute path and re-checking containment means a path that
+    # escapes the repository is refused rather than parsed. The rule that flagged
+    # this was about CLI arguments; the containment check is the property actually
+    # worth having, and it is enforced here rather than annotated.
+    resolved = os.path.realpath(path)
+    root = os.path.realpath(ROOT)
+    if os.path.commonpath([resolved, root]) != root:
+        raise ValueError(f"refusing to load a path outside the repository: {path}")
+    with open(resolved) as fh:
         return yaml.safe_load(fh)
 
 
@@ -116,7 +131,7 @@ def collect_projects(rep):
         if not os.path.isdir(d):
             continue
         for name in sorted(os.listdir(d)):
-            if not name.endswith((".yaml", ".yml")):
+            if not name.endswith(YAML_SUFFIXES):
                 continue
             path = os.path.join(d, name)
             doc = load(path)
