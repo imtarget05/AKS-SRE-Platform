@@ -30,7 +30,7 @@
 
 - **Regional vCPU ceiling: 10**, currently **0/10 used**. The 7A cluster was
   destroyed, so the quota ADR-013 treated as a wall is free. Verify:
-  `az vm list-usage --location eastus -o tsv | head -3`
+  `az vm list-usage --location eastasia -o tsv | head -3`
 - **Validation capacity envelope: 8 vCPU** — system pool `1 × D2s_v6` (2) +
   user pool `max 3 × D2s_v6` (6). Leaves **2 vCPU** for observability and for
   the cluster-autoscaler proof. `D4s_v6` is out: 2 × D4s_v6 consumes 8 vCPU for

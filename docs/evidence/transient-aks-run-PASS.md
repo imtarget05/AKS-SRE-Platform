@@ -114,6 +114,103 @@ Deployed overlay: `deploy/overlays/validation`
    - Confirms that failure injection is armed in the validation overlay.
 4. **RED Metrics (`/metrics`)**:
    - `sre_api_requests_total`, `sre_api_request_duration_seconds` exposed in Prometheus format.
-5. **NetworkPolicy Enforcement**:
-   - Default deny with explicit allow rules enforced by Azure NetworkPolicy engine.
-   - Unauthorized traffic from leaf pods blocked by policy.
+5. **NetworkPolicy** — `IMPLEMENTED` / `NOT_VERIFIED`
+
+   The four policies in `deploy/base/networkpolicy.yaml` (default-deny,
+   allow-dns, sre-demo-api, mock-dependency) were applied and accepted by the
+   Kubernetes API server.
+
+   **Enforcement was NOT verified.** This cluster ran `network_plugin = "azure"`
+   (classic Azure CNI) with no Cilium addon and no overlay dataplane. Per this
+   repo's own `ADR-014` and the header of `deploy/base/networkpolicy.yaml`,
+   enforcement requires Azure CNI **Overlay + Cilium** — neither of which was
+   present. Acceptance by the API server is not evidence of a deny taking
+   effect.
+
+   Historical negative control: **INCONCLUSIVE.** The intended test — traffic
+   from `mock-dependency` to `sre-demo-api:80`, which policy should block —
+   was terminated before returning a result. No authoritative
+   blocked/allowed outcome was obtained, so it is recorded as inconclusive
+   rather than as a pass.
+
+   ```text
+   NETWORKPOLICY_OBJECTS      = IMPLEMENTED / APPLIED
+   NETWORKPOLICY_ENFORCEMENT  = NOT_VERIFIED
+   NEGATIVE_CONTROL_RESULT    = INCONCLUSIVE
+   CILIUM                      = TARGET / NOT_VERIFIED
+   ```
+
+   Proving enforcement is a separate, explicit exercise (deploy Overlay +
+   Cilium, then run the negative control to completion). It is deliberately
+   **not** claimed here.
+
+
+---
+
+## 6. Teardown & Post-Condition — `VERIFIED_LIVE`
+
+Teardown was performed immediately after validation, to return the shared
+regional quota envelope to its baseline.
+
+```text
+DESTROY COMMAND LOG = NOT RETAINED
+POST-TEARDOWN STATE = VERIFIED_LIVE
+```
+
+The original `terraform destroy` console output was not preserved as an
+artifact, so it is not quoted or reconstructed here. What follows is a fresh,
+independent re-query of live Azure state — the authoritative basis for the
+teardown claim.
+
+Re-verified at `2026-10-02T14:29:57Z` (read-only queries):
+
+| Check | Command | Result |
+|---|---|---|
+| Regional vCPU | `az vm list-usage --location eastasia` | `Total Regional vCPUs 0 / 10` |
+| Dsv6 family vCPU | same | `Standard Dsv6 Family vCPUs 0 / 10` |
+| Cluster resource group | `az group show -n rg-aks-platform-dev` | `ResourceGroupNotFound` |
+| Temporary ACR | `az acr list` | empty — `acrportfoliodev01` removed |
+| Workload namespaces | `kubectl delete namespace sre-platform phase7a-proof` | deleted |
+
+Remaining resource groups in the subscription are unrelated to this run
+(`NetworkWatcherRG`, `rg-portfolio-evidence`, and the `*-tfstate` state
+backends). No AKS cluster, node pool, container registry, or namespace from
+this validation run remains.
+
+```text
+AKS_CLUSTER          = DESTROYED (VERIFIED_LIVE)
+NODE_POOLS           = DESTROYED (VERIFIED_LIVE)
+TRANSIENT_ACR        = DELETED   (VERIFIED_LIVE)
+QUOTA                = 0 / 10 vCPU (VERIFIED_LIVE)
+BILLABLE_RUNTIME     = NONE from this run
+```
+
+**Cost.** The `< $0.15` figure in §1 is an **estimate**, not a measured Azure
+Cost Management query. No billing export was captured, so no measured spend
+figure is claimed. What is measured is the compute envelope: peak 4 vCPU for
+roughly 25 minutes inside a Free-tier control plane.
+
+---
+
+## 7. Status Summary
+
+| Capability | Status |
+|---|---|
+| AKS cluster provisioning, K8s v1.36.4, Free tier | `VERIFIED_TRANSIENT` |
+| System/user pool placement & isolation | `VERIFIED_TRANSIENT` |
+| Private ACR pull by immutable digest, no pull secret | `VERIFIED_TRANSIENT` |
+| Workload Identity federated token exchange → ARM read | `VERIFIED_TRANSIENT` |
+| AcrPull via Kubelet managed identity | `VERIFIED_TRANSIENT` |
+| Liveness / readiness / failure-injection routes | `VERIFIED_TRANSIENT` |
+| Container non-root, read-only root filesystem | `VERIFIED_TRANSIENT` |
+| Teardown to `0 / 10` vCPU | `VERIFIED_LIVE` |
+| NetworkPolicy **objects applied** | `VERIFIED_TRANSIENT` |
+| NetworkPolicy **enforcement** | `NOT_VERIFIED` |
+| NetworkPolicy negative control | `INCONCLUSIVE` |
+| Cilium / Azure CNI Overlay | `TARGET` — `NOT_VERIFIED` |
+| Argo CD, Gateway API + Envoy, Prometheus, Grafana | `IMPLEMENTED_TESTED_LOCAL` (kind) — not on AKS |
+| HPA / cluster autoscaler, PDB, topology spread | `NOT_VERIFIED` |
+
+Components marked `IMPLEMENTED_TESTED_LOCAL` have passing proofs on the local
+kind platform (see `docs/evidence/local-platform/`). They were **not** part of
+this Azure run and are not claimed as live here.
