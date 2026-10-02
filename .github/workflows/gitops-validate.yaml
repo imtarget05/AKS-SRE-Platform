@@ -32,7 +32,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: pip install --require-hashes -r requirements.lock
+      - run: pip install --require-hashes --only-binary ":all:" -r requirements.lock
 
       - name: repo-owned GitOps validation
         run: python3 gitops/validate-gitops.py
@@ -75,7 +75,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: pip install --require-hashes -r requirements.lock
+      - run: pip install --require-hashes --only-binary ":all:" -r requirements.lock
 
       # A control that has never been observed failing is not a control. Mutate
       # a real invariant, prove the validator rejects it, restore byte-identical,
