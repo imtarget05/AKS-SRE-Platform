@@ -1,0 +1,66 @@
+# minReplicas 2, not 1. An HPA that can scale to 1 has no room to demonstrate
+# anything, and a single replica contradicts the PDB below.
+#
+# The CPU target is a starting proposal, not a measured value. Per CURRENT_STATE
+# the SLO thresholds stay PROPOSED until an Azure baseline exists, and this
+# metric is chosen the same way: 70% of request is conservative enough to react
+# before saturation, and Phase K replaces it with a measured number.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sre-demo-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      # React fast. Waiting minutes to add capacity during a traffic spike is the
+      # difference between an autoscaler that helps and one that documents the
+      # outage after the fact.
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 4
+          periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      # Conservative. Removing capacity faster than load falls causes
+      # flapping: pods are killed and immediately needed again, which looks like
+      # an incident and inflates pod-restart metrics.
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+---
+# minAvailable 1 with replicas >= 2 means a node drain can evict at most one pod
+# and the Service keeps serving. minAvailable equal to replicas would block all
+# voluntary disruption and make `kubectl drain` hang forever, which is a real
+# operational trap rather than a theoretical one.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sre-demo-api

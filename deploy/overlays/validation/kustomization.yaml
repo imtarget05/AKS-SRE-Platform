@@ -1,0 +1,53 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sre-platform
+
+resources:
+  - ../../base
+
+# The validation profile. Distinct from base in three deliberate ways:
+#
+#  1. failure injection is ARMED here, so /api/fail returns 500. It stays
+#     disarmed in base, which means a prod overlay built from base cannot
+#     accidentally expose it.
+#  2. HPA bounds are lower (max 4). The cluster runs on 3 nodes inside a 10 vCPU
+#     regional ceiling shared with other portfolio repos; scaling to 10 replicas
+#     would need nodes that do not exist and would leave nothing for the
+#     observability profile. Per ADR-014 the autoscaling and observability
+#     experiments run as SEQUENTIAL profiles, never simultaneously.
+#  3. readiness depends on the mock dependency, so a dependency failure is
+#     observable as un-ready pods.
+commonAnnotations:
+  aks-sre-platform.io/profile: validation
+  aks-sre-platform.io/cost-mode: transient
+
+configMapGenerator:
+  - name: sre-demo-api-config
+    behavior: merge
+    literals:
+      - FAILURE_INJECTION_ARMED=true
+      - LOG_LEVEL=debug
+
+replicas:
+  - name: sre-demo-api
+    count: 2
+
+# Capacity, not preference. The validation cluster fits inside the 10 vCPU
+# regional ceiling shared with the other portfolio repos: system pool 2 + user
+# pool up to 6. Ten replicas at 100m/96Mi would need roughly four more nodes
+# than the envelope allows, so the pods would sit Pending and the autoscaling
+# evidence would record a scheduling failure instead of a scale-out.
+patches:
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sre-demo-api
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4
+
+images:
+  - name: sre-demo-api
+    newName: sre-demo-api
+    newTag: 0.1.0

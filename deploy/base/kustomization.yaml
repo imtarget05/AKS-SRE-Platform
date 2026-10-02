@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - service.yaml        # ServiceAccounts, ConfigMap, Services, mock dependency
+  - deployment.yaml     # sre-demo-api Deployment
+  - autoscaling.yaml    # HPA + PodDisruptionBudget
+  - networkpolicy.yaml  # default-deny + explicit allows
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: aks-sre-platform
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false
