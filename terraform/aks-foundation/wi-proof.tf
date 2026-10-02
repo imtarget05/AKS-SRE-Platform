@@ -8,8 +8,8 @@
 resource "azurerm_user_assigned_identity" "wi_proof" {
   count               = var.enable_wi_proof ? 1 : 0
   name                = "mi-aks-wi-proof-dev"
-  location            = azurerm_resource_group.aks.location
-  resource_group_name = azurerm_resource_group.aks.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
   tags = {
     environment = "portfolio"
@@ -24,13 +24,13 @@ resource "azurerm_federated_identity_credential" "wi_proof" {
   name                      = "wi-proof-fic"
   user_assigned_identity_id = azurerm_user_assigned_identity.wi_proof[0].id
   audience                  = ["api://AzureADTokenExchange"]
-  issuer                    = azurerm_kubernetes_cluster.aks.oidc_issuer_url
+  issuer                    = module.aks.oidc_issuer_url
   subject                   = "system:serviceaccount:phase7a-proof:wi-proof"
 }
 
 resource "azurerm_role_assignment" "wi_proof_reader" {
-  count                = var.enable_wi_proof ? 1 : 0
-  scope                = data.azurerm_container_registry.shared.id
+  count                = var.enable_wi_proof && var.enable_acr_integration ? 1 : 0
+  scope                = data.azurerm_container_registry.shared[0].id
   role_definition_name = "Reader"
   principal_id         = azurerm_user_assigned_identity.wi_proof[0].principal_id
 

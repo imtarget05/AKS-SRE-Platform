@@ -24,11 +24,13 @@ on:
   push:
     branches: [main]
 
+# Workflow level grants READ ONLY. `id-token: write` is deliberately NOT here:
+# it is granted only to the `live` job that actually needs to mint an OIDC token.
+# At workflow level it would also apply to `contract` and `status`, which read
+# files and write a summary — they have no reason to hold a token-minting
+# capability. SonarCloud rule githubactions:S8233 is right about this shape.
 permissions:
   contents: read
-  # Required to mint an OIDC token. Least privilege: read-only repo access plus
-  # token minting, nothing else.
-  id-token: write
 
 concurrency:
   group: oidc-azure-${{ github.ref }}
@@ -104,6 +106,11 @@ jobs:
   live:
     name: OIDC live (positive + negative control)
     runs-on: ubuntu-latest
+    # Scoped to this job only. `contract` and `status` run without it.
+    permissions:
+      contents: read
+      # Required to mint an OIDC token for azure/login. Nothing else is granted.
+      id-token: write
     # Bound to the GitHub Environment that owns the federated credential, so the
     # OIDC token's `sub` claim matches the federated subject exactly.
     environment: azure-verify

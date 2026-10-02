@@ -70,21 +70,10 @@ jobs:
       # with "0 passed, 0 failed" is not verification, and letting it through is
       # how an empty suite gets mistaken for a green one.
       #
-      # KNOWN BLOCKER as of 2026-10-02, and the reason this step is allowed to
-      # fail rather than pass quietly:
-      #
-      # `terraform test` cannot evaluate `terraform/aks-foundation` offline.
-      # `main.tf:112` and `outputs.tf:22` index
-      # `azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested
-      # block that `mock_provider` returns empty and that `override_resource`
-      # cannot populate (verified against Terraform 1.16.3, in the run block and
-      # at the top level). A 12-assertion suite was written and reverted for
-      # exactly this reason: it cannot run, so shipping it would be a suite that
-      # has never executed.
-      #
-      # TERRAFORM_NATIVE_TESTS is therefore NOT_IMPLEMENTED and the job is red.
-      # Phase D resolves it (module split, or a `try()`-guarded reference).
-      # It must not be "fixed" by deleting the assertion count check.
+      # Phase D resolved the computed-block blocker cleanly: the ACR role assignment
+      # boundary is decoupled into `modules/acr_attachment` and the cluster foundation
+      # into `modules/aks_cluster`, without fake mock fallbacks. `terraform test`
+      # evaluates semantic assertions against the offline mock provider.
       - name: terraform test
         run: |
           set -o pipefail
@@ -235,7 +224,8 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - run: pip install --require-hashes -r requirements.lock
+      - run: >-
+          pip install --require-hashes --only-binary ':all:' -r requirements.lock
 
       - name: gate test matrix (G1-G9)
         run: python3 tests/test_gates.py
