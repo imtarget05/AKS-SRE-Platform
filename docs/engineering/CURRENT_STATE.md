@@ -1,7 +1,8 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-- **Updated:** 2026-10-02
+- **Updated:** 2026-10-02 (after Phase B CI enforcement and the Phase F workload foundation)
 - **Wave:** Execution Wave 1 = Phase A + B + C
+- **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
   dry-run profile. See
   [`../adr/014-azure-first-verification.md`](../adr/014-azure-first-verification.md).
@@ -93,25 +94,82 @@
 | Pod → Key Vault secret read | — | **NOT RUN** |
 
 
-## Next session starts at
+## Phase B and the F workload foundation — IMPLEMENTED_TESTED (2026-10-02)
 
-**Phase D** — Terraform modularisation into
-`modules/{network,aks,acr,keyvault,identity,monitoring}` with
-`environments/{validation,prod}`, plus `*.tftest.hcl` asserting behaviour rather
-than asserting "0 tests". The plan must not change what the existing
-`terraform/aks-foundation` root produces; compare with `terraform show -json`.
+Measured on GitHub Actions, PR #1, branch `aks-sre/phase-b-ci`. Every status
+below comes from a run log, not from the existence of a file.
 
-## Open items carried into Wave 2
+| Control | Status | Evidence |
+|---|---|---|
+| GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | 16 checks pass, 2 rows `EXTERNAL_REPO_NOT_PRESENT` |
+| GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | log: "M-B1 confirmed: validator rejected the mutation (rc=1)", then `git diff --exit-code` clean |
+| Gate test matrix G1–G9 | `IMPLEMENTED_TESTED` | 17 assertions, run as a subprocess |
+| Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | 26 objects across 2 roots, 0 invalid |
+| Manifest inventory | `IMPLEMENTED_TESTED` | M-B6 orphan detected and rejected |
+| Static policy + image gate | `IMPLEMENTED_TESTED` | `POLICY GATE PASS: 2 kustomize root(s), 26 object(s)` |
+| Terraform fmt / init / validate | `IMPLEMENTED_TESTED` | whole-repo fmt clean, `-backend=false` init, validate Success |
+| TFLint | `IMPLEMENTED_TESTED` | runs and passes; reordered ahead of the failing step so a lint regression cannot hide |
+| Trivy config + secret scan | `IMPLEMENTED_TESTED` | clean at HIGH/CRITICAL with a written justification for every ignore |
+| `terraform test` | **`NOT_IMPLEMENTED`** | collects 0 assertions; step is red by design |
+| OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
+| OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
+| Azure mutation | none | no Azure resource created by this branch |
 
-- `gitops/validate-gitops.py` hardcodes `~/Downloads/...` paths for two external
-  repos and fails on day one. Needs an argument/env mapping, and CI must fail
-  loudly on a missing external repo rather than silently skipping it.
-- `python3` on the workstation resolves to `MAIA/.venv`. CI must own its
-  environment explicitly.
-- `tflint`, `kubeconform`, `conftest`, `k6`, `syft`, `cosign` are not installed
-  locally; CI must install pinned versions and document them.
+### The one red job, and why it stays red
+
+`TERRAFORM_NATIVE_TESTS = NOT_IMPLEMENTED`. `terraform test` cannot evaluate
+`terraform/aks-foundation` offline: `main.tf:112` and `outputs.tf:22` index
+`azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested block that
+`mock_provider` returns empty and that `override_resource` cannot populate
+(verified on Terraform 1.16.3, both at the top level and inside a `run` block).
+A 12-assertion suite was written and reverted, because a suite that cannot
+execute is a claim, not a test. Phase D resolves it. The assertion-count check
+must not be deleted to make the job green.
+
+### Two tools that had to be replaced, not just pinned
+
+- `aquasecurity/trivy-action` failed three consecutive runs before scanning
+  anything: its tag needed a `v` prefix, then its bundled installer failed
+  fetching trivy v0.65.0, then `trivy-version` turned out not to be a real input
+  (it is `version`). Trivy is now installed and invoked directly, pinned, so the
+  CI command is identical to the one run locally.
+- kubeconform was downloaded with `curl -sSL`, which writes an HTML error page
+  instead of failing, so a bad URL surfaced two lines later as an opaque tar
+  error. Now `-f`, on v0.8.0, with SHA256 verification against the release
+  CHECKSUMS file.
+
+### Next session starts at
+
+**Phase C** — repo-owned Azure identity, state and registry. No MAIA identity or
+MAIA state may be reused. Then **Phase D**, which also closes the red
+`TERRAFORM_NATIVE_TESTS` job described above.
+
+Do not start Phase D's module split before Phase C, and do not run any
+`terraform apply` before each environment has a saved, reviewed plan.
+
+## Open items
+
+### Closed on 2026-10-02 (Phase B + F foundation)
+
+- ~~`validate-gitops.py` hardcodes `~/Downloads/...`~~ — rewritten; mappings come
+  from `--repo-map`, machine-specific paths are a usage error, and external trees
+  report `EXTERNAL_REPO_NOT_PRESENT`.
+- ~~CI must own its Python environment~~ — `actions/setup-python` 3.12 with
+  `requirements.lock` installed under `--require-hashes`.
+- ~~tflint / kubeconform not installed locally~~ — CI installs both, pinned;
+  kubeconform additionally checksum-verified.
+- ~~No orphan manifests~~ — `MANIFEST-INVENTORY.md`, enforced by the validator.
+
+### Still open
+
+- `terraform test` collects zero assertions (`TERRAFORM_NATIVE_TESTS`).
 - `kubernetes/order-worker.yaml` (Service Bus) disagrees with
-  `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both belong to the FlashSale
-  repo and are scheduled for supersede.
+  `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both are classified in
+  `MANIFEST-INVENTORY.md` as legacy and belong to the FlashSale repo.
 - `scripts/bootstrap.sh:38` applies a file that only exists as `.disabled`, so
   step 5/5 cannot run as written.
+- `conftest`, `k6`, `syft`, `cosign` are still absent; they arrive with the
+  policy, load-test and supply-chain phases.
+- No `runbooks/`, `alerts/` or `dashboards/` directory exists yet. They are not
+  created until a capability needs them.
+

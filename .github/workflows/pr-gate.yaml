@@ -54,6 +54,17 @@ jobs:
       - name: validate
         run: terraform validate
 
+      # tflint runs BEFORE the native-test step. A failing step must not hide the
+      # controls after it: with the original order the tflint steps were reported
+      # as "skipped" on every run, so a lint regression would have been invisible
+      # for as long as the test step stayed red.
+      - uses: terraform-linters/setup-tflint@v5
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint (recursive)
+        run: tflint --recursive --format=compact
+
       # Truthful native-test accounting. Zero tests is reported as
       # NOT_IMPLEMENTED and fails this step on purpose: `terraform test` exiting 0
       # with "0 passed, 0 failed" is not verification, and letting it through is
@@ -66,9 +77,10 @@ jobs:
       # `main.tf:112` and `outputs.tf:22` index
       # `azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested
       # block that `mock_provider` returns empty and that `override_resource`
-      # cannot populate (verified against Terraform 1.16.3). A 12-assertion suite
-      # was written and reverted for exactly this reason: it cannot run, so
-      # shipping it would be a suite that has never executed.
+      # cannot populate (verified against Terraform 1.16.3, in the run block and
+      # at the top level). A 12-assertion suite was written and reverted for
+      # exactly this reason: it cannot run, so shipping it would be a suite that
+      # has never executed.
       #
       # TERRAFORM_NATIVE_TESTS is therefore NOT_IMPLEMENTED and the job is red.
       # Phase D resolves it (module split, or a `try()`-guarded reference).
@@ -88,14 +100,6 @@ jobs:
             echo "NOT VERIFIED and must not be claimed. Phase D adds the suite."
             exit 1
           fi
-
-      - uses: terraform-linters/setup-tflint@v5
-        with:
-          tflint_version: ${{ env.TFLINT_VERSION }}
-
-      - name: tflint (recursive)
-        run: tflint --recursive --format=compact
-
 
   kubernetes:
     name: kubernetes (render, schema, inventory, policy)
