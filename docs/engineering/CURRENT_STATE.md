@@ -19,9 +19,9 @@
 | Argo CD sync + `git revert` rollback + drift detect/reconcile | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | Gateway API + Envoy Gateway shared north-south | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | Prometheus + Grafana + one real alert fire/resolve cycle | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
-| HPA / AKS Cluster Autoscaler | — | **NOT RUN** |
-| Enforced NetworkPolicy (Cilium) | — | **NOT RUN** |
-| PDB / drain / topology spread | — | **NOT RUN** |
+| HPA / AKS Cluster Autoscaler | — | **NOT RUN** (HPA manifest validated by kubeconform; no scale event observed) |
+| Enforced NetworkPolicy (`network_policy = "azure"`) | `AZURE_VALIDATION` | Deployed 2026-10-02; default-deny + allow rules applied; deny-of-unauthorized-traffic **NOT MEASURED** (no negative-traffic probe run) |
+| PDB / drain / topology spread | — | **NOT RUN** (PDB manifest schema-valid; no drain event) |
 | Continuous CI (`.github/`) | GitHub Actions | **PASS** (Workflows run & pass 100% green on PR #1) |
 | `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
 | Repo-owned workload (`app/sre-demo-api`) | Node.js / K8s | **IMPLEMENTED_TESTED** (Unit tests pass; probes & failure injection decoupled) |

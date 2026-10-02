@@ -47,7 +47,19 @@ patches:
         path: /spec/maxReplicas
         value: 4
 
+# TRANSIENT IMAGE REFERENCE — REQUIRES REBUILD BEFORE NEXT APPLY
+#
+# acrportfoliodev01.azurecr.io was created solely for the 2026-10-02 transient
+# validation run (docs/evidence/transient-aks-run-PASS.md) and DESTROYED after
+# evidence capture. This digest is UNREACHABLE (registry gone).
+#
+# To re-deploy:
+#   1. Provision a new transient ACR via Terraform (enable_acr_integration=true)
+#   2. Build: docker build -t sre-demo-api:0.1.0 app/sre-demo-api/
+#   3. Push:  docker push <new-acr>/sre-demo-api:0.1.0
+#   4. Update newName + digest below to the new registry + SHA256
+#   5. AcrPull role assignment lives in terraform/modules/acr_attachment/
 images:
   - name: sre-demo-api
-    newName: acrportfoliodev01.azurecr.io/sre-demo-api
+    newName: acrportfoliodev01.azurecr.io/sre-demo-api  # STALE — rebuild required
     digest: sha256:253087111baf7e40b472f20d695482f6c7a6700b6a9b6d45aea918e5b5a963bb
