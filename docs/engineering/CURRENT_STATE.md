@@ -97,23 +97,45 @@
 ## Phase B and the F workload foundation — IMPLEMENTED_TESTED (2026-10-02)
 
 Measured on GitHub Actions, PR #1, branch `aks-sre/phase-b-ci`. Every status
-below comes from a run log, not from the existence of a file.
+below comes from a run log, not from the existence of a file. One step is red,
+by design; everything else is green.
 
-| Control | Status | Evidence |
+| Control | Status | Evidence from the run log |
 |---|---|---|
-| GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | 16 checks pass, 2 rows `EXTERNAL_REPO_NOT_PRESENT` |
-| GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | log: "M-B1 confirmed: validator rejected the mutation (rc=1)", then `git diff --exit-code` clean |
-| Gate test matrix G1–G9 | `IMPLEMENTED_TESTED` | 17 assertions, run as a subprocess |
-| Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | 26 objects across 2 roots, 0 invalid |
+| GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | `GITOPS: 16 passed, 0 failed, 2 not-present, 18 total` |
+| GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | `M-B1 confirmed: validator rejected the mutation (rc=1)`, then `git diff --exit-code` clean |
+| Gate test matrix G1–G9 | `IMPLEMENTED_TESTED` | 17 assertions, run as a subprocess so the exit code under test is the real one |
+| Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | `Valid: 13, Invalid: 0` per root; 26 objects across 2 roots |
 | Manifest inventory | `IMPLEMENTED_TESTED` | M-B6 orphan detected and rejected |
 | Static policy + image gate | `IMPLEMENTED_TESTED` | `POLICY GATE PASS: 2 kustomize root(s), 26 object(s)` |
-| Terraform fmt / init / validate | `IMPLEMENTED_TESTED` | whole-repo fmt clean, `-backend=false` init, validate Success |
-| TFLint | `IMPLEMENTED_TESTED` | runs and passes; reordered ahead of the failing step so a lint regression cannot hide |
-| Trivy config + secret scan | `IMPLEMENTED_TESTED` | clean at HIGH/CRITICAL with a written justification for every ignore |
-| `terraform test` | **`NOT_IMPLEMENTED`** | collects 0 assertions; step is red by design |
+| Terraform fmt / init / validate / tflint | `IMPLEMENTED_TESTED` | whole-repo fmt clean, `-backend=false` init, validate Success, tflint 0 issues |
+| Trivy config + secret scan | `IMPLEMENTED_TESTED` | clean at HIGH/CRITICAL, every ignore carrying a written justification |
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
+| **`terraform test`** | **`NOT_IMPLEMENTED`** | collects 0 assertions. The only red step in CI, by design |
 | Azure mutation | none | no Azure resource created by this branch |
+
+Five consecutive Actions runs were needed to reach this state, and every one found
+something no local check could: three distinct `trivy-action` failures before it
+scanned anything, a kubeconform download that wrote an HTML error page and failed
+two lines later with an opaque tar message, and a `case` statement truncated by an
+earlier edit. None were visible until the workflows actually ran, which is the
+argument for requiring a real run rather than treating a workflow file as evidence.
+
+
+### A finding that only surfaced because the lint step was moved
+
+tflint had never actually executed before, because it sat after the always-failing
+`terraform test` step and reported as *skipped* on every run. Once moved ahead of
+it, tflint immediately reported one real issue: `variables.tf` declared
+`workload_identity_client_id` and no resource referenced it. `terraform validate`
+passes anyway, which is the point — an unread input looks identical from the
+outside to one that is wired up and working. Removed, with a note recording what
+it was.
+
+This is the general lesson, and it is worth stating because it will recur: **a
+control placed after a step that is currently red is not a control.** Wherever a
+known-failing gate exists, every other check in that job must run before it.
 
 ### The one red job, and why it stays red
 
