@@ -75,10 +75,6 @@ spec:
           env:
             - name: PORT
               value: "8080"
-            - name: LOG_LEVEL
-              value: info
-            - name: NODE_ENV
-              value: production
             - name: OTEL_SERVICE_NAME
               value: sre-demo-api
             - name: OTEL_EXPORTER_OTLP_ENDPOINT

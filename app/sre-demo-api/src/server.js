@@ -37,7 +37,7 @@ export function createServer({ metrics, state, logger }) {
     // against, which is a Host-header injection surface even when the base is
     // discarded — and it makes behaviour depend on a client-controlled value
     // for no benefit, since only the path is read below.
-    const url = new URL(req.url ?? '/', 'http://workload.invalid');
+    const url = new URL(req.url ?? '/', 'https://workload.invalid');
     const route = url.pathname;
     const method = req.method ?? 'GET';
     metrics.inFlight.inc();
@@ -109,7 +109,7 @@ export function createServer({ metrics, state, logger }) {
 
       if (route === '/internal/readiness') {
         // Lets a test flip readiness without killing the process.
-        const value = url.searchParams.get('ready') === 'false' ? false : true;
+        const value = url.searchParams.get('ready') !== 'false';
         state.setReady(value);
         reply(res, 200, { ready: value }, route, method);
         return done(200);
