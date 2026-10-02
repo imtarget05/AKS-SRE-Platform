@@ -40,8 +40,15 @@
   `rg-maia-verify`. The only storage account, `sttfmaia`, belongs to **MAIA** —
   do not inherit it. This repo needs its own Entra-authenticated state identity
   with `validation` and `prod` keys kept separate.
-- **The quota is shared.** Other portfolio repos draw on the same 10 vCPU. A
-  second AKS environment here needs a quota increase first.
+- **Azure-first is a shared quota.** Other portfolio repos draw on the same
+  10 vCPU. A second AKS environment here needs a quota increase first.
+- **The 2 vCPU remainder is not "free observability capacity."** It must also
+  carry the Cluster Autoscaler proof. The two are therefore run as
+  **sequential experiment profiles**, never assumed to coexist:
+  `PROFILE A` = autoscaler validation + the minimum telemetry needed to observe
+  it; `PROFILE B` = observability/SLO validation + the normal workload
+  topology. A claim must name the profile it was measured under, and must never
+  state that both stacks ran simultaneously unless they actually did.
 
 ## Locked decisions — do not drift
 
