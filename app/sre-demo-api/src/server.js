@@ -51,7 +51,7 @@ export function createServer({ metrics, state, logger }) {
     };
 
     try {
-      if (route === '/health/live') {
+      if (route === '/health/live' || route === '/health') {
         reply(res, 200, { status: 'live', uptime_s: (Date.now() - startedAt) / 1000 }, route, method);
         return done(200);
       }

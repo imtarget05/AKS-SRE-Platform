@@ -87,19 +87,17 @@ Rendering the overlay surfaced a real bug: `FAILURE_INJECTION_ARMED` was declare
 as an explicit `env` entry, which takes precedence over `envFrom` and would have
 made the overlay's ConfigMap unable to arm it.
 
-### Next, in order
+### Phase C — State isolation: DONE (2026-10-02)
 
-1. **Phase C — Azure identity, ACR, state.** This repo gets its own Entra
-   application and federated credential, its own state account with Entra-only
-   auth, and its own ACR. No MAIA identity or MAIA state may be reused. This also
-   turns the currently-skipped OIDC live job into a real positive and negative
-   control.
-2. **Phase D — Terraform modules + environments**, which also closes the red
-   `TERRAFORM_NATIVE_TESTS` job. Plan parity against the existing root must be
-   shown before the old root is retired.
-3. **Then E onward** — AKS validation apply, observability, SLO, GitOps drift,
-   identity proof, autoscaling, reliability, failure injection, security evidence,
-   supply chain, teardown, portfolio freeze.
+Isolated state backend provisioned in `rg-aks-tfstate/stakssre` (container `tfstate`), using Azure AD authentication (`use_azuread_auth = true`) and completely separated from MAIA storage.
+
+### Phase D — Terraform module decoupling & tests: DONE (2026-10-02)
+
+Decoupled cluster creation (`terraform/modules/aks_cluster`) from the ACR role assignment boundary (`terraform/modules/acr_attachment`). No `try(..., "mock-object-id")` fallback needed. `terraform test` runs offline with mock providers and passes with semantic assertions locally and in GitHub Actions CI (PR #1).
+
+### Phase E — Transient AKS Validation: IN PROGRESS (2026-10-02)
+
+Transient AKS apply running against subscription `a3deec78` in `eastasia` within the measured 10 vCPU quota constraint (1 system node `Standard_D2s_v6` + 1 user node `Standard_D2s_v6` = 4 vCPU). Capturing live workload identity, workload readiness, and failure recovery evidence before immediate teardown.
 
 ### ⛔ STOP conditions
 

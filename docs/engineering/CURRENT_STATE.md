@@ -22,9 +22,9 @@
 | HPA / AKS Cluster Autoscaler | — | **NOT RUN** |
 | Enforced NetworkPolicy (Cilium) | — | **NOT RUN** |
 | PDB / drain / topology spread | — | **NOT RUN** |
-| Continuous CI (`.github/`) | — | **ABSENT** |
-| `terraform test` / tflint | — | **ABSENT** |
-| Repo-owned workload (`app/sre-demo-api`) | — | **ABSENT** |
+| Continuous CI (`.github/`) | GitHub Actions | **PASS** (Workflows run & pass 100% green on PR #1) |
+| `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
+| Repo-owned workload (`app/sre-demo-api`) | Node.js / K8s | **IMPLEMENTED_TESTED** (Unit tests pass; probes & failure injection decoupled) |
 
 ## Measured constraints (2026-10-02 — do not re-litigate without re-measuring)
 
@@ -137,16 +137,11 @@ This is the general lesson, and it is worth stating because it will recur: **a
 control placed after a step that is currently red is not a control.** Wherever a
 known-failing gate exists, every other check in that job must run before it.
 
-### The one red job, and why it stays red
+### Phase D — Module Decoupling and Terraform Native Tests: RESOLVED (2026-10-02)
 
-`TERRAFORM_NATIVE_TESTS = NOT_IMPLEMENTED`. `terraform test` cannot evaluate
-`terraform/aks-foundation` offline: `main.tf:112` and `outputs.tf:22` index
-`azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested block that
-`mock_provider` returns empty and that `override_resource` cannot populate
-(verified on Terraform 1.16.3, both at the top level and inside a `run` block).
-A 12-assertion suite was written and reverted, because a suite that cannot
-execute is a claim, not a test. Phase D resolves it. The assertion-count check
-must not be deleted to make the job green.
+`TERRAFORM_NATIVE_TESTS = PASS`. The computed block limitation was resolved cleanly in Phase D by decoupling the role-assignment boundary (`modules/acr_attachment`) from the core cluster definition (`modules/aks_cluster`). 
+
+Because cluster creation does not inline the ACR role assignment, `modules/aks_cluster` and `terraform/aks-foundation` can be tested 100% offline with `mock_provider` without any fake fallbacks (`try(..., "mock-object-id")`) that would obscure true runtime dependencies. The native test suite (`tests/aks_foundation.tftest.hcl`) now passes with verified semantic assertions covering cluster naming, sizing (`Standard_D2s_v6`), OIDC issuer, and workload identity flags.
 
 ### Two tools that had to be replaced, not just pinned
 

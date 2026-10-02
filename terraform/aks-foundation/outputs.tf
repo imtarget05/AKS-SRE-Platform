@@ -22,3 +22,8 @@ output "kubelet_identity" {
   value       = module.aks.kubelet_identity
   description = "Kubelet Managed Identity block for the AKS cluster."
 }
+
+output "resource_group_id" {
+  value       = module.aks.resource_group_id
+  description = "Resource group ID for scoping proof role assignments."
+}

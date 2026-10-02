@@ -9,7 +9,7 @@ resource "azurerm_user_assigned_identity" "wi_proof" {
   count               = var.enable_wi_proof ? 1 : 0
   name                = "mi-aks-wi-proof-dev"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = module.aks.resource_group_name
 
   tags = {
     environment = "portfolio"
@@ -29,8 +29,8 @@ resource "azurerm_federated_identity_credential" "wi_proof" {
 }
 
 resource "azurerm_role_assignment" "wi_proof_reader" {
-  count                = var.enable_wi_proof && var.enable_acr_integration ? 1 : 0
-  scope                = data.azurerm_container_registry.shared[0].id
+  count                = var.enable_wi_proof ? 1 : 0
+  scope                = module.aks.resource_group_id
   role_definition_name = "Reader"
   principal_id         = azurerm_user_assigned_identity.wi_proof[0].principal_id
 

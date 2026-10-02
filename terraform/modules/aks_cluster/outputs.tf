@@ -34,3 +34,7 @@ output "kubelet_identity" {
   value       = azurerm_kubernetes_cluster.aks.kubelet_identity
   description = "The Kubelet Managed Identity block for the AKS cluster."
 }
+
+output "resource_group_id" {
+  value = azurerm_resource_group.aks.id
+}

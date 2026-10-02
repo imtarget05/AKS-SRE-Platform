@@ -49,5 +49,5 @@ patches:
 
 images:
   - name: sre-demo-api
-    newName: sre-demo-api
-    newTag: 0.1.0
+    newName: acrportfoliodev01.azurecr.io/sre-demo-api
+    digest: sha256:253087111baf7e40b472f20d695482f6c7a6700b6a9b6d45aea918e5b5a963bb
