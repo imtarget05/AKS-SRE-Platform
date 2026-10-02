@@ -145,7 +145,35 @@ def check_pod_spec(docs, source):
 def main():
     ap = argparse.ArgumentParser(description="Static manifest policy and image gate")
     ap.add_argument("--scope", choices=["maintained", "all"], default="maintained")
-    ap.add_argument("--require-digest", action="store_true", help="Phase O image policy")
+    # IMAGE DIGEST POLICY — what this actually enforces, and why the flag is
+    # named the way it is.
+    #
+    # The bug this replaces: `--require-digest` existed but CI invoked the gate
+    # WITHOUT it, so `digest_required=False` and `:latest` passed. A check that is
+    # present but switched off is the empty-suite false green this repo forbids
+    # elsewhere — the gate was green while the property it existed to enforce was
+    # unenforced.
+    #
+    # What is forbidden by DEFAULT: a MUTABLE tag (`:latest`, or no tag at all).
+    # That is a real supply-chain hazard and nothing in this repository needs it.
+    #
+    # What is NOT forbidden by default: a pinned non-floating tag such as
+    # `:0.1.0`. `deploy/base` ships one deliberately, because the digest is not
+    # knowable until an image is built, and pretending otherwise would mean
+    # inventing a sha256 that resolves to nothing. Pinning to a digest happens at
+    # deploy time via `WORKLOAD_IMAGE`, and `--require-digest` is how a reviewer
+    # asserts that a given rendered output IS digest-pinned.
+    #
+    # So: mutable is rejected outright; "is this digest-pinned?" is a question the
+    # reviewer asks explicitly. Neither reading can be obtained by accident.
+    ap.add_argument(
+        "--require-digest",
+        action="store_true",
+        help=(
+            "Additionally require an immutable @sha256 digest. Use when reviewing "
+            "a deploy-time-rendered manifest, where the digest is known."
+        ),
+    )
     args = ap.parse_args()
 
     dirs = kustomize_dirs(args.scope)
