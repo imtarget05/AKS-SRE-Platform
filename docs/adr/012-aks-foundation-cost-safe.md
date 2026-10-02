@@ -1,9 +1,19 @@
 # ADR-012 — AKS Foundation Architecture (system pool + temporary user pool)
 
-- Status: **PROPOSED (v2) — NOT APPLIED.** Cost Safety Mode: apply happens only
-  after the user re-approves this revised version. `rg-aks-platform-prod` /
-  `rg-aks-platform-dev` do not exist (`az group exists` → false); the RG name in v2
-  is `rg-aks-platform-dev` per the non-prod naming correction.
+- Status: **ACCEPTED and APPLIED (2026-09-21).** Phase 7A.1 (system-only) and
+  Phase 7A.2 (temporary user pool + WI proof) both executed and passed; the
+  cluster `aks-portfolio-dev` was then `Stopped` and the temporary user pool was
+  deleted in the same session. Evidence:
+  `../evidence/phase7a/phase7a-FINAL-PASS.md`.
+- Superseded in part by the v3 SKU-family recovery recorded at the end of this
+  document (`Standard_D4as_v5` → `Standard_D4s_v6`) and by **ADR-013**, which
+  moves the day-to-day platform runtime to a local kind cluster.
+- Historical warning: the status line above previously read
+  `PROPOSED (v2) — NOT APPLIED` and asserted that `rg-aks-platform-dev` did not
+  exist. Both statements were false at the time they were written into the file
+  and were corrected on 2026-10-02 during the Phase 0 audit. The resource group
+  does exist, and the apply did happen. Do not reintroduce a status line that is
+  not re-verified against `az`.
 
 ## Context
 
@@ -24,11 +34,13 @@ monitoring in 7A).
 | AKS docs (current) | production single-system-pool cluster: **≥ 2 nodes** (3 recommended) |
 | Existing clusters | `az aks list` → none |
 
-## Decision (v1, proposed)
+## Decision (v1, as originally proposed)
 
 ```text
 RG rg-aks-platform-dev               (new, eastasia, non-prod name)
-## Architecture (v2 ASCII — revised per corrections)
+```
+
+### Architecture (v2 ASCII — revised per corrections)
 
 ```text
           eastasia
@@ -61,13 +73,19 @@ RG rg-aks-platform-dev               (new, eastasia, non-prod name)
   the API server endpoint is a separate AKS-managed FQDN.
 - No application LoadBalancers/Ingress in 7A (they belong to 7B).
 
+### Resulting cluster shape (as built)
 
+```text
 └── AKS aks-portfolio-dev             (k8s 1.36.x pinned, Free tier, OIDC + WI enabled)
     ├── system pool "sys"             Standard_D4s_v6, 2 nodes, regular, mode=System
     └── user pool "work" (TEMPORARY)  Standard_D2s_v6, 1 node, regular, mode=User,
                                       created ONLY for the 7A placement + pull tests,
                                       deleted immediately after evidence is captured
 ```
+
+Note: the v3 SKU-family recovery below moved `D4as_v5`/`D2as_v5` to
+`D4s_v6`/`D2s_v6`. The tree above shows the **final built shape**, not the v2
+pricing discussed further down.
 
 Why eastasia (documented, not silent): candidate SKUs are subscription-blocked
 in southeastasia at Location scope, unrestricted in eastasia with identical
