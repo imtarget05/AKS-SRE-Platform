@@ -13,16 +13,43 @@ terraform {
     }
   }
 
-  # Remote encrypted state on the portfolio tfstate account (same pattern as
-  # the backup-storage and release roots). Dedicated key — never mixed with
-  # application-backup state or Terraform cloud defaults.
-  backend "azurerm" {
-    resource_group_name  = "rg-flashsale-tfstate"
-    storage_account_name = "stflashs3ctfbk01"
-    container_name       = "tfstate"
-    key                  = "aks-foundation.terraform.tfstate"
-    use_azuread_auth     = true
-  }
+  # Remote encrypted state — PARTIAL CONFIG, values supplied per environment.
+  #
+  # HISTORY, because it explains why this block is empty rather than a copy of
+  # what used to be here. This block previously carried hardcoded values:
+  #
+  #     resource_group_name  = "rg-flashsale-tfstate"
+  #     storage_account_name = "stflashs3ctfbk01"
+  #     container_name       = "tfstate"
+  #     key                  = "aks-foundation.terraform.tfstate"
+  #
+  # Those pointed at ANOTHER repository's state store (FlashSale-Backend), and
+  # that storage account is gone from this subscription. `terraform init` failed
+  # with "no such host" — which is at least fail-closed, since it did NOT fall
+  # back to local state, but it made this root un-initialisable and un-deployable.
+  #
+  # Two rules are now enforced instead:
+  #
+  #   1. NO CROSS-REPO STATE COUPLING. This repository owns its own state
+  #      identity (rg-aks-tfstate / staksstate / tfstate). It must never be
+  #      initialised against another project's storage account, and it never
+  #      reads or writes another project's state keys. tests/probe_backend_isolation.py
+  #      fails the build if any forbidden portfolio resource name appears here.
+  #
+  #   2. NO CREDENTIALS IN SOURCE. Partial config means no value, key or token
+  #      is committed; environments/<env>/backend.hcl carries only storage
+  #      identity and key.
+  #
+  # `use_azuread_auth = true` lives in the backend.hcl files, not here, because
+  # authentication is per-environment (see S7 below). `use_oidc` is deliberately
+  # NOT set anywhere in committed config: a static value forces the GitHub
+  # Actions OIDC path, which reads ACTIONS_ID_TOKEN_REQUEST_TOKEN and therefore
+  # breaks a local `az login` init. One config, two paths:
+  #
+  #   local : `az login` supplies the token
+  #   CI    : ARM_USE_OIDC=true ARM_USE_AZUREAD_AUTH=true ARM_CLIENT_ID=…
+  #           ARM_TENANT_ID=… ARM_SUBSCRIPTION_ID=…
+  backend "azurerm" {}
 }
 
 provider "azurerm" {
