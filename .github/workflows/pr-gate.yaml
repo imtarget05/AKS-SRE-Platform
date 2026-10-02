@@ -114,7 +114,11 @@ jobs:
       - name: install kubeconform (pinned + checksummed)
         run: |
           set -euo pipefail
-          curl -sfL -o kubeconform.tar.gz \
+          # --proto '=https' because SonarCloud rule githubactions:S6506 is right
+          # about it: curl follows redirects by default, so an https URL can be
+          # redirected to http. Pinning the protocol closes that, independently of
+          # the checksum that follows.
+          curl -sfL --proto '=https' --tlsv1.2 -o kubeconform.tar.gz \
             "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
           echo "${KUBECONFORM_SHA256}  kubeconform.tar.gz" | sha256sum -c -
           tar xzf kubeconform.tar.gz kubeconform
@@ -165,22 +169,31 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Trivy is installed and invoked directly rather than through
-      # aquasecurity/trivy-action. Two measured reasons: the action's bundled
-      # installer fetches trivy v0.65.0 from its own script and failed inside
-      # the action on two consecutive runs, before any scan executed; and the
-      # action exposes the binary version as `version`, not `trivy-version`, so
-      # pinning it was silently ignored (Actions only warns on unknown inputs).
+      # The action bundled an install script that fetched trivy v0.65.0 from its
+      # own source and failed on the runner three runs in a row before any scan
+      # executed. A security scanner whose failure mode is "the job goes red and
+      # nothing is scanned" provides no security at all.
       #
-      # A security scanner that fails to install and takes the job down with it
-      # provides no security at all, so the version is pinned explicitly and the
-      # same command is used locally, which is what makes the ignore file
-      # verifiable.
-      - name: install trivy (pinned)
+      # The binary is downloaded and checksum-verified instead. SonarCloud
+      # flagged the previous `curl | sh` as githubactions:S8482 (BLOCKER,
+      # "executing downloaded artifacts directly without verification"), which is
+      # correct: piping an install script into a shell is exactly the pattern that
+      # rule exists for. The checksum below is the published value from
+      # trivy_0.74.0_checksums.txt, so the CI scan runs the same binary the
+      # .trivyignore entries were validated against.
+      - name: install trivy (pinned + checksummed)
+        env:
+          TRIVY_VERSION: "0.74.0"
+          TRIVY_SHA256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
         run: |
           set -euo pipefail
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sh -s -- -b /usr/local/bin v0.74.0
+          ASSET="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sfL --proto '=https' --tlsv1.2 -o "$ASSET" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${ASSET}"
+          echo "${TRIVY_SHA256}  ${ASSET}" | sha256sum -c -
+          tar xzf "$ASSET" trivy
+          sudo mv trivy /usr/local/bin/trivy
+          sudo chmod +x /usr/local/bin/trivy
           trivy --version
 
       # IaC/config scan only. No container image is built in Phase B, so an image
