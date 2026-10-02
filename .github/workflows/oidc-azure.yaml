@@ -1,0 +1,223 @@
+name: oidc-azure
+
+# CONTRACT ONLY in Phase B.
+#
+# Status vocabulary until Phase C provisions the identity:
+#   OIDC_WORKFLOW_CONTRACT = IMPLEMENTED_TESTED
+#   OIDC_LIVE_LOGIN        = NOT_VERIFIED
+#   OIDC_NEGATIVE_LIVE     = NOT_VERIFIED
+#
+# Phase C creates the Entra application, the federated credential, the ACR and
+# the repository-owned Terraform state. Until those exist there is nothing
+# legitimate to log into, and this workflow says so out loud rather than
+# printing a misleading green skip.
+#
+# There is no AZURE_CLIENT_SECRET, no storage key and no SAS token here, and
+# none may be added. Phase C binds client id, tenant and subscription via
+# repository variables on the `azure-verify` GitHub Environment.
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/oidc-azure.yaml"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Workflow level grants READ ONLY. `id-token: write` is deliberately NOT here:
+# it is granted only to the `live` job that actually needs to mint an OIDC token.
+# At workflow level it would also apply to `contract` and `status`, which read
+# files and write a summary — they have no reason to hold a token-minting
+# capability. SonarCloud rule githubactions:S8233 is right about this shape.
+permissions:
+  contents: read
+
+concurrency:
+  group: oidc-azure-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # Proves the CONTRACT is wired correctly: permissions are right, the expected
+  # federated subject is environment-bound and non-wildcard, and no credential
+  # secret is referenced. Runs even before Azure identity exists.
+  contract:
+    name: OIDC contract (static, no Azure)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: workflow requests id-token write
+        run: |
+          set -euo pipefail
+          grep -q 'id-token: *write' .github/workflows/oidc-azure.yaml
+          echo "id-token: write present."
+
+      # Greps the OTHER workflows and this file's non-comment lines. Matching
+      # this file's own comment prose, or its own grep pattern, would make the
+      # check fail on itself — a control that can never go green is worse than
+      # no control.
+      - name: no client secret anywhere in the workflow
+        run: |
+          set -euo pipefail
+          HITS=0
+          for f in .github/workflows/*.yaml; do
+            if grep -nE '^[^#]*(AZURE_CLIENT_SECRET|secrets\.[A-Z_]*CLIENT_SECRET)' "$f"; then
+              echo "::error::client secret reference in $f; this workflow must be secretless"
+              HITS=1
+            fi
+          done
+          if [ "$HITS" -ne 0 ]; then
+            exit 1
+          fi
+          echo "No client secret reference in any workflow."
+
+      - name: expected federated subject is environment-bound and exact
+        env:
+          EXPECTED_SUBJECT: repo:imtarget05/AKS-SRE-Platform:environment:azure-verify
+        run: |
+          set -euo pipefail
+          echo "Expected federated subject: $EXPECTED_SUBJECT"
+          case "$EXPECTED_SUBJECT" in
+            *:environment:azure-verify) echo "Environment-bound: yes" ;;
+            *) echo "::error::subject is not bound to the azure-verify Environment"; exit 1 ;;
+          esac
+          case "$EXPECTED_SUBJECT" in
+            *'*'*) echo "::error::subject contains a wildcard"; exit 1 ;;
+            *) echo "Wildcard: no" ;;
+          esac
+          # Also assert the literal subject appears in this workflow, so the
+          # checked-in contract and the enforced contract cannot drift apart.
+          grep -qF "$EXPECTED_SUBJECT" .github/workflows/oidc-azure.yaml
+          echo "Subject is present in the workflow as the enforced value."
+
+  # The live gate. CONDITIONALLY RUNS, and never runs green by accident.
+  #
+  # It is skipped while Phase C has not provisioned the identity, and the skip is
+  # declared here plus reported by the `status` job, so the repository never
+  # shows a passing OIDC login that did not happen. Once the identity exists the
+  # job runs for real, including the negative control.
+  live:
+    name: OIDC live (positive + negative control)
+    runs-on: ubuntu-latest
+    # Scoped to this job only. `contract` and `status` run without it.
+    permissions:
+      contents: read
+      # Required to mint an OIDC token for azure/login. Nothing else is granted.
+      id-token: write
+    # Bound to the GitHub Environment that owns the federated credential, so the
+    # OIDC token's `sub` claim matches the federated subject exactly.
+    environment: azure-verify
+    # No identity yet means NOT_VERIFIED, which the `status` job states in the
+    # run summary. Not a quiet pass.
+    if: ${{ vars.AZURE_CLIENT_ID != '' }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: azure/login@7184910d9eb2b1c5e48f7073824a90609bb9b6d6 # v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      # POSITIVE control: the environment-bound login above must have succeeded.
+      - name: positive control (environment-bound login)
+        run: |
+          set -euo pipefail
+          az account show --output json
+          echo "Positive control confirmed: environment-bound OIDC login succeeded."
+
+      # NEGATIVE CONTROL: a federated token whose `sub` claim is OUTSIDE the
+      # environment allowlist must be rejected by Entra. This proves the
+      # federated credential is actually restricted rather than merely present.
+      #
+      # Two properties this step must have, and must keep:
+      #
+      #  1. It refuses to report success when no token is available. A login
+      #     that fails simply because there was no credential would pass for the
+      #     wrong reason, which is the exact false-green this repo forbids.
+      #  2. It uses no `continue-on-error`. If the unbound login unexpectedly
+      #     succeeds, the step exits non-zero and fails the job. A masked
+      #     `outcome` field would turn that regression into green.
+      - name: negative control (unbound subject must be rejected)
+        env:
+          TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          # Supplied by Phase C, where an unbound federated credential exists so
+          # this control can be exercised for real. Absent until then.
+          UNBOUND_TOKEN: ${{ secrets.UNBOUND_OIDC_TOKEN }}
+          UNBOUND_SUBJECT: repo:imtarget05/AKS-SRE-Platform:environment:not-azure-verify
+        run: |
+          set -uo pipefail
+
+          # A fake or absent token must not be able to satisfy this control: a
+          # login that fails merely because there was no credential would pass
+          # for the wrong reason. Phase C mints a token whose `sub` is a real but
+          # un-permitted subject and supplies it here; until then the control
+          # cannot run, and it says so by failing rather than skipping.
+          if [ -z "${UNBOUND_TOKEN:-}" ]; then
+            echo "::error title=OIDC_NEGATIVE_LIVE=NOT_VERIFIED::"
+            echo "No unbound test token available, so this control did NOT execute."
+            echo "NOT_VERIFIED — not passed."
+            echo ""
+            echo "Phase C must mint a federated token for a subject outside the"
+            echo "azure-verify allowlist and supply it as the UNBOUND_OIDC_TOKEN secret."
+            exit 1
+          fi
+
+          NEG_RC=0
+          NEG_OUT="$(az login --service-principal \
+            --username "${UNBOUND_SUBJECT}" \
+            --tenant "${TENANT_ID}" \
+            --federated-token "${UNBOUND_TOKEN}" \
+            2>&1)" || NEG_RC=$?
+
+          if [ "$NEG_RC" -eq 0 ]; then
+            echo "::error title=NEGATIVE CONTROL FAILED::subject '${UNBOUND_SUBJECT}'"
+            echo "::error::was ACCEPTED. The federated credential is not restricted to the"
+            echo "::error::azure-verify environment. This is a real security regression."
+            exit 1
+          fi
+
+          echo "Negative control: unbound subject rejected as expected (rc=$NEG_RC)."
+          echo "$NEG_OUT" | grep -iE 'AADSTS70021|AADSTS700213|no matching federated|not.*directory' \
+            || echo "$NEG_OUT" | tail -3
+
+  # Deliberately visible, never a quiet pass. If identity is not provisioned,
+  # this job reports NOT_VERIFIED with the reason.
+  status:
+    name: OIDC status
+    runs-on: ubuntu-latest
+    # Reads the repository variable so the summary can state the real status
+    # whether or not the identity exists yet.
+    environment: azure-verify
+    steps:
+      - name: report live verification status
+        env:
+          CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## OIDC verification status"
+            echo ""
+            echo "- \`OIDC_WORKFLOW_CONTRACT\` = IMPLEMENTED_TESTED (static checks pass)"
+            if [ -z "${CLIENT_ID:-}" ]; then
+              echo "- \`OIDC_LIVE_LOGIN\` = **NOT_VERIFIED** — AZURE_CLIENT_ID is not set"
+              echo "- \`OIDC_NEGATIVE_LIVE\` = **NOT_VERIFIED** — no federated credential exists"
+              echo ""
+              echo "The \`live\` job was SKIPPED because no identity is provisioned. A skipped"
+              echo "OIDC login is not a passing OIDC login. Phase C creates the Entra"
+              echo "application, federated credential, ACR and repository-owned state."
+            else
+              echo "- \`OIDC_LIVE_LOGIN\` = see the \`live\` job result"
+              echo "- \`OIDC_NEGATIVE_LIVE\` = see the \`live\` job result"
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+

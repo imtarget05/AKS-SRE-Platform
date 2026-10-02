@@ -12,3 +12,14 @@ crash.log
 
 # Raw local artifacts (terraform plans, scratch) — never commit; sanitized evidence goes to docs/evidence/
 **/.local/
+
+# Node (app/sre-demo-api)
+node_modules/
+npm-debug.log*
+*.tgz
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.log

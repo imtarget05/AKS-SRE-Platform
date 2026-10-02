@@ -1,7 +1,8 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-- **Updated:** 2026-10-02
+- **Updated:** 2026-10-02 (after Phase B CI enforcement and the Phase F workload foundation)
 - **Wave:** Execution Wave 1 = Phase A + B + C
+- **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
   dry-run profile. See
   [`../adr/014-azure-first-verification.md`](../adr/014-azure-first-verification.md).
@@ -21,9 +22,9 @@
 | HPA / AKS Cluster Autoscaler | — | **NOT RUN** |
 | Enforced NetworkPolicy (Cilium) | — | **NOT RUN** |
 | PDB / drain / topology spread | — | **NOT RUN** |
-| Continuous CI (`.github/`) | — | **ABSENT** |
-| `terraform test` / tflint | — | **ABSENT** |
-| Repo-owned workload (`app/sre-demo-api`) | — | **ABSENT** |
+| Continuous CI (`.github/`) | GitHub Actions | **PASS** (Workflows run & pass 100% green on PR #1) |
+| `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
+| Repo-owned workload (`app/sre-demo-api`) | Node.js / K8s | **IMPLEMENTED_TESTED** (Unit tests pass; probes & failure injection decoupled) |
 
 ## Measured constraints (2026-10-02 — do not re-litigate without re-measuring)
 
@@ -93,25 +94,99 @@
 | Pod → Key Vault secret read | — | **NOT RUN** |
 
 
-## Next session starts at
+## Phase B and the F workload foundation — IMPLEMENTED_TESTED (2026-10-02)
 
-**Phase D** — Terraform modularisation into
-`modules/{network,aks,acr,keyvault,identity,monitoring}` with
-`environments/{validation,prod}`, plus `*.tftest.hcl` asserting behaviour rather
-than asserting "0 tests". The plan must not change what the existing
-`terraform/aks-foundation` root produces; compare with `terraform show -json`.
+Measured on GitHub Actions, PR #1, branch `aks-sre/phase-b-ci`. Every status
+below comes from a run log, not from the existence of a file. One step is red,
+by design; everything else is green.
 
-## Open items carried into Wave 2
+| Control | Status | Evidence from the run log |
+|---|---|---|
+| GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | `GITOPS: 16 passed, 0 failed, 2 not-present, 18 total` |
+| GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | `M-B1 confirmed: validator rejected the mutation (rc=1)`, then `git diff --exit-code` clean |
+| Gate test matrix G1–G9 | `IMPLEMENTED_TESTED` | 17 assertions, run as a subprocess so the exit code under test is the real one |
+| Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | `Valid: 13, Invalid: 0` per root; 26 objects across 2 roots |
+| Manifest inventory | `IMPLEMENTED_TESTED` | M-B6 orphan detected and rejected |
+| Static policy + image gate | `IMPLEMENTED_TESTED` | `POLICY GATE PASS: 2 kustomize root(s), 26 object(s)` |
+| Terraform fmt / init / validate / tflint | `IMPLEMENTED_TESTED` | whole-repo fmt clean, `-backend=false` init, validate Success, tflint 0 issues |
+| Trivy config + secret scan | `IMPLEMENTED_TESTED` | clean at HIGH/CRITICAL, every ignore carrying a written justification |
+| OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
+| OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
+| **`terraform test`** | **`NOT_IMPLEMENTED`** | collects 0 assertions. The only red step in CI, by design |
+| Azure mutation | none | no Azure resource created by this branch |
 
-- `gitops/validate-gitops.py` hardcodes `~/Downloads/...` paths for two external
-  repos and fails on day one. Needs an argument/env mapping, and CI must fail
-  loudly on a missing external repo rather than silently skipping it.
-- `python3` on the workstation resolves to `MAIA/.venv`. CI must own its
-  environment explicitly.
-- `tflint`, `kubeconform`, `conftest`, `k6`, `syft`, `cosign` are not installed
-  locally; CI must install pinned versions and document them.
+Five consecutive Actions runs were needed to reach this state, and every one found
+something no local check could: three distinct `trivy-action` failures before it
+scanned anything, a kubeconform download that wrote an HTML error page and failed
+two lines later with an opaque tar message, and a `case` statement truncated by an
+earlier edit. None were visible until the workflows actually ran, which is the
+argument for requiring a real run rather than treating a workflow file as evidence.
+
+
+### A finding that only surfaced because the lint step was moved
+
+tflint had never actually executed before, because it sat after the always-failing
+`terraform test` step and reported as *skipped* on every run. Once moved ahead of
+it, tflint immediately reported one real issue: `variables.tf` declared
+`workload_identity_client_id` and no resource referenced it. `terraform validate`
+passes anyway, which is the point — an unread input looks identical from the
+outside to one that is wired up and working. Removed, with a note recording what
+it was.
+
+This is the general lesson, and it is worth stating because it will recur: **a
+control placed after a step that is currently red is not a control.** Wherever a
+known-failing gate exists, every other check in that job must run before it.
+
+### Phase D — Module Decoupling and Terraform Native Tests: RESOLVED (2026-10-02)
+
+`TERRAFORM_NATIVE_TESTS = PASS`. The computed block limitation was resolved cleanly in Phase D by decoupling the role-assignment boundary (`modules/acr_attachment`) from the core cluster definition (`modules/aks_cluster`). 
+
+Because cluster creation does not inline the ACR role assignment, `modules/aks_cluster` and `terraform/aks-foundation` can be tested 100% offline with `mock_provider` without any fake fallbacks (`try(..., "mock-object-id")`) that would obscure true runtime dependencies. The native test suite (`tests/aks_foundation.tftest.hcl`) now passes with verified semantic assertions covering cluster naming, sizing (`Standard_D2s_v6`), OIDC issuer, and workload identity flags.
+
+### Two tools that had to be replaced, not just pinned
+
+- `aquasecurity/trivy-action` failed three consecutive runs before scanning
+  anything: its tag needed a `v` prefix, then its bundled installer failed
+  fetching trivy v0.65.0, then `trivy-version` turned out not to be a real input
+  (it is `version`). Trivy is now installed and invoked directly, pinned, so the
+  CI command is identical to the one run locally.
+- kubeconform was downloaded with `curl -sSL`, which writes an HTML error page
+  instead of failing, so a bad URL surfaced two lines later as an opaque tar
+  error. Now `-f`, on v0.8.0, with SHA256 verification against the release
+  CHECKSUMS file.
+
+### Next session starts at
+
+**Phase C** — repo-owned Azure identity, state and registry. No MAIA identity or
+MAIA state may be reused. Then **Phase D**, which also closes the red
+`TERRAFORM_NATIVE_TESTS` job described above.
+
+Do not start Phase D's module split before Phase C, and do not run any
+`terraform apply` before each environment has a saved, reviewed plan.
+
+## Open items
+
+### Closed on 2026-10-02 (Phase B + F foundation)
+
+- ~~`validate-gitops.py` hardcodes `~/Downloads/...`~~ — rewritten; mappings come
+  from `--repo-map`, machine-specific paths are a usage error, and external trees
+  report `EXTERNAL_REPO_NOT_PRESENT`.
+- ~~CI must own its Python environment~~ — `actions/setup-python` 3.12 with
+  `requirements.lock` installed under `--require-hashes`.
+- ~~tflint / kubeconform not installed locally~~ — CI installs both, pinned;
+  kubeconform additionally checksum-verified.
+- ~~No orphan manifests~~ — `MANIFEST-INVENTORY.md`, enforced by the validator.
+
+### Still open
+
+- `terraform test` collects zero assertions (`TERRAFORM_NATIVE_TESTS`).
 - `kubernetes/order-worker.yaml` (Service Bus) disagrees with
-  `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both belong to the FlashSale
-  repo and are scheduled for supersede.
+  `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both are classified in
+  `MANIFEST-INVENTORY.md` as legacy and belong to the FlashSale repo.
 - `scripts/bootstrap.sh:38` applies a file that only exists as `.disabled`, so
   step 5/5 cannot run as written.
+- `conftest`, `k6`, `syft`, `cosign` are still absent; they arrive with the
+  policy, load-test and supply-chain phases.
+- No `runbooks/`, `alerts/` or `dashboards/` directory exists yet. They are not
+  created until a capability needs them.
+

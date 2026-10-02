@@ -1,0 +1,146 @@
+# The repo-owned workload. Every hardening decision here exists to make a later
+# phase observable rather than merely correct:
+#
+#   * three distinct probes, so readiness failure and liveness failure are
+#     separable events (Phase L) instead of one vague "unhealthy";
+#   * startupProbe with a high failureThreshold, so a slow Node boot under
+#     load is not mistaken for a crash;
+#   * resources.requests set, because both HPA (CPU) and the scheduler need
+#     them, and a Deployment without them silently never scales (Phase K);
+#   * topologySpreadConstraints, so a 3-node cluster actually spreads instead of
+#     stacking replicas on one node, which is what makes a node-drain proof mean
+#     something (Phase L);
+#   * securityContext at BOTH pod and container level, because Pod Security
+#     `restricted` evaluates them separately;
+#   * a separate ServiceAccount, so the RBAC negative control in Phase N has a
+#     subject to test.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+    app.kubernetes.io/part-of: aks-sre-platform
+spec:
+  replicas: 2 # >= 2 so a single pod loss is survivable; HPA owns the range
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Never take capacity below the PDB floor while rolling, and allow one
+      # extra pod so a new version can become Ready before the old one is
+      # removed. maxUnavailable: 0 is what makes the rollout zero-downtime.
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sre-demo-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sre-demo-api
+        app.kubernetes.io/part-of: aks-sre-platform
+    spec:
+      serviceAccountName: sre-demo-api
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread across nodes. maxSkew 1 with ScheduleAnyway keeps the scheduler
+      # from leaving a pod Pending on a single-node cluster; DoNotSchedule would
+      # deadlock a pod there and make the drain proof fail for the wrong reason.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: sre-demo-api
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: sre-demo-api
+          # Replaced with a digest reference by the validation overlay and by the
+          # Phase O supply-chain pipeline. Never `:latest`: a mutable tag makes
+          # a rollout unreproducible and defeats drift detection.
+          image: sre-demo-api:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: PORT
+              value: "8080"
+            - name: OTEL_SERVICE_NAME
+              value: sre-demo-api
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: sre-demo-api-config
+                  key: otlp-endpoint
+            # NOTE: FAILURE_INJECTION_ARMED is intentionally NOT set here. If it
+            # were declared as an explicit `env` entry, it would take precedence
+            # over envFrom and the validation overlay's ConfigMap could never arm
+            # it — which is exactly the bug this workload exists to avoid. The
+            # value comes from sre-demo-api-config only.
+          envFrom:
+            - configMapRef:
+                name: sre-demo-api-config
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            # Generous: Node with OTel instrumentation can take several seconds
+            # to boot, and a restart loop during startup is worse than a slow start.
+            periodSeconds: 2
+            failureThreshold: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
+            successThreshold: 1
+          livenessProbe:
+            # Deliberately /health/live, NOT /health/ready. Liveness must not
+            # depend on the dependency: if it did, a database blip would restart
+            # every pod simultaneously and turn a recoverable degradation into an
+            # outage. Readiness drains traffic; liveness restarts only on a dead
+            # process.
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+            successThreshold: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            privileged: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        # readOnlyRootFilesystem means /tmp must be an explicit writable volume,
+        # otherwise Node cannot write and the container dies on first use.
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 32Mi

@@ -1,0 +1,40 @@
+# Trivy ignore file.
+#
+# Trivy's plain-text ignore format takes one vulnerability or misconfiguration ID
+# per line. The YAML form (.trivyignore.yaml with per-path scoping) is parsed but
+# was measured on trivy 0.74.0 to have NO effect on exit status, so it would have
+# been a file that looks like scoping and suppresses nothing. Verified 2026-10-02.
+#
+# Every ID below is written as AVD-<ID>, which is what trivy actually matches.
+# Each entry states the decision that makes the finding acceptable, so a later
+# change to that decision has something to contradict. An ignore file full of
+# "fix later" is accepted risk with the reasoning deleted.
+
+# ---------------------------------------------------------------------------
+# AVD-AZU-0041 - "AKS has no API Server Authorized IP Ranges"  (CRITICAL)
+#
+# DECISION: this is the validation profile, not the production target. ADR-014
+# fixes the production target as a private cluster; the validation cluster
+# deliberately uses a public API server so a transient CI run can reach it
+# without a bastion, sized against the measured 10 vCPU envelope.
+#
+# MUST be removed, not extended, when a prod environment is created.
+AVD-AZU-0041
+
+# ---------------------------------------------------------------------------
+# AVD-KSV-0014 - "Root file system is not read-only"  (HIGH)
+# AVD-KSV-0118 - "Default security context configured"  (HIGH)
+#
+# Both hit only manifests classified in MANIFEST-INVENTORY.md as
+# EXTERNAL_WORKLOAD_REFERENCE or legacy proof material that is not deployed from
+# this repository. Hardening a manifest nobody deploys would create the
+# appearance of a fixed control, which is worse than an honest gap.
+#
+#   kubernetes/order-worker.yaml            EXTERNAL_WORKLOAD_REFERENCE
+#   platform/envoy-gateway/proof-backend/   legacy pre-Azure proof backend
+#
+# The repo-owned workload under deploy/ does set readOnlyRootFilesystem and a full
+# securityContext, and scripts/policy-gate.py enforces that. It is not ignored.
+# When Phase G replaces the envoy proof backend, re-enable these IDs.
+AVD-KSV-0014
+AVD-KSV-0118

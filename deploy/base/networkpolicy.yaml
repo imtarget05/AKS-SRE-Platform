@@ -1,0 +1,144 @@
+# NetworkPolicy. Enforced only where the CNI enforces it: Azure CNI Overlay +
+# Cilium on AKS (Phase E/H). Under local kindnet these objects are accepted by
+# the API server and silently ignored, which is exactly why the negative control
+# must run on AKS and not locally — see ADR-014.
+#
+# Default deny, then explicit allow. There is no allow-all fallback: an
+# allow-all policy would make every deny below unverifiable.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  labels:
+    app.kubernetes.io/name: aks-sre-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# DNS must be allowed or nothing resolves. Without this the deny-all egress
+# below breaks every hostname-based call, including the OTLP endpoint.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-dns
+  labels:
+    app.kubernetes.io/name: aks-sre-platform
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: sre-demo-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Ingress from the Gateway, matched by the shared gateway namespace label.
+    # Scoped by namespace AND pod label: allowing "the whole gateway namespace"
+    # would let any pod in it reach the API, which is not what least privilege
+    # means here.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    # Prometheus scraping. Narrowed to the monitoring namespace because
+    # /metrics is a read-only endpoint, but it is still an information leak if
+    # exposed cluster-wide.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # Only the mock dependency. No general internet egress: the API needs none,
+    # and allowing 0.0.0.0/0 here would negate the deny.
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mock-dependency
+      ports:
+        - protocol: TCP
+          port: 8080
+    # OTLP to the collector, port 4318 (HTTP). Sourced from the monitoring
+    # namespace, which is where the collector lives in both profiles.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 4318
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mock-dependency
+  labels:
+    app.kubernetes.io/name: mock-dependency
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: mock-dependency
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only sre-demo-api may call the dependency. This is the rule the Phase N
+    # negative control proves bites: an unauthorized pod gets a connection
+    # timeout, not a 200.
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sre-demo-api
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # DNS only. The dependency is a leaf: it calls nothing.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
