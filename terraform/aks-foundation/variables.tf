@@ -47,11 +47,13 @@ variable "workload_pool_vm_size" {
   description = "Temporary user pool SKU (2 vCPU; a different SKU hedges capacity)."
 }
 
-variable "workload_identity_client_id" {
-  type        = string
-  default     = ""
-  description = "Set from a later phase: reserved for the future ACR-pull/workload identity wiring. Empty = skip federated wiring here."
-}
+# REMOVED 2026-10-02: variable "workload_identity_client_id".
+#
+# It was declared but never referenced, which `terraform validate` does not catch
+# and `tflint`'s terraform_unused_declarations rule did. It was a placeholder for
+# "a later phase", and an input that no resource reads is indistinguishable from
+# an input that was wired up and works. Phase C introduces the real identity, so
+# the variable is created where it is actually consumed.
 
 # TEMPORARY 7A.2 WI-proof safety: default false (no identity resources).
 # true creates ONLY the temp UAMI + FIC + Reader-on-ACR in wi-proof.tf.
