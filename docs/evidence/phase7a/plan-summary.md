@@ -1,5 +1,21 @@
 # AKS Foundation — plan summary (sanitized, quota recovery → Dsv6)
 
+> **HISTORICAL — SUPERSEDED — NOT THE CURRENT PLAN.**
+> This is the sanitized plan for the **2026-09-21** Phase 7A replan, retained
+> because it documents the quota-recovery decision. It describes a
+> **2 × `Standard_D4s_v6`** system pool and an `aks_acr_pull` role assignment
+> that lived in this directory at the time.
+>
+> Neither reflects the current source. `terraform/aks-foundation` now defaults
+> to `1 × Standard_D2s_v6` (see `variables.tf`), and the `AcrPull` assignment
+> moved to `terraform/modules/acr_attachment`.
+>
+> The last Azure validation run (2026-10-02) used **1 × `D2s_v6` system +
+> 1 × `D2s_v6` user = 4 vCPU** — see
+> [`../transient-aks-run-PASS.md`](../transient-aks-run-PASS.md), which is the
+> authoritative evidence document. **Current source is
+> `terraform/modules/aks_cluster`, not this snapshot.**
+
 - Date: 2026-09-21 (recovery replan)
 - Source commit: `e9d086c`
 - Dir: `terraform/aks-foundation`

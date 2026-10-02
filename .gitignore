@@ -13,6 +13,12 @@ crash.log
 # Raw local artifacts (terraform plans, scratch) — never commit; sanitized evidence goes to docs/evidence/
 **/.local/
 
+# Sanitized plan snapshots must not live in the Terraform source area — they are
+# historical evidence and belong under docs/evidence/<phase>/. Regenerate with
+# `terraform plan -out=<phase>.tfplan`, then hand-sanitize into docs/evidence/.
+terraform/**/plan.txt
+terraform/**/plan-summary.md
+
 # Node (app/sre-demo-api)
 node_modules/
 npm-debug.log*
