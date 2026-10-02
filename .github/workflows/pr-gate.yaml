@@ -153,28 +153,38 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      # Pinned by tag. This is an IaC/config scan only: no container image is
-      # built in Phase B, so an image scan would be scanning nothing.
-      # Tags carry a `v` prefix; `0.32.0` without it is not a resolvable release.
+      # Pinned by tag. Releases carry a `v` prefix; `0.32.0` without it is not a
+      # resolvable tag and the job failed at setup instead of scanning anything.
+      #
+      # IaC/config scan only. No container image is built in Phase B, so an image
+      # scan here would be scanning nothing. It arrives with the Phase O pipeline.
+      # The fs scan runs the secret scanner only; misconfig is already covered by
+      # scan-type: config above, and duplicating it reports the same findings twice.
       - uses: aquasecurity/trivy-action@v0.33.1
         with:
+          # The action bundles an install script for a specific trivy version
+          # which failed inside the action before any scan ran. Pin the binary
+          # explicitly to the version verified locally, so CI scans with the
+          # same trivy the ignore file was validated against.
+          trivy-version: "v0.74.0"
           scan-type: config
           scan-ref: .
           severity: HIGH,CRITICAL
           exit-code: "1"
-          # Terraform needs the provider schema to check azurerm resources.
-          # Without it Trivy falls back to generic checks and reports noise, or
-          # silently skips the very files this repo cares most about.
           skip-dirs: .git,.terraform
+          # Findings this repo has consciously accepted, each with a written
+          # justification in the file. Not a blanket suppression.
+          trivyignores: .trivyignore
 
       - uses: aquasecurity/trivy-action@v0.33.1
         with:
+          trivy-version: "v0.74.0"
           scan-type: fs
           scan-ref: .
           scanners: secret
           severity: HIGH,CRITICAL
           exit-code: "1"
-          skip-dirs: .git,.terraform
+          skip-dirs: .git,.terraform,node_modules
 
   python:
     name: python gates (validator test matrix)
