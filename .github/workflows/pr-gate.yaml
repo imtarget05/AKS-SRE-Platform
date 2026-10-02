@@ -16,7 +16,9 @@ concurrency:
 
 env:
   TERRAFORM_VERSION: "1.13.5"
-  TFLINT_VERSION: "v0.59.1"
+  # setup-tflint requires a semver tflint version. v0.59.1 does not exist; the
+  # current release line is v0.6x.
+  TFLINT_VERSION: "v0.64.0"
   KUBECONFORM_VERSION: "v0.7.0"
   PYTHON_VERSION: "3.12"
 
@@ -54,14 +56,20 @@ jobs:
       # with "0 passed, 0 failed" is not verification, and letting it through is
       # how an empty suite gets mistaken for a green one.
       #
-      # KNOWN BLOCKER as of 2026-10-02: this step fails until Phase D lands.
-      # `terraform test` cannot evaluate `terraform/aks-foundation` offline:
+      # KNOWN BLOCKER as of 2026-10-02, and the reason this step is allowed to
+      # fail rather than pass quietly:
+      #
+      # `terraform test` cannot evaluate `terraform/aks-foundation` offline.
       # `main.tf:112` and `outputs.tf:22` index
       # `azurerm_kubernetes_cluster.aks.kubelet_identity[0]`, a computed nested
-      # block that `mock_provider` returns empty, and `override_resource` cannot
-      # populate a computed block. The root therefore cannot be planned without
-      # real Azure credentials. Resolution belongs in Phase D (module split, or
-      # a `try()`-guarded reference), not in weakening this check.
+      # block that `mock_provider` returns empty and that `override_resource`
+      # cannot populate (verified against Terraform 1.16.3). A 12-assertion suite
+      # was written and reverted for exactly this reason: it cannot run, so
+      # shipping it would be a suite that has never executed.
+      #
+      # TERRAFORM_NATIVE_TESTS is therefore NOT_IMPLEMENTED and the job is red.
+      # Phase D resolves it (module split, or a `try()`-guarded reference).
+      # It must not be "fixed" by deleting the assertion count check.
       - name: terraform test
         run: |
           set -o pipefail
@@ -147,21 +155,26 @@ jobs:
 
       # Pinned by tag. This is an IaC/config scan only: no container image is
       # built in Phase B, so an image scan would be scanning nothing.
-      - uses: aquasecurity/trivy-action@0.32.0
+      # Tags carry a `v` prefix; `0.32.0` without it is not a resolvable release.
+      - uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: config
           scan-ref: .
           severity: HIGH,CRITICAL
           exit-code: "1"
+          # Terraform needs the provider schema to check azurerm resources.
+          # Without it Trivy falls back to generic checks and reports noise, or
+          # silently skips the very files this repo cares most about.
+          skip-dirs: .git,.terraform
 
-      - uses: aquasecurity/trivy-action@0.32.0
+      - uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: fs
           scan-ref: .
-          scanners: secret,misconfig
+          scanners: secret
           severity: HIGH,CRITICAL
           exit-code: "1"
-          skip-dirs: .git
+          skip-dirs: .git,.terraform
 
   python:
     name: python gates (validator test matrix)

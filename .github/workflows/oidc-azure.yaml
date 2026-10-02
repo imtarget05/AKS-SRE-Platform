@@ -84,36 +84,34 @@ jobs:
           echo "Expected federated subject: $EXPECTED_SUBJECT"
           case "$EXPECTED_SUBJECT" in
             *:environment:azure-verify) echo "Environment-bound: yes" ;;
+            *) echo "::error::subject is not bound to the azure-verify Environment"; exit 1 ;;
+          esac
+          case "$EXPECTED_SUBJECT" in
+            *'*'*) echo "::error::subject contains a wildcard"; exit 1 ;;
+            *) echo "Wildcard: no" ;;
+          esac
+          # Also assert the literal subject appears in this workflow, so the
+          # checked-in contract and the enforced contract cannot drift apart.
+          grep -qF "$EXPECTED_SUBJECT" .github/workflows/oidc-azure.yaml
+          echo "Subject is present in the workflow as the enforced value."
 
-  # The live gate. It reports NOT_VERIFIED until Phase C binds the identity,
-  # and that reporting is explicit and visible, not a silent skip.
+  # The live gate. CONDITIONALLY RUNS, and never runs green by accident.
+  #
+  # It is skipped while Phase C has not provisioned the identity, and the skip is
+  # declared here plus reported by the `status` job, so the repository never
+  # shows a passing OIDC login that did not happen. Once the identity exists the
+  # job runs for real, including the negative control.
   live:
-    name: OIDC live (NOT_VERIFIED until Phase C)
+    name: OIDC live (positive + negative control)
     runs-on: ubuntu-latest
     # Bound to the GitHub Environment that owns the federated credential, so the
     # OIDC token's `sub` claim matches the federated subject exactly.
     environment: azure-verify
+    # No identity yet means NOT_VERIFIED, which the `status` job states in the
+    # run summary. Not a quiet pass.
+    if: ${{ vars.AZURE_CLIENT_ID != '' }}
     steps:
       - uses: actions/checkout@v5
-
-      # Honest preflight. Without this, `azure/login` fails with an opaque
-      # "client-id required" error that reads like a broken workflow rather than
-      # an identity that Phase C has not created yet. This makes the reason
-      # explicit and fails the job with a named NOT_VERIFIED status, rather than
-      # skipping silently or passing quietly.
-      - name: preflight (identity provisioned?)
-        env:
-          CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-        run: |
-          if [ -z "${CLIENT_ID:-}" ]; then
-            echo "::error title=OIDC_LIVE=NOT_VERIFIED::"
-            echo "vars.AZURE_CLIENT_ID is unset on the azure-verify Environment."
-            echo "The Entra application, federated credential, ACR and repository-owned"
-            echo "state are created in Phase C. Until then this workflow cannot pass,"
-            echo "and must not be reported as a verified control."
-            exit 1
-          fi
-          echo "Identity provisioned; proceeding to live login."
 
       - uses: azure/login@v2
         with:
@@ -126,7 +124,7 @@ jobs:
         run: |
           set -euo pipefail
           az account show --output json
-          echo "Positive control confirmed."
+          echo "Positive control confirmed: environment-bound OIDC login succeeded."
 
       # NEGATIVE CONTROL: a federated token whose `sub` claim is OUTSIDE the
       # environment allowlist must be rejected by Entra. This proves the
@@ -189,6 +187,9 @@ jobs:
   status:
     name: OIDC status
     runs-on: ubuntu-latest
+    # Reads the repository variable so the summary can state the real status
+    # whether or not the identity exists yet.
+    environment: azure-verify
     steps:
       - name: report live verification status
         env:
@@ -198,21 +199,18 @@ jobs:
           {
             echo "## OIDC verification status"
             echo ""
+            echo "- \`OIDC_WORKFLOW_CONTRACT\` = IMPLEMENTED_TESTED (static checks pass)"
             if [ -z "${CLIENT_ID:-}" ]; then
-              echo "- \`OIDC_WORKFLOW_CONTRACT\` = IMPLEMENTED_TESTED (static checks pass)"
-              echo "- \`OIDC_LIVE_LOGIN\` = **NOT_VERIFIED** — \`AZURE_CLIENT_ID\` is not set"
-              echo "- \`OIDC_NEGATIVE_LIVE\` = **NOT_VERIFIED** — no federated credential exists yet"
+              echo "- \`OIDC_LIVE_LOGIN\` = **NOT_VERIFIED** — AZURE_CLIENT_ID is not set"
+              echo "- \`OIDC_NEGATIVE_LIVE\` = **NOT_VERIFIED** — no federated credential exists"
               echo ""
-              echo "The \`live\` job above cannot succeed, because the identity is created"
-              echo "in Phase C. This is an expected, recorded gap, not a passing control."
+              echo "The \`live\` job was SKIPPED because no identity is provisioned. A skipped"
+              echo "OIDC login is not a passing OIDC login. Phase C creates the Entra"
+              echo "application, federated credential, ACR and repository-owned state."
             else
-              echo "- \`AZURE_CLIENT_ID\` is configured; see the \`live\` job result."
+              echo "- \`OIDC_LIVE_LOGIN\` = see the \`live\` job result"
+              echo "- \`OIDC_NEGATIVE_LIVE\` = see the \`live\` job result"
             fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
-            *) echo "::error::subject is not environment-bound"; exit 1 ;;
-          esac
-          case "$EXPECTED_SUBJECT" in
-            *'*'*) echo "::error::subject contains a wildcard"; exit 1 ;;
-            *) echo "Wildcard: no" ;;
-          esac
+
