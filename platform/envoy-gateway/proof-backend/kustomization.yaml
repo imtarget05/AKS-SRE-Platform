@@ -1,0 +1,14 @@
+# Maintained kustomize root for the north-south proof backend.
+#
+# This is a temporary evidence workload (see README): it exists so the Gateway
+# has a real backend to route to during L3/L8 proof. It is plain Kubernetes
+# (Deployment + Service), so kubeconform validates it strictly.
+#
+# The platform-gateway namespace is owned by ../gateway/namespace.yaml. Render
+# that root first on a fresh cluster; this root does not duplicate the Namespace
+# object, because two roots creating the same object is how drift starts.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - proof-backend.yaml

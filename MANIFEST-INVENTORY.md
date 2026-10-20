@@ -14,7 +14,15 @@ fails CI.** There are no silent orphans.
 | `LEGACY_NOT_DEPLOYED` | Retained as history or design record. Not in any kustomization. Never deployed from this repo. |
 | `EXTERNAL_WORKLOAD_REFERENCE` | Describes a workload owned by another repository. This repo holds a reference/contract, not the workload. |
 | `SUPERSEDED` | Contradicted or replaced. Kept for the record until the replacement lands, then removed. |
+| `REFERENCE_NOT_RENDERED` | A real manifest or chart input, but no `kustomization.yaml` picks it up, so pr-gate neither renders nor schema-validates it. Applied out-of-band or by Helm. Not evidence of a CI-covered contract. |
 | `FUTURE_PHASE` | Planned and owned by this repo, not yet written. Must name the phase. |
+
+> **Correction (2026-10-20).** Rows previously marked `RENDERED` under
+> `platform/observability/` were not reachable from any `kustomization.yaml`
+> (there was none under `platform/`), so pr-gate never rendered them. They are
+> now labelled `REFERENCE_NOT_RENDERED`. The two `envoy-gateway` roots gained
+> real `kustomization.yaml` files in the same change, so their `RENDERED` status
+> is now produced by CI rather than asserted by this document.
 
 ## `kubernetes/` — legacy tree
 
@@ -31,8 +39,11 @@ fails CI.** There are no silent orphans.
 
 | File | Status | Reason |
 |---|---|---|
-| `platform/envoy-gateway/gateway/*.yaml` | `RENDERED` | GatewayClass / Gateway / EnvoyProxy. Validated by kubeconform via `kustomize`. |
-| `platform/envoy-gateway/proof-backend/*.yaml` | `RENDERED` | Backend used by the north-south proof. |
+| `platform/envoy-gateway/gateway/kustomization.yaml` | `RENDERED` | Root for gatewayclass/envoyproxy/gateway/httproute-proof + the namespace. Added 2026-10-20; before it, the files below were claimed as rendered but had no root. |
+| `platform/envoy-gateway/gateway/*.yaml` | `RENDERED` | GatewayClass / Gateway / EnvoyProxy / HTTPRoute, validated by kubeconform via the root above. CRD kinds are in pr-gate's skip-list. |
+| `platform/envoy-gateway/proof-backend/kustomization.yaml` | `RENDERED` | Root for the temporary proof backend. |
+| `platform/envoy-gateway/proof-backend/*.yaml` | `RENDERED` | Deployment + Service used by the north-south proof; strict kubeconform. |
+| `platform/envoy-gateway/values.yaml` | `REFERENCE_NOT_RENDERED` | Helm chart values for the local Envoy Gateway install. A chart input, not a Kubernetes object; kubeconform would correctly reject it. |
 | `platform/argocd/appproject.yaml` | `RENDERED` | The AppProject both Applications live in. Validated by `gitops/validate-gitops.py`. |
 | `platform/argocd/applications/*.yaml` | `RENDERED` | The two maintained Argo CD Applications (`flashsale`, `legacyapp`). This is the directory `gitops/validate-gitops.py` validates and the negative control M-B1 mutates (ADR-015). |
 | `gitops/applications/*.yaml` | `REMOVED` | Stale duplicates that drifted from the maintained Applications (old overlay path, `prune: true`). ADR-015 declares `platform/argocd/applications/` the only live Application source, so the duplicates were deleted instead of kept in sync. |
@@ -41,9 +52,10 @@ fails CI.** There are no silent orphans.
 
 | File | Status | Reason |
 |---|---|---|
-| `platform/observability/dashboards/*.yaml` | `RENDERED` | Grafana dashboards provisioned from Git. |
-| `platform/observability/*servicemonitor*.yaml` | `RENDERED` | ServiceMonitors for Argo CD and Envoy Gateway. |
-| `platform/observability/local-platform-prometheusrule.yaml` | `RENDERED` | The one alert rule with real firing/resolving evidence (`docs/evidence/local-platform/l10-observability-PASS.md`). |
+| `platform/observability/dashboards.yaml` | `REFERENCE_NOT_RENDERED` | Three Grafana dashboard ConfigMaps, applied out-of-band. **Contains `grafana-dashboard-local-platform`, which is also defined in `dashboards/local-platform-dashboard.yaml`.** Two files owning one object name is a real conflict; it is recorded here instead of hidden behind a `RENDERED` label. |
+| `platform/observability/dashboards/*.yaml` | `REFERENCE_NOT_RENDERED` | Grafana dashboards applied out-of-band. CRD/ConfigMap kinds are not rendered by CI. |
+| `platform/observability/*servicemonitor*.yaml` | `REFERENCE_NOT_RENDERED` | ServiceMonitors for Argo CD and Envoy Gateway (`monitoring.coreos.com/v1`, CRD). |
+| `platform/observability/local-platform-prometheusrule.yaml` | `REFERENCE_NOT_RENDERED` | The one alert rule with real firing/resolving evidence (`docs/evidence/local-platform/l10-observability-PASS.md`). Evidence exists; CI schema coverage does not. |
 | `platform/observability/kube-prometheus-stack-values.yaml` | `LEGACY_NOT_DEPLOYED` | Helm values retained for the local stack; not applied by any CI path. |
 
 ## `app/` and `deploy/`

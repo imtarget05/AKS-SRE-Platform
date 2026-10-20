@@ -1,0 +1,18 @@
+# Maintained kustomize root for the shared north-south Gateway.
+#
+# Why this file exists: MANIFEST-INVENTORY.md classified these manifests as
+# RENDERED ("validated by kubeconform via kustomize"), but until this file was
+# added there was no kustomization.yaml under platform/, so pr-gate's render
+# loop never saw them. The claim was true of the intent and false of the CI.
+#
+# CRD-backed kinds are covered by the skip-list in .github/workflows/pr-gate.yaml
+# (GatewayClass, Gateway, HTTPRoute, EnvoyProxy).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - gatewayclass.yaml
+  - envoyproxy.yaml
+  - gateway.yaml
+  - httproute-proof.yaml
