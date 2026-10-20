@@ -43,7 +43,7 @@ The platform strictly separates infrastructure provisioning from application dep
 
 1. **Terraform (Infrastructure):** Manages the Azure boundaries for the platform itself (AKS cluster, node pools, networking foundation). Active roots and rules: [`terraform/README.md`](terraform/README.md). Application infrastructure (ACR, Service Bus, storage) lives with the owning workload repo.
 
-2. **Bootstrap script (Platform Components):** `scripts/bootstrap.sh` installs Argo CD (upstream install manifest) and KEDA (upstream `kedacore/keda` Helm chart) into an already-provisioned cluster. There is **no Helm chart in this repo** (KEDA and Argo CD are consumed as upstream artifacts), and **no Ingress Controller and no external-secrets manifest exist anywhere in this repository** — those are not implemented here. Two further honest caveats: `scripts/bootstrap.sh:38` applies `gitops/argocd/application.yaml`, which exists in this repo only as `gitops/argocd/application.yaml.disabled`, so step 5/5 does not run as written; and the `TriggerAuthentication` Secret it applies is created out-of-band in a later phase, not by anything in this repo (`kubernetes/keda-trigger-auth.yaml:1-5`).
+2. **Bootstrap script (Platform Components):** `scripts/bootstrap.sh` installs Argo CD (upstream install manifest) and KEDA (upstream `kedacore/keda` Helm chart) into an already-provisioned cluster, then applies the AppProject and the maintained Applications from `platform/argocd/applications/`. There is **no Helm chart in this repo** (KEDA and Argo CD are consumed as upstream artifacts), and **no Ingress Controller and no external-secrets manifest exist anywhere in this repository** — those are not implemented here. **Fixed 2026-10-20:** the script previously referenced `gitops/argocd/application.yaml` (only present as `.disabled`) and applied four manifests that `MANIFEST-INVENTORY.md` classifies as undeployable. It now validates its inputs before touching the cluster, applies only maintained paths, and refuses to apply `legacyapp.yaml` unless `APPLY_LEGACYAPP=1` (ADR-015 source switch).
 3. **Argo CD (GitOps):** Reconciles the desired application state from Git directly into the cluster, providing self-healing and drift detection.
 
 ## 🚀 Key Platform Features — as actually proven
@@ -102,10 +102,13 @@ is a design intention presented as a result.
   Secret, while `kubernetes/keda-autoscaler.yaml` scales on a **RabbitMQ**
   `QueueLength` trigger. These two halves disagree. Both belong to the
   FlashSale repo's concerns and are being superseded, not extended.
-- `scripts/bootstrap.sh:38` applies `gitops/argocd/application.yaml`, which only
-  exists here as `application.yaml.disabled`, so step 5/5 cannot run as written.
-- The `TriggerAuthentication` Secret that `bootstrap.sh:30` applies is created
-  out-of-band, not by anything in this repo.
+- ~~`scripts/bootstrap.sh:38` applies `gitops/argocd/application.yaml`, which only
+  exists here as `application.yaml.disabled`, so step 5/5 cannot run as written.~~
+  **Fixed 2026-10-20** — the script now applies `platform/argocd/applications/`
+  and fails fast on a missing input.
+- ~~The `TriggerAuthentication` Secret that `bootstrap.sh:30` applies is created
+  out-of-band, not by anything in this repo.~~ **Removed from the script** — those
+  manifests are `LEGACY_NOT_DEPLOYED` in `MANIFEST-INVENTORY.md`.
 
 ## 🗺️ Where the work actually stands
 

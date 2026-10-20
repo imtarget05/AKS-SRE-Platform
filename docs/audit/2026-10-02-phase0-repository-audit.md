@@ -99,8 +99,9 @@ Two internal inconsistencies already recorded in the README, confirmed still tru
 - `kubernetes/order-worker.yaml:29-33` injects a **Service Bus** connection string
   while `kubernetes/keda-autoscaler.yaml` watches **RabbitMQ** `QueueLength`.
 - `kubernetes/keda-trigger-auth.yaml` references a secret created out-of-band;
-  `scripts/bootstrap.sh:38` applies `gitops/argocd/application.yaml`, which exists
-  only as `.disabled`.
+  `scripts/bootstrap.sh:38` applied `gitops/argocd/application.yaml`, which exists
+  only as `.disabled`. **Resolved 2026-10-20** — the script now applies
+  `platform/argocd/applications/` and refuses the legacy manifests.
 
 ### 4.4 Delivery gaps
 

@@ -104,7 +104,7 @@ by design; everything else is green.
 |---|---|---|
 | GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | `GITOPS: 16 passed, 0 failed, 2 not-present, 18 total` |
 | GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | `M-B1 confirmed: validator rejected the mutation (rc=1)`, then `git diff --exit-code` clean |
-| Gate test matrix G1–G9 | `IMPLEMENTED_TESTED` | 17 assertions, run as a subprocess so the exit code under test is the real one |
+| Gate test matrix G1–G10 | `IMPLEMENTED_TESTED` | 24 assertions, run as a subprocess so the exit code under test is the real one |
 | Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | `Valid: 13, Invalid: 0` per root; 26 objects across 2 roots |
 | Manifest inventory | `IMPLEMENTED_TESTED` | M-B6 orphan detected and rejected |
 | Static policy + image gate | `IMPLEMENTED_TESTED` | `POLICY GATE PASS: 2 kustomize root(s), 26 object(s)` |
@@ -112,7 +112,7 @@ by design; everything else is green.
 | Trivy config + secret scan | `IMPLEMENTED_TESTED` | clean at HIGH/CRITICAL, every ignore carrying a written justification |
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
-| **`terraform test`** | **`NOT_IMPLEMENTED`** | collects 0 assertions. The only red step in CI, by design |
+| **`terraform test`** | **`IMPLEMENTED_TESTED`** | 5 passing run blocks across 3 roots (`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2). CI executes **all three** roots as of 2026-10-20 (it previously ran only `aks-foundation` = 2) |
 | Azure mutation | none | no Azure resource created by this branch |
 
 Five consecutive Actions runs were needed to reach this state, and every one found
@@ -179,12 +179,40 @@ Do not start Phase D's module split before Phase C, and do not run any
 
 ### Still open
 
-- `terraform test` collects zero assertions (`TERRAFORM_NATIVE_TESTS`).
+- ~~`terraform test` collects zero assertions (`TERRAFORM_NATIVE_TESTS`).~~
+  **Resolved (Phase D)** and re-verified 2026-10-20: `terraform test` runs 5 run
+  blocks across `aks-foundation` (2), `acr_attachment` (1), `aks_cluster` (2),
+  all passing. This line was stale, not a live gap.
+  **Further corrected 2026-10-20 (G2):** the 5 blocks were all passing locally,
+  but CI executed only the 2 in `aks-foundation` — the job's
+  `working-directory` meant the two module-level `*.tftest.hcl` files were never
+  run by any CI step, and the `grep '[0-9]+ passed'` guard saw `2`, not `0`, so
+  the guard passed while 3 assertions were invisible. CI now walks every root
+  declared in `env.TERRAFORM_TEST_ROOTS`, prints a per-root count, and the
+  guard consumes the total (`5`). The gate matrix also gained G10 assertions
+  that fail if a root is dropped from CI, if a new module with a `*.tftest.hcl`
+  is not wired in, or if the tflint lint loses its absolute `--config`.
+- `tflint` covered only `terraform/aks-foundation` (job `working-directory`); the
+  other 3 roots were never linted and no AzureRM ruleset was enabled.
+  **Fixed 2026-10-20 (G2):** `terraform/.tflint.hcl` pins the `azurerm` plugin
+  (v0.32.0) and the lint runs from `terraform/` with an **absolute**
+  `--config` — a relative path hard-fails in 9 subdirectories, and omitting
+  `--config` silently falls back to the bundled ruleset and *misses* AzureRM
+  findings. Local result: 0 issues across all 10 directories.
+  **Open:** `terraform/.tflint.hcl` is still **untracked** — until it is
+  committed, `tflint --init` fails on a fresh runner and the plugin cache key
+  degenerates to a constant.
 - `kubernetes/order-worker.yaml` (Service Bus) disagrees with
   `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both are classified in
   `MANIFEST-INVENTORY.md` as legacy and belong to the FlashSale repo.
-- `scripts/bootstrap.sh:38` applies a file that only exists as `.disabled`, so
-  step 5/5 cannot run as written.
+- ~~`scripts/bootstrap.sh:38` applies a file that only exists as `.disabled`, so
+  step 5/5 cannot run as written.~~ **Fixed 2026-10-20** — applies the maintained
+  `platform/argocd/applications/` and no longer applies the four manifests that
+  `MANIFEST-INVENTORY.md` classifies as undeployable.
+- ~~`platform/observability/*` was labelled `RENDERED` but no `kustomization.yaml`
+  existed under `platform/`, so pr-gate never validated it.~~ **Corrected
+  2026-10-20** — relabelled `REFERENCE_NOT_RENDERED`; the two `envoy-gateway`
+  roots gained real kustomizations so their claim is now produced by CI.
 - `conftest`, `k6`, `syft`, `cosign` are still absent; they arrive with the
   policy, load-test and supply-chain phases.
 - No `runbooks/`, `alerts/` or `dashboards/` directory exists yet. They are not

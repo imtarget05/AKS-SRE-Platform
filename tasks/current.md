@@ -69,11 +69,16 @@ Three workflows, all executed on GitHub Actions. Green except one deliberate red
 - `oidc-azure.yaml`: contract is enforced; the live job is **skipped** and reports
   `OIDC_LIVE_LOGIN = NOT_VERIFIED` in the run summary.
 
-`terraform test` is red with `TERRAFORM_NATIVE_TESTS = NOT_IMPLEMENTED`. The root
-cannot be planned offline because `main.tf:112` and `outputs.tf:22` index a
-computed block that `mock_provider` leaves empty and `override_resource` cannot
-populate. A 12-assertion suite was written and reverted: a suite that cannot run
-is a claim, not a test. The assertion-count check must survive until Phase D.
+`terraform test` is **green** as of 2026-10-20: 5 run blocks across 3 roots
+(`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2), and CI now executes
+all three roots — it previously ran only `aks-foundation` (2 blocks), so the
+`TERRAFORM_NATIVE_TESTS` guard was reading `2` while 3 assertions were never
+executed. The guard is now fed the total across roots and still fails on `0`.
+The root cannot be planned offline because `main.tf:112` and `outputs.tf:22`
+index a computed block that `mock_provider` leaves empty and `override_resource`
+cannot populate. A 12-assertion suite was written and reverted: a suite that
+cannot run is a claim, not a test. The assertion-count check must survive until
+Phase D.
 
 ### F foundation — repo-owned workload: DONE
 
@@ -108,6 +113,36 @@ Transient AKS apply running against subscription `a3deec78` in `eastasia` within
 - Evidence: `docs/adr/015-legacyapp-subtree-import.md` and `docs/evidence/a0-legacyapp-subtree-import.md`.
 
 **Next approval:** review the Argo source-switch diff and approve a controlled shadow/sync validation before retiring the standalone source path.
+
+### A0.1 — Baseline honesty pass: PASS locally (2026-10-20)
+
+Closed three defects that were disclosed but not fixed. No Azure, cluster, or
+Argo mutation was performed.
+
+1. **`scripts/bootstrap.sh` could not run.** It applied `gitops/argocd/application.yaml`
+   (only present as `.disabled`) and four manifests that `MANIFEST-INVENTORY.md`
+   classifies as `LEGACY_NOT_DEPLOYED` / `EXTERNAL_WORKLOAD_REFERENCE` /
+   `SUPERSEDED`. Rewritten to: validate every input before touching the cluster,
+   apply only `platform/argocd/applications/`, and refuse `legacyapp.yaml`
+   unless `APPLY_LEGACYAPP=1` (ADR-015 source switch still unapproved).
+2. **`MANIFEST-INVENTORY.md` overstated CI coverage.** `platform/observability/*`
+   was marked `RENDERED` although no `kustomization.yaml` existed under
+   `platform/`, so pr-gate never rendered it. Relabelled `REFERENCE_NOT_RENDERED`;
+   recorded that `dashboards.yaml` and `dashboards/local-platform-dashboard.yaml`
+   both define `grafana-dashboard-local-platform`.
+3. **`platform/envoy-gateway` gained real kustomize roots** (`gateway/`,
+   `proof-backend/`), so its `RENDERED` claim is now produced by pr-gate rather
+   than asserted by a document.
+
+Verification (local, 2026-10-20): `bash -n` OK; `validate-gitops.py` 16 passed /
+0 failed / 2 not-present; `tests/test_gates.py` 17/17; `policy-gate.py` PASS;
+`kubectl kustomize` on all 8 roots rc=0 (new roots: 5 and 2 objects);
+kubeconform `-strict` on both new roots → Valid 3, Invalid 0, Errors 0, Skipped 4.
+
+Open item for the next phase: the two `EXTERNAL_REPO_NOT_PRESENT` rows mean
+external source trees are still unvalidated in CI. `validate-gitops.py` refuses
+a `--repo-map` path outside the repository root, so wiring a real external
+checkout is still unsolved.
 
 ### ⛔ STOP conditions
 
