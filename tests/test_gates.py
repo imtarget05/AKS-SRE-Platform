@@ -530,7 +530,8 @@ def main():
               "argocd-server" in bootstrap and "ARGOCD_VERSION" in bootstrap)
         # The documents that claim a version must claim THE pinned one.
         for rel in ("platform/argocd/README.md",
-                    "docs/evidence/local-platform/l4-argocd-PASS.md"):
+                    "docs/evidence/local-platform/l4-argocd-PASS.md",
+                    "docs/evidence/local-platform/2026-10-20-reverify.md"):
             path = os.path.join(REPO, rel)
             text = open(path).read() if os.path.isfile(path) else ""
             check(f"G12 {rel} states the pinned version",
