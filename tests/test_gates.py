@@ -35,6 +35,11 @@ asserts the outcome.
            dropped is validated too (a wildcard allowlist in it is reported)
          - an AppProject outside the canonical directory FAILS
          - the verdict does not depend on the order of the project directories
+    G12 the Argo CD version is pinned in ONE place (regression F5):
+         - platform/argocd/VERSION holds a vMAJOR.MINOR.PATCH tag
+         - scripts/bootstrap.sh reads that file and contains no floating
+           reference (stable / latest / main)
+         - the same version string appears in the docs that claim it
     G13 the install and the manifests are not able to lose data silently
          (regressions F1/F2):
          - scripts/bootstrap.sh applies the Argo CD manifest server-side
@@ -65,7 +70,7 @@ WORKFLOW = os.path.join(REPO, ".github", "workflows", "pr-gate.yaml")
 # exists hides a group from the run log, and a label that runs ahead of this
 # file advertises a control that does not exist.
 GATE_GROUPS = (
-    "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G13",
+    "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13",
 )
 
 APP_PROJECT = """apiVersion: argoproj.io/v1alpha1
@@ -504,6 +509,34 @@ def main():
                   r.stdout[-300:])
         with_tmp({"extra_projects": (("gitops/projects/portfolio.yaml", APP_PROJECT),)}, g11_non_canonical)
     g11()
+
+    print("G12 the Argo CD version is pinned in ONE place (regression F5)")
+    def g12():
+        version_file = os.path.join(REPO, "platform", "argocd", "VERSION")
+        check("G12 platform/argocd/VERSION exists", os.path.isfile(version_file))
+        version = ""
+        if os.path.isfile(version_file):
+            version = open(version_file).read().strip()
+        check("G12 the pin is a vMAJOR.MINOR.PATCH tag",
+              bool(re.fullmatch(r"v\d+\.\d+\.\d+", version)), f"got {version!r}")
+        with open(os.path.join(REPO, "scripts", "bootstrap.sh")) as fh:
+            bootstrap = fh.read()
+        check("G12 bootstrap.sh reads the pin file", "platform/argocd/VERSION" in bootstrap)
+        floating = [ref for ref in ("argo-cd/stable", "argo-cd/latest", "argo-cd/main",
+                                    "/stable/manifests", ":latest") if ref in bootstrap]
+        check("G12 bootstrap.sh contains no floating Argo CD reference",
+              not floating, f"floating references: {floating}")
+        check("G12 bootstrap.sh asserts the running version against the pin",
+              "argocd-server" in bootstrap and "ARGOCD_VERSION" in bootstrap)
+        # The documents that claim a version must claim THE pinned one.
+        for rel in ("platform/argocd/README.md",
+                    "docs/evidence/local-platform/l4-argocd-PASS.md"):
+            path = os.path.join(REPO, rel)
+            text = open(path).read() if os.path.isfile(path) else ""
+            check(f"G12 {rel} states the pinned version",
+                  bool(version) and version in text,
+                  f"version {version!r} not found in {rel}")
+    g12()
 
     print("G13 nothing can be overwritten silently (regressions F1/F2)")
     def g13():

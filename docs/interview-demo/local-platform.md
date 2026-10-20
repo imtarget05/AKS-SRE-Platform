@@ -14,7 +14,7 @@ flowchart TD
     end
 
     subgraph Cluster ["Local kind Cluster (v1.36.1, 3 nodes)"]
-        Argo["Argo CD v3.5.3 (GitOps Control Plane)"]
+        Argo["Argo CD v3.5.5 (GitOps Control Plane)"]
         
         subgraph GatewaySystem ["Envoy Gateway (Gateway API v1.9.1)"]
             GW["portfolio-gateway (ClusterIP:80)"]

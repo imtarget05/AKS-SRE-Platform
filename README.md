@@ -74,7 +74,7 @@ is a design intention presented as a result.
 
 ### Proven on local kind (`PRE_AZURE_DRY_RUN`, not Azure evidence)
 
-- **GitOps authority + rollback:** Argo CD v3.5.3 reconciled Git → cluster, and a
+- **GitOps authority + rollback:** Argo CD v3.5.5 reconciled Git → cluster, and a
   `git revert` produced a rollback. Includes the drift case (manual
   `kubectl scale` detected as `OutOfSync`, then reconciled).
   → [`evidence/local-platform/l9-gitops-PASS.md`](docs/evidence/local-platform/l9-gitops-PASS.md)

@@ -2,7 +2,8 @@
 # Bootstrap the maintained platform components on an already-provisioned cluster.
 #
 # Scope is defined by MANIFEST-INVENTORY.md, not by history:
-#   1. Argo CD  — upstream install manifest (no chart owned by this repo).
+#   1. Argo CD  — upstream install manifest (no chart owned by this repo),
+#                 pinned by platform/argocd/VERSION and applied SERVER-SIDE.
 #   2. KEDA     — upstream chart, for the order worker that FlashSale-Backend owns.
 #   3. AppProject + maintained Applications from platform/argocd/applications/.
 #
@@ -28,6 +29,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APPS_DIR="$ROOT/platform/argocd/applications"
+VERSION_FILE="$ROOT/platform/argocd/VERSION"
 REPO_URL="${REPO_URL:-}"
 APPLY_LEGACYAPP="${APPLY_LEGACYAPP:-0}"
 
@@ -37,16 +39,32 @@ require_file() {
 
 # Fail before touching the cluster, not after installing half of it.
 require_file "$ROOT/platform/argocd/appproject.yaml"
+require_file "$VERSION_FILE"
 [ -d "$APPS_DIR" ] || { echo "FATAL: missing $APPS_DIR" >&2; exit 1; }
 require_file "$APPS_DIR/flashsale.yaml"
 require_file "$APPS_DIR/legacyapp.yaml"
 
+# The Argo CD version is pinned in exactly ONE place: platform/argocd/VERSION.
+# Before this, the script installed from the floating `stable` branch while the
+# README, the ADR and the evidence doc all claimed a pinned v3.5.3 — so the
+# documented version and the installed version were different facts (the
+# floating branch had already moved to v3.5.5). Reading the tag from one file
+# is what makes "what we install" and "what we document" the same statement.
+ARGOCD_VERSION="$(tr -d '[:space:]' < "$VERSION_FILE")"
+case "$ARGOCD_VERSION" in
+  v[0-9]*.[0-9]*.[0-9]*) ;;
+  *)
+    echo "FATAL: $VERSION_FILE must hold a vMAJOR.MINOR.PATCH tag, got '$ARGOCD_VERSION'" >&2
+    exit 1
+    ;;
+esac
+ARGOCD_MANIFEST_URL="https://raw.githubusercontent.com/argoproj/argo-cd/${ARGOCD_VERSION}/manifests/install.yaml"
 
-echo "==> 1/3 Installing Argo CD"
+echo "==> 1/3 Installing Argo CD ${ARGOCD_VERSION} (pinned)"
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 # SERVER-SIDE APPLY IS REQUIRED HERE, NOT A STYLE CHOICE.
 #
-# Measured on a clean kind cluster on 2026-10-20 with the upstream install
+# Measured on a clean kind cluster on 2026-10-20 with the pinned v3.5.5
 # manifest:
 #
 #   client-side apply ->
@@ -70,8 +88,21 @@ kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
 # ownership from the previous field manager.
 kubectl apply -n argocd --server-side --force-conflicts \
   --field-manager=aks-sre-bootstrap \
-  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  -f "$ARGOCD_MANIFEST_URL"
 kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
+
+# Assert the running control plane IS the pinned version. A drifted install is
+# a silent reproducibility failure, and this is the last point at which it can
+# still be stopped instead of documented around.
+INSTALLED_IMAGE="$(kubectl -n argocd get deploy argocd-server \
+  -o jsonpath='{.spec.template.spec.containers[0].image}')"
+case "$INSTALLED_IMAGE" in
+  *":${ARGOCD_VERSION}"|*":${ARGOCD_VERSION}@sha256:"*)
+    echo "    argocd-server image: $INSTALLED_IMAGE (matches the pin)" ;;
+  *)
+    echo "FATAL: argocd-server runs '$INSTALLED_IMAGE' but the pin is '$ARGOCD_VERSION'" >&2
+    exit 1 ;;
+esac
 
 echo "==> 2/3 Installing KEDA (upstream chart)"
 helm repo add kedacore https://kedacore.github.io/charts 2>/dev/null || true

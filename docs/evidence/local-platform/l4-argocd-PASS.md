@@ -1,6 +1,8 @@
 # L4 — Argo CD Local Non-HA — PASS
 
-**Date:** 2026-09-23
+**Date:** 2026-09-23 (this run) · **Re-verified:** 2026-10-20 — see the
+correction below and
+[`docs/evidence/local-platform/2026-10-20-reverify.md`](2026-10-20-reverify.md).
 **Cluster:** `kind-local-platform` (Kubernetes v1.36.1)
 **Azure mutated:** NO — local kind only.
 
@@ -8,12 +10,40 @@
 
 | Item | Value |
 |---|---|
-| Argo CD | **v3.5.3** (`quay.io/argoproj/argocd:v3.5.3`) |
+| Argo CD — this L4 run (2026-09-23) | **v3.5.3** (`quay.io/argoproj/argocd:v3.5.3`) — historical record of that run |
+| Argo CD — current pin | **v3.5.5**, in `platform/argocd/VERSION` (single source of truth) |
 | Install method | official version-pinned `manifests/install.yaml`, server-side apply |
 | Mode | **non-HA** multi-tenant bundle (LOCAL / PORTFOLIO / DEMO — not HA) |
 | Namespace | `argocd` |
 
-No floating tag (`stable`/`latest`/`main`) was used.
+No floating tag (`stable`/`latest`/`main`) was used **for this run**.
+
+> ### Correction (2026-10-20) — the script was NOT pinned
+>
+> The statement above was true of the L4 install performed on 2026-09-23 and of
+> the instructions in `platform/argocd/README.md`, but it was **not** true of the
+> repeatable path: `scripts/bootstrap.sh` installed Argo CD from the floating
+> `stable` branch with a **client-side** apply, while this document and the
+> README claimed a pinned `v3.5.3` installed server-side.
+>
+> Two consequences, both measured on 2026-10-20:
+>
+> 1. **Not reproducible.** `stable` had drifted to **v3.5.5**, so the script
+>    installed a different version than the documentation claimed, and would
+>    again tomorrow.
+> 2. **The ApplicationSet CRD was never created.** A client-side apply stores
+>    the whole object in the `kubectl.kubernetes.io/last-applied-configuration`
+>    annotation; the `applicationsets.argoproj.io` schema is larger than the
+>    256 KiB annotation limit, so the apply failed with
+>    `metadata.annotations: Too long: may not be more than 262144 bytes`
+>    (exit code 1) and the `&&` chain aborted the rest of the install.
+>
+> Fixed: the pin now lives in `platform/argocd/VERSION` (**v3.5.5**), the
+> script reads that file, refuses a non-`vMAJOR.MINOR.PATCH` value, applies the
+> manifest **server-side** and asserts that the running `argocd-server` image
+> matches the pin. This document's version table now carries both the
+> historical value and the current pin instead of pretending they are one.
+
 
 ## Health — 7/7 components Running, 0 restarts
 
@@ -61,8 +91,10 @@ The 10 GiB recommendation remains only as a pre-L5/L10 lever if pressure appears
 
 Argo CD non-HA is upstream's evaluation/demo/testing topology; the full
 multi-tenant bundle (API server + UI present) is what was installed. The
-pinned v3.5.3 manifest — not `stable` — keeps the local control plane
-reproducible.
+pinned manifest — not `stable` — keeps the local control plane reproducible.
+The pin itself now lives in one file, `platform/argocd/VERSION`, currently
+**v3.5.5**; `scripts/bootstrap.sh` reads it and asserts the running image
+matches it.
 
 ## Not claimed
 
