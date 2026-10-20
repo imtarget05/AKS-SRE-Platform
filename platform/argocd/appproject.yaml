@@ -14,13 +14,13 @@ metadata:
     # bootstrap ordering (project must exist before its Applications).
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Local-platform portfolio (FlashSale-Backend + Productionized-LegacyApp) on kind.
+  description: Local-platform portfolio (FlashSale-Backend + imported LegacyApp subtree) on kind.
 
   # P01 owns the flashsale namespace, P02 owns legacyapp. P03 (this repo)
   # owns the cluster-scoped platform (Envoy Gateway, AppProject, Applications).
   sourceRepos:
     - https://github.com/imtarget05/FlashSale-Backend.git
-    - https://github.com/imtarget05/Productionized-LegacyApp.git
+    - https://github.com/imtarget05/AKS-SRE-Platform.git
 
   destinations:
     - server: https://kubernetes.default.svc

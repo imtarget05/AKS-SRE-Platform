@@ -5,7 +5,7 @@
 > [`../plans/history/`](../plans/history/) and is kept for the record, not for
 > execution. Superseded sections are never deleted; they are moved and marked.
 
-## LIVE — Wave 1 in progress: Phase B + F foundation done, Phase C next
+## LIVE — Wave 1 in progress: A0 subtree import complete, source switch pending approval
 
 **Status: 🟡 IN PROGRESS.** Strategy changed on 2026-10-02: **AKS is the proof
 surface, local kind is the OSS / dry-run profile.** The decision and its measured
@@ -98,6 +98,16 @@ Decoupled cluster creation (`terraform/modules/aks_cluster`) from the ACR role a
 ### Phase E — Transient AKS Validation: IN PROGRESS (2026-10-02)
 
 Transient AKS apply running against subscription `a3deec78` in `eastasia` within the measured 10 vCPU quota constraint (1 system node `Standard_D2s_v6` + 1 user node `Standard_D2s_v6` = 4 vCPU). Capturing live workload identity, workload readiness, and failure recovery evidence before immediate teardown.
+
+### A0 — LegacyApp subtree import: PASS locally (2026-10-20)
+
+- Imported committed `Productionized-LegacyApp/main` history without squash into `apps/legacy-inventory/` at platform commit `8c0f66c`.
+- Carried over the current LegacyApp observability working diff separately; original checkout remains untouched for rollback/provenance.
+- Imported tests 4/4, npm audit 0 vulnerabilities, Docker build and Trivy image scan 0 blocking findings, Kustomize render PASS, manifest mutation gate 9/9, and GitOps validator 18/18 with both local source maps.
+- Maintained `platform/argocd/applications/legacyapp.yaml` is prepared for the platform repo/path. No Argo sync, cluster mutation, Azure apply, or production deployment was performed.
+- Evidence: `docs/adr/015-legacyapp-subtree-import.md` and `docs/evidence/a0-legacyapp-subtree-import.md`.
+
+**Next approval:** review the Argo source-switch diff and approve a controlled shadow/sync validation before retiring the standalone source path.
 
 ### ⛔ STOP conditions
 

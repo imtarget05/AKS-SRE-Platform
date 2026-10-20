@@ -1,8 +1,8 @@
 # L9 — Productionized-LegacyApp (P02) under GitOps.
 #
-# Same contract as the flashsale Application: the repository's local overlay is
-# the desired state, Argo reconciles it, and no credential is stored for the
-# public repository.
+# Same contract as the flashsale Application: the imported application subtree
+# is the desired state, Argo reconciles it, and no credential is stored for the
+# public repository. The former standalone repo remains migration provenance.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -14,9 +14,9 @@ spec:
   project: portfolio
 
   source:
-    repoURL: https://github.com/imtarget05/Productionized-LegacyApp.git
+    repoURL: https://github.com/imtarget05/AKS-SRE-Platform.git
     targetRevision: main
-    path: infrastructure/kubernetes/overlays/local
+    path: apps/legacy-inventory/infrastructure/kubernetes/overlays/prod
 
   destination:
     server: https://kubernetes.default.svc

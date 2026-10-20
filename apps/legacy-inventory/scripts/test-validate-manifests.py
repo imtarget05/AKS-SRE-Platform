@@ -128,7 +128,7 @@ MUTATIONS = [
     ("resources_removed", "must declare both cpu and memory", mut_resources_removed),
     ("liveness_probe_removed", "no livenessProbe", mut_probe_removed),
     ("service_public_lb", "exposed as LoadBalancer", mut_public_service),
-    ("namespace_missing", "not in namespace legacy-prod", mut_no_namespace),
+    ("namespace_missing", "not in namespace legacyapp", mut_no_namespace),
 ]
 
 

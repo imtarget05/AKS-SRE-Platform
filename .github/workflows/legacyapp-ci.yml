@@ -1,0 +1,264 @@
+name: "Productionized Legacy App CI"
+
+# Phase 6B: P02 to the same release contract as P01 before Phase 7/AKS deploys it.
+# Legacy source → tests → real security gate → immutable SHA image → the SAME
+# portfolio ACR (acrflashsalep6) → GitOps manifest pinned to SHA.
+#
+# Jobs:
+#   test-and-scan       npm ci + npm test + Trivy fs (secret/HIGH+ vuln blocks)
+#   docker-build-scan   build legacy-app image, Trivy image scan (HIGH+ blocks)
+#   manifest-validation render prod overlay, assert deployable (P01 7C lesson)
+#   sonarqube           JS analysis + quality gate (needs SONAR_TOKEN; skipped
+#                       with an explicit message until configured — never faked)
+#   release-push        main only, after the gate: OIDC → ACR push <sha> → digest verify
+#   gitops-update       pin infrastructure/kubernetes/overlays/prod newTag → bot commit
+#   ci-gate             single aggregate check for branch protection
+
+on:
+  push:
+    branches: [main]
+    paths: ['apps/legacy-inventory/**']
+  pull_request:
+    paths: ['apps/legacy-inventory/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: legacy-app
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/legacy-inventory/src/package-lock.json
+      - name: Install and test (smoke suite, built-in node:test)
+        working-directory: apps/legacy-inventory/src
+        run: |
+          npm ci --omit=dev
+          npm test
+      # Real gate (not advisory exit-code 0): secrets + known HIGH+ CVEs fail the PR.
+      # Local TF state (*.tfstate*) is never committed; the skip keeps the scan
+      # deterministic for machines that still hold one locally.
+      - name: Trivy fs — secrets and vulnerabilities (HIGH+ blocks)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: ./apps/legacy-inventory/src
+          scanners: vuln,secret
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: false
+      - name: Trivy config — Dockerfile and repo IaC
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+
+  docker-build-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build legacy-app image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/legacy-inventory
+          file: ./apps/legacy-inventory/Dockerfile
+          push: false
+          load: true
+          tags: legacy-app:ci-${{ github.sha }}
+      - name: Trivy image scan — legacy-app (HIGH+ blocks)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: legacy-app:ci-${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: '1'
+          ignore-unfixed: true
+
+  detect-changes:
+    # Docs-only commits must not mint a new runtime image (P06B-STEP-10).
+    # Computed with changed-files against the push base so the release jobs can
+    # skip without re-running the expensive quality gates.
+    runs-on: ubuntu-latest
+    outputs:
+      runtime: ${{ steps.filter.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect runtime vs docs-only change
+        id: filter
+        run: |
+          BASE="${{ github.event.before }}"
+          [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ] || BASE="HEAD~1"
+          CHANGED=$(git diff --name-only "$BASE" HEAD)
+          echo "changed files:"; echo "$CHANGED"
+           if echo "$CHANGED" | grep -qE '^apps/legacy-inventory/' && \
+             echo "$CHANGED" | grep -qvE '^apps/legacy-inventory/(README\.md$|docs/|.*\.md$)'; then
+            echo "runtime=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "runtime=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  sonarqube:
+    # Same contract as P01: explicit repo variable gate. SonarCloud refuses CI
+    # analysis while Automatic Analysis is enabled for the project (org/UI
+    # setting the API cannot change), so this job is skipped — never faked —
+    # until an operator flips it and sets vars.SONAR_ENABLED=true. Needs
+    # SONAR_TOKEN; uses the P02 project key imtarget05_Productionized-LegacyApp.
+    if: vars.SONAR_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/legacy-inventory/src/package-lock.json
+      - name: SonarQube analysis + quality gate (JS)
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        working-directory: apps/legacy-inventory/src
+        run: |
+          npm ci --omit=dev
+          npx -y sonarqube-scanner \
+            -Dsonar.projectKey=imtarget05_Productionized-LegacyApp \
+            -Dsonar.organization=imtarget05 \
+            -Dsonar.token="${SONAR_TOKEN}" \
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout=600
+
+  release-push:
+    needs: [ci-gate, detect-changes]
+    # Publish only artefact-changing commits; docs-only commits run CI checks
+    # but must NOT mint a new runtime image or move the GitOps SHA (P06B-STEP-10).
+    # workflow_dispatch can still force a release when explicitly requested.
+    if: >-
+      github.actor != 'github-actions[bot]' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.ref == 'refs/heads/main' && github.event_name == 'push' &&
+        needs.detect-changes.outputs.runtime == 'true'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      image: ${{ steps.tags.outputs.legacy }}
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Azure login (OIDC — same identity model as P01, no client secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Log in to the portfolio ACR
+        run: az acr login --name ${{ vars.ACR_NAME }}
+      - name: Compute immutable tag
+        id: tags
+        run: |
+          echo "legacy=${{ vars.ACR_LOGIN_SERVER }}/legacy-app:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push legacy-app:<sha>
+        uses: docker/build-push-action@v6
+        with:
+          context: ./apps/legacy-inventory
+          file: ./apps/legacy-inventory/Dockerfile
+          push: true
+          tags: ${{ steps.tags.outputs.legacy }}
+      - name: Verify the pushed tag resolves to a digest
+        id: push
+        run: |
+          DIGEST=$(az acr manifest list-metadata --registry ${{ vars.ACR_NAME }} \
+            --name legacy-app --query "[?tags[0]=='${GITHUB_SHA}'].digest | [0]" -o tsv)
+          echo "legacy-app ${GITHUB_SHA} → ${DIGEST}"
+          [ -n "$DIGEST" ] && [ "$DIGEST" != "None" ] || { echo "legacy-app:$GITHUB_SHA not found in ACR"; exit 1; }
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+      - name: Summary
+        run: |
+          echo "### Released artifact" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ${{ steps.tags.outputs.legacy }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- legacy-app digest: ${{ steps.push.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"
+
+  gitops-update:
+    needs: release-push
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      # Git state is the desired runtime state (same ownership contract as P01:
+      # CI builds, Git holds desired state, nothing kubectl-applied by CI).
+      - name: Pin the prod overlay to the released SHA
+        run: |
+          python3 - apps/legacy-inventory/infrastructure/kubernetes/overlays/prod/kustomization.yaml \
+                   "${{ vars.ACR_LOGIN_SERVER }}" "${GITHUB_SHA}" <<'PY'
+          import sys, re
+          path, acr, sha = sys.argv[1], sys.argv[2], sys.argv[3]
+          text = open(path).read()
+          text = re.sub(r'(?m)^(\s*- name: )\S*/legacy-app',
+                        lambda m: m.group(1) + acr + '/legacy-app', text)
+          text = re.sub(r'(?m)^(\s*newTag: ).*$',
+                        lambda m: m.group(1) + sha, text)
+          open(path, 'w').write(text)
+          PY
+          git diff -- apps/legacy-inventory/infrastructure/kubernetes/overlays/prod/kustomization.yaml
+      - name: Commit and push the GitOps bump
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/legacy-inventory/infrastructure/kubernetes/overlays/prod/kustomization.yaml
+          if git diff --cached --quiet; then
+            echo "no change (already pinned to ${GITHUB_SHA})"
+          else
+            git commit -m "gitops: pin prod overlay to legacy-app:${GITHUB_SHA}"
+            git push
+          fi
+      - name: Summary
+        run: |
+          echo "### GitOps" >> "$GITHUB_STEP_SUMMARY"
+          echo "Desired state committed: prod overlay → \`${GITHUB_SHA}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  manifest-validation:
+    runs-on: ubuntu-latest
+    # Renders the prod overlay and asserts the OUTPUT is deployable. P02 learned
+    # this the P01 way: a green release-push coexisted with a render that could
+    # silently skip the image override (base/overlay name coupling), so the
+    # manifest is rendered and asserted, not just built.
+    steps:
+      - uses: actions/checkout@v4
+      - name: Render and validate the prod overlay
+        run: ./apps/legacy-inventory/scripts/validate-manifests.sh
+
+  ci-gate:
+    needs:
+      - test-and-scan
+      - docker-build-scan
+      - manifest-validation
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Aggregate gate
+        run: |
+          echo "test-and-scan      = ${{ needs.test-and-scan.result }}"
+          echo "docker-build-scan  = ${{ needs.docker-build-scan.result }}"
+          echo "manifest-validation = ${{ needs.manifest-validation.result }}"
+          fail=0
+          [ "${{ needs.test-and-scan.result }}"     = "success" ] || { echo "GATE FAIL: test-and-scan";     fail=1; }
+          [ "${{ needs.docker-build-scan.result }}" = "success" ] || { echo "GATE FAIL: docker-build-scan"; fail=1; }
+          [ "${{ needs.manifest-validation.result }}" = "success" ] || { echo "GATE FAIL: manifest-validation"; fail=1; }
+          exit $fail

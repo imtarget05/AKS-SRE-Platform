@@ -102,11 +102,11 @@ RESULTS = []
 
 def build(root, *, app_yaml=APP, inventory=INVENTORY, project_yaml=APP_PROJECT):
     """Create the minimal repo shape the validator expects, validator included."""
-    os.makedirs(os.path.join(root, "gitops", "applications"), exist_ok=True)
+    os.makedirs(os.path.join(root, "platform", "argocd", "applications"), exist_ok=True)
     os.makedirs(os.path.join(root, "gitops", "projects"), exist_ok=True)
     os.makedirs(os.path.join(root, "kubernetes"), exist_ok=True)
     shutil.copy2(SOURCE_VALIDATOR, os.path.join(root, "gitops", "validate-gitops.py"))
-    with open(os.path.join(root, "gitops", "applications", "app.yaml"), "w") as fh:
+    with open(os.path.join(root, "platform", "argocd", "applications", "app.yaml"), "w") as fh:
         fh.write(app_yaml)
     with open(os.path.join(root, "gitops", "projects", "portfolio.yaml"), "w") as fh:
         fh.write(project_yaml)

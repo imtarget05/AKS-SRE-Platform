@@ -1,3 +1,6 @@
+# LEGACY DISABLED: maintained Application is platform/argocd/applications/legacyapp.yaml.
+# This file is retained as migration provenance and is not consumed by the
+# maintained validator or bootstrap path.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

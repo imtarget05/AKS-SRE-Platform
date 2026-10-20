@@ -78,10 +78,10 @@ doc_of() {
 DEP=$(doc_of Deployment legacy-app) || { err "rendered manifest has no Deployment/legacy-app"; DEP=""; }
 
 if [ -n "$DEP" ]; then
-  # 4. Namespace: the overlay must place the workload in legacy-prod — never
+  # 4. Namespace: the overlay must place the workload in legacyapp — never
   #    let an app land in `default`.
-  printf '%s' "$DEP" | grep -q "^  namespace: legacy-prod$" \
-    || err "Deployment/legacy-app is not in namespace legacy-prod"
+  printf '%s' "$DEP" | grep -q "^  namespace: legacyapp$" \
+    || err "Deployment/legacy-app is not in namespace legacyapp"
 
   # 5. Pod-level non-root identity.
   printf '%s' "$DEP" | grep -q "runAsNonRoot: true" \

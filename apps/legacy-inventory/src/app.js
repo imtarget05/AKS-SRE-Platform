@@ -4,6 +4,7 @@
 // Layered folders: routes/ (HTTP), services/ (business logic), middleware/ (cross-cutting).
 // Exported for tests and for the runtime entry point (server.js).
 
+const { registry } = require('./observability');
 const express = require('express');
 const { requestLogger, notFound, errorHandler } = require('./middleware/http');
 const healthRoutes = require('./routes/health');
@@ -13,6 +14,15 @@ const app = express();
 
 app.use(express.json());
 app.use(requestLogger);
+
+app.get('/metrics', async (_req, res, next) => {
+	try {
+		res.set('Content-Type', registry.contentType);
+		res.end(await registry.metrics());
+	} catch (error) {
+		next(error);
+	}
+});
 
 app.use(healthRoutes);
 app.use(syncRoutes);

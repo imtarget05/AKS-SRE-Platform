@@ -3,7 +3,7 @@
 
 WHAT THIS VALIDATES (repo-owned, honest, offline)
 -------------------------------------------------
-1. `gitops/applications/*.yaml` — every Argo CD Application declares a project
+1. `platform/argocd/applications/*.yaml` — every maintained Argo CD Application declares a project
    that exists, and every locally-verifiable field is well formed
    (repoURL, targetRevision, destination namespace, sync policy).
 2. `gitops/projects/*.yaml` and `platform/argocd/appproject.yaml` — AppProject
@@ -51,7 +51,7 @@ except ImportError:
 
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APPS_DIR = os.path.join(ROOT, "gitops", "applications")
+APPS_DIR = os.path.join(ROOT, "platform", "argocd", "applications")
 PROJECTS_DIRS = [
     os.path.join(ROOT, "gitops", "projects"),
     os.path.join(ROOT, "platform", "argocd"),

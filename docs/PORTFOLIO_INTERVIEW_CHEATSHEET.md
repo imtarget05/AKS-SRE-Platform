@@ -12,7 +12,7 @@
 
 > **Chỉ gồm những thứ đã được chứng minh bằng log thật trên Azure** (run 2026-10-02,
 > đã teardown về `0/10` vCPU). Nguồn:
-> [`docs/evidence/transient-aks-run-PASS.md`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/docs/evidence/transient-aks-run-PASS.md).
+> [`docs/evidence/transient-aks-run-PASS.md`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/transient-aks-run-PASS.md).
 > **Không có Gateway, Argo CD, Prometheus hay Grafana trong sơ đồ này** — chúng
 > không từng chạy trên AKS.
 
@@ -161,7 +161,7 @@ flowchart TD
 |---|---|---|---|
 | **0:00 - 1:00** | **MAIA: Grounded RAG & Honest Refusal** | Chạy `scripts/run_demo_e2e.sh` hoặc truy cập Azure endpoint:<br>`POST /chat` `"Chính sách nghỉ phép?"`<br>`POST /chat` `"Thưởng tiền Bitcoin?"` | • Câu hỏi 1: Trả về câu trả lời kèm trích dẫn chuẩn `[S1]`, `[S2]`.<br>• Câu hỏi 2: `has_evidence: false`, hệ thống từ chối lịch sự và trung thực. |
 | **1:00 - 2:00** | **MAIA: LangGraph HITL & MCP Tools** | `POST /agent/chat` `"Xin nghỉ 2 ngày từ 15/09"`<br>$\to$ Nhận thẻ chờ duyệt `needs_approval`<br>$\to$ Duyệt qua `{"resume": {"approved": true}}` | • Agent dừng tại interrupt, không tự ý ghi dữ liệu.<br>• Sau khi duyệt: Trừ phép thành công (12 $\to$ 10 ngày).<br>• Chạy `python3 -m maia.mcp.bridge --list-tools` hiển thị các công cụ chuẩn JSON-RPC 2.0. |
-| **2:00 - 3:00** | **AKS-SRE: Platform Credibility & FinOps** | Mở GitHub Actions của `AKS-SRE-Platform` hoặc review file [`.github/workflows/pr-gate.yaml`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/.github/workflows/pr-gate.yaml) | • CI 100% xanh: `terraform test` chạy offline không mock dối trá, Trivy scan nhị phân có checksum SHA256.<br>• Giải thích FinOps Envelope: Quota 10 vCPU, sizing hệ thống $\le 8$ vCPU, transient validation kiểm chứng Workload Identity rồi teardown về 0 vCPU. |
+| **2:00 - 3:00** | **AKS-SRE: Platform Credibility & FinOps** | Mở GitHub Actions của `AKS-SRE-Platform` hoặc review file [`.github/workflows/pr-gate.yaml`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/.github/workflows/pr-gate.yaml) | • CI 100% xanh: `terraform test` chạy offline không mock dối trá, Trivy scan nhị phân có checksum SHA256.<br>• Giải thích FinOps Envelope: Quota 10 vCPU, sizing hệ thống $\le 8$ vCPU, transient validation kiểm chứng Workload Identity rồi teardown về 0 vCPU. |
 
 ---
 
@@ -210,10 +210,10 @@ flowchart TD
 
 | Chủ đề kiểm chứng | Vị trí file mã nguồn / bằng chứng |
 |---|---|
-| **AKS Hardened CI & Test** | [`.github/workflows/pr-gate.yaml`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/.github/workflows/pr-gate.yaml), [`terraform/aks-foundation/tests/aks_foundation.tftest.hcl`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/terraform/aks-foundation/tests/aks_foundation.tftest.hcl) |
-| **AKS Modularity & Decoupling** | [`terraform/modules/aks_cluster/`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/terraform/modules/aks_cluster), [`terraform/modules/acr_attachment/`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/terraform/modules/acr_attachment) |
-| **AKS Remote State Foundation** | [`terraform/aks-foundation/versions.tf`](file:///Users/mainguyenbinhtan/Downloads/Projects/AKS-SRE-Platform/terraform/aks-foundation/versions.tf) (`rg-aks-tfstate` / `stakssre`) |
-| **MAIA Live Azure Proof** | [`docs/evidence/MAIA_AZURE_LIVE_PROOF.md`](file:///Users/mainguyenbinhtan/Downloads/Projects/MAIA/docs/evidence/MAIA_AZURE_LIVE_PROOF.md) (16/16 checks PASS) |
-| **MAIA One-Command E2E Demo** | [`scripts/run_demo_e2e.sh`](file:///Users/mainguyenbinhtan/Downloads/Projects/MAIA/scripts/run_demo_e2e.sh) |
-| **MAIA Gate 8B Decision & ADR** | [`docs/adr/0006-answerability-vs-topical-similarity-gate.md`](file:///Users/mainguyenbinhtan/Downloads/Projects/MAIA/docs/adr/0006-answerability-vs-topical-similarity-gate.md) |
-| **MAIA MCP Protocol Implementation** | [`src/maia/mcp/`](file:///Users/mainguyenbinhtan/Downloads/Projects/MAIA/src/maia/mcp) (`protocol.py`, `bridge.py`, `servers/`) |
+| **AKS Hardened CI & Test** | [`.github/workflows/pr-gate.yaml`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/.github/workflows/pr-gate.yaml), [`terraform/aks-foundation/tests/aks_foundation.tftest.hcl`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/terraform/aks-foundation/tests/aks_foundation.tftest.hcl) |
+| **AKS Modularity & Decoupling** | [`terraform/modules/aks_cluster/`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/terraform/modules/aks_cluster), [`terraform/modules/acr_attachment/`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/terraform/modules/acr_attachment) |
+| **AKS Remote State Foundation** | [`terraform/aks-foundation/versions.tf`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/terraform/aks-foundation/versions.tf) (`rg-aks-tfstate` / `stakssre`) |
+| **MAIA Live Azure Proof** | [`docs/evidence/MAIA_AZURE_LIVE_PROOF.md`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/docs/evidence/MAIA_AZURE_LIVE_PROOF.md) (16/16 checks PASS) |
+| **MAIA One-Command E2E Demo** | [`scripts/run_demo_e2e.sh`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/scripts/run_demo_e2e.sh) |
+| **MAIA Gate 8B Decision & ADR** | [`docs/adr/0006-answerability-vs-topical-similarity-gate.md`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/docs/adr/0006-answerability-vs-topical-similarity-gate.md) |
+| **MAIA MCP Protocol Implementation** | [`src/maia/mcp/`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/src/maia/mcp) (`protocol.py`, `bridge.py`, `servers/`) |

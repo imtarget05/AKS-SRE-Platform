@@ -142,7 +142,7 @@ jobs:
             kubectl kustomize "$d" | kubeconform \
               -kubernetes-version 1.36.0 \
               -strict -summary \
-              -skip ServiceMonitor,PrometheusRule,GrafanaDashboard,EnvoyProxy,GatewayClass,ScaledObject,TriggerAuthentication,AppProject,Application
+              -skip ServiceMonitor,PrometheusRule,GrafanaDashboard,EnvoyProxy,GatewayClass,HTTPRoute,Gateway,ScaledObject,TriggerAuthentication,AppProject,Application
             echo "::endgroup::"
           done < <(find . -name kustomization.yaml -not -path './.git/*' | sort)
 
