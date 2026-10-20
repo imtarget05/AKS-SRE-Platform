@@ -26,8 +26,9 @@ This repository is the central infrastructure blueprint for a shared Azure Kuber
 > claim on this page that "no cluster has ever been successfully applied" was
 > **false** and has been removed.
 >
-> **What has not happened yet:** no persistent cluster, no CI, no HPA, no
-> enforced NetworkPolicy, no SLO history. Those are the open items, tracked in
+> **What has not happened yet:** no persistent cluster, no live Azure CI login,
+> no HPA runtime proof, no measured NetworkPolicy enforcement, and no SLO
+> history. Repository CI exists; the remaining Azure runtime gaps are tracked in
 > [`tasks/current.md`](tasks/current.md).
 >
 > **Where verification now happens:** a real AKS cluster is the proof surface;
