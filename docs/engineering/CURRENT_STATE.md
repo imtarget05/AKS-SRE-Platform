@@ -205,9 +205,9 @@ Do not start Phase D's module split before Phase C, and do not run any
   `--config` — a relative path hard-fails in 9 subdirectories, and omitting
   `--config` silently falls back to the bundled ruleset and *misses* AzureRM
   findings. Local result: 0 issues across all 10 directories.
-  **Open:** `terraform/.tflint.hcl` is still **untracked** — until it is
-  committed, `tflint --init` fails on a fresh runner and the plugin cache key
-  degenerates to a constant.
+  **Resolved (2026-10-20):** `terraform/.tflint.hcl` is tracked in commit
+  `6b563d1`; a fresh runner can initialize the pinned plugin and the cache key
+  incorporates the configuration file.
 - `kubernetes/order-worker.yaml` (Service Bus) disagrees with
   `kubernetes/keda-autoscaler.yaml` (RabbitMQ); both are classified in
   `MANIFEST-INVENTORY.md` as legacy and belong to the FlashSale repo.
