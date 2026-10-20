@@ -41,9 +41,36 @@ require_file "$ROOT/platform/argocd/appproject.yaml"
 require_file "$APPS_DIR/flashsale.yaml"
 require_file "$APPS_DIR/legacyapp.yaml"
 
+
 echo "==> 1/3 Installing Argo CD"
 kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# SERVER-SIDE APPLY IS REQUIRED HERE, NOT A STYLE CHOICE.
+#
+# Measured on a clean kind cluster on 2026-10-20 with the upstream install
+# manifest:
+#
+#   client-side apply ->
+#     The CustomResourceDefinition "applicationsets.argoproj.io" is invalid:
+#     metadata.annotations: Too long: may not be more than 262144 bytes
+#     exit code 1
+#
+# and the consequence is not cosmetic: the `applicationsets.argoproj.io` CRD is
+# never created, the ApplicationSet controller crashes on start, and the
+# `&&` chain aborts the remaining install. The cause is structural — a
+# client-side apply stores the ENTIRE object in the
+# kubectl.kubernetes.io/last-applied-configuration annotation, and the
+# ApplicationSet CRD schema is larger than the 256 KiB annotation limit. A
+# server-side apply keeps the object server-side and never writes that
+# annotation.
+#
+# The whole upstream manifest is applied server-side: on the same clean
+# cluster every object (3 CRDs, StatefulSet, Deployments, Services, RBAC,
+# ConfigMaps, NetworkPolicies) applied with rc=0, so nothing had to fall back
+# to client-side apply. `--force-conflicts` is required because a re-run takes
+# ownership from the previous field manager.
+kubectl apply -n argocd --server-side --force-conflicts \
+  --field-manager=aks-sre-bootstrap \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 kubectl -n argocd rollout status deploy/argocd-server --timeout=300s
 
 echo "==> 2/3 Installing KEDA (upstream chart)"
@@ -60,6 +87,14 @@ echo "          LEGACY_NOT_DEPLOYED and would target a workload this repo does"
 echo "          not own."
 
 echo "==> 3/3 Applying AppProject and maintained Applications"
+# These repo-owned objects are applied CLIENT-SIDE on purpose. They are orders
+# of magnitude below the 256 KiB annotation limit that breaks the upstream
+# CRDs, and client-side apply computes a diff against the previously applied
+# configuration: a key removed from a manifest in Git is removed from the
+# cluster too. A server-side apply only removes fields that the applying
+# field manager owns, so a field owned by Argo CD or by an earlier operator
+# survives — a weaker contract for the one object whose entire purpose is to
+# BE the allowlist.
 kubectl apply -f "$ROOT/platform/argocd/appproject.yaml"
 
 for app in "$APPS_DIR"/*.yaml; do
