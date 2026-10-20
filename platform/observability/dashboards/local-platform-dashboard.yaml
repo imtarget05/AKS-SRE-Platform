@@ -1,8 +1,22 @@
-# L10.2 — dashboard 1/3: the platform itself (kind nodes + workloads).
+# L10.2 — the ONE owner of the `grafana-dashboard-local-platform` ConfigMap.
 #
-# Provisioned through the Grafana sidecar (label grafana_dashboard), so the
-# dashboard exists in Git and in Grafana at the same time — same
-# config-as-code rule as everything else in this repository.
+# Provenance (why this file exists in this shape):
+#
+#   `platform/observability/dashboards.yaml` and this file BOTH defined a
+#   ConfigMap named `grafana-dashboard-local-platform` in namespace
+#   `monitoring`, with different dashboard JSON under the SAME key
+#   (`local-platform.json`). Applied to a cluster, that is last-writer-wins:
+#   on 2026-10-20 the live ConfigMap held only the 4-panel dashboard below and
+#   the 6-panel "Local Platform Overview" from `dashboards.yaml` was gone.
+#
+# The fix keeps BOTH dashboards and loses NEITHER: this ConfigMap now carries
+# two keys, one per dashboard, so the Grafana sidecar (label
+# `grafana_dashboard: "1"`) provisions both, and the object name is unique
+# across the repository so no second file can overwrite it again.
+#
+# `dashboards.yaml` now owns only `grafana-dashboard-argocd` and
+# `grafana-dashboard-workloads`; it must NOT reintroduce a
+# `grafana-dashboard-local-platform` object.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -12,6 +26,8 @@ metadata:
     grafana_dashboard: "1"
     platform.local/component: observability
 data:
+  # Dashboard 1/2 — the platform itself (kind nodes + workloads).
+  # uid: local-platform
   local-platform.json: |
     {
       "uid": "local-platform",
@@ -37,7 +53,7 @@ data:
           "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
           "datasource": {"type": "prometheus", "uid": "prometheus"},
           "fieldConfig": {"defaults": {"unit": "percent", "min": 0, "max": 100}, "overrides": []},
-          "targets": [{"refId": "A", "expr": "100 * (1 - avg by (instance) (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))", "legendFormat": "{{instance}}"}]
+          "targets": [{"refId": "A", "expr": "100 * (1 - (avg by (instance) (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)))", "legendFormat": "{{instance}}"}]
         },
         {
           "id": 3,
@@ -59,4 +75,103 @@ data:
           "targets": [{"refId": "A", "expr": "count(kube_pod_status_ready{condition=\"false\"} == 1) or vector(0)", "legendFormat": "not ready"}]
         }
       ]
+    }
+  # Dashboard 2/2 — the cluster overview (nodes ready, running pods, CPU, RAM).
+  # uid: local-platform-overview
+  # Moved here verbatim from `platform/observability/dashboards.yaml`, which
+  # used to define a second ConfigMap with the SAME object name and therefore
+  # silently overwrote dashboard 1/2.
+  local-platform-overview.json: |-
+    {
+      "annotations": { "list": [] },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 0,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "title": "Cluster Nodes Ready",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})",
+              "legendFormat": "Ready Nodes",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Total Running Pods",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+          "targets": [
+            {
+              "expr": "count(kube_pod_status_phase{phase=\"Running\"} == 1)",
+              "legendFormat": "Running Pods",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Cluster CPU Usage (Cores)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[1m]))",
+              "legendFormat": "CPU Cores",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Cluster Memory Usage (GiB)",
+          "type": "stat",
+          "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+          "targets": [
+            {
+              "expr": "sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / 1073741824",
+              "legendFormat": "Used RAM (GiB)",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Node CPU Usage Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+          "targets": [
+            {
+              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[1m])) * 100)",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "title": "Node Memory Usage (%)",
+          "type": "timeseries",
+          "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+          "targets": [
+            {
+              "expr": "100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))",
+              "legendFormat": "{{instance}}",
+              "refId": "A"
+            }
+          ]
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["platform", "local"],
+      "time": { "from": "now-1h", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "Local Platform Overview",
+      "uid": "local-platform-overview",
+      "version": 1
     }
