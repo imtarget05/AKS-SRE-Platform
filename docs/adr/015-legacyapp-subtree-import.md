@@ -20,7 +20,7 @@ apps/legacy-inventory/
 
 using a non-squashed `git subtree` import. The imported application remains an application-owned subtree; platform files outside that path remain platform-owned. The source repository remains immutable migration provenance and is not deleted, reset, or pushed by this operation.
 
-The maintained Argo Application under `platform/argocd/applications/legacyapp.yaml` will be changed only after the imported tree renders and its local application gates pass. Its source will then point to this repository and `apps/legacy-inventory/infrastructure/kubernetes/overlays/prod`. The old `gitops/applications/legacyapp.yaml` is historical/legacy and is not a second live Application source.
+The maintained Argo Application under `platform/argocd/applications/legacyapp.yaml` will be changed only after the imported tree renders and its local application gates pass. Its source will then point to this repository and `apps/legacy-inventory/infrastructure/kubernetes/overlays/prod`. The old `gitops/applications/legacyapp.yaml` was historical/legacy and was removed so `platform/argocd/applications/` remains the only live Application source.
 
 No Azure resource, cluster, Argo instance, registry, database, or production deployment is changed by this local import.
 

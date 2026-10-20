@@ -34,7 +34,8 @@ fails CI.** There are no silent orphans.
 | `platform/envoy-gateway/gateway/*.yaml` | `RENDERED` | GatewayClass / Gateway / EnvoyProxy. Validated by kubeconform via `kustomize`. |
 | `platform/envoy-gateway/proof-backend/*.yaml` | `RENDERED` | Backend used by the north-south proof. |
 | `platform/argocd/appproject.yaml` | `RENDERED` | The AppProject both Applications live in. Validated by `gitops/validate-gitops.py`. |
-| `platform/argocd/applications/*.yaml` | `SUPERSEDED` | Duplicates of `gitops/applications/*.yaml` for the local platform. The `gitops/` tree is canonical; these drift. |
+| `platform/argocd/applications/*.yaml` | `RENDERED` | The two maintained Argo CD Applications (`flashsale`, `legacyapp`). This is the directory `gitops/validate-gitops.py` validates and the negative control M-B1 mutates (ADR-015). |
+| `gitops/applications/*.yaml` | `REMOVED` | Stale duplicates that drifted from the maintained Applications (old overlay path, `prune: true`). ADR-015 declares `platform/argocd/applications/` the only live Application source, so the duplicates were deleted instead of kept in sync. |
 
 ## `platform/observability/` — monitoring
 

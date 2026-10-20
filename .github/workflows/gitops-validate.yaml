@@ -85,7 +85,7 @@ jobs:
       - name: M-B1 break a GitOps invariant
         run: |
           set -euo pipefail
-          APP=gitops/applications/flashsale.yaml
+          APP=platform/argocd/applications/flashsale.yaml
           cp "$APP" "$APP.orig"
           # destination.namespace must be allowed by the AppProject. Moving it
           # to kube-system breaks both the allowlist and the namespace rule.
@@ -112,5 +112,5 @@ jobs:
       - name: restore is byte-identical
         run: |
           set -euo pipefail
-          git diff --exit-code -- gitops/applications/flashsale.yaml
+          git diff --exit-code -- platform/argocd/applications/flashsale.yaml
           echo "Mutation fully reverted; working tree clean for the mutated file."

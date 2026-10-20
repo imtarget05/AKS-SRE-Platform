@@ -193,11 +193,11 @@ def project_allows(project_doc, repo_url, namespace):
 # ------------------------------------------------------------ applications ----
 def check_applications(rep, projects, repo_map):
     if not os.path.isdir(APPS_DIR):
-        rep.add("applications-present", "gitops/applications", FAIL, "directory missing")
+        rep.add("applications-present", "platform/argocd/applications", FAIL, "directory missing")
         return
     files = [f for f in sorted(os.listdir(APPS_DIR)) if f.endswith((".yaml", ".yml"))]
     if not files:
-        rep.add("applications-present", "gitops/applications", FAIL, "no Application found")
+        rep.add("applications-present", "platform/argocd/applications", FAIL, "no Application found")
 
     for fname in files:
         path = os.path.join(APPS_DIR, fname)
