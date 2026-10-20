@@ -7,7 +7,9 @@
 
 A portfolio project demonstrating practical **Brownfield DevSecOps** and **Release Engineering**. 
 
-The premise: I inherited a "legacy" Node.js inventory application. Instead of rewriting the business logic (which works), my task was to "productionize" how it builds, runs, and deploys—transforming it from a fragile script into a secure, observable, and immutable release artifact.
+The premise: I inherited a deliberately minimal "legacy" Node.js inventory application. This subtree is currently a **reference workload** for release engineering, GitOps, and SRE validation: its `/sync` endpoint is a no-op simulation and does **not** persist or synchronize inventory. Instead of presenting it as a complete inventory product, this phase productionizes how the workload builds, runs, and deploys—transforming a fragile script into a secure, observable, and immutable release artifact.
+
+> **Scope boundary:** A real inventory-sync product requires a versioned integration contract, service authentication, durable idempotency, persistence/outbox, and failure-recovery tests. Those capabilities are intentionally not claimed by this reference workload and are tracked as a later enterprise-pilot phase.
 
 ## 🚀 Engineering Highlights
 

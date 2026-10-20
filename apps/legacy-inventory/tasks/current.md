@@ -17,6 +17,16 @@ Verified live 2026-09-21 (not inferred from docs):
 - Resource requests are small; compatible with the shared AKS foundation.
 - No Terraform state or plan artifacts are tracked in Git.
 
+## Workload role and non-claims
+
+`legacy-inventory` is currently a **reference workload**, not a complete
+inventory-sync product. `POST /sync` deliberately returns a simulated success;
+it does not validate, persist, or synchronize inventory data. The Phase 6B
+claim is limited to its build, security, image, manifest, and release contract.
+Do not use this subtree to claim a business inventory integration until a later
+phase adds a versioned contract, service authentication, durable idempotency,
+persistence/outbox, and recovery evidence.
+
 ## Ownership boundary
 
 P03 `AKS-SRE-Platform` owns the shared Azure/AKS runtime (resource group,
@@ -24,7 +34,7 @@ cluster, ACR, gateway, GitOps). **P02 owns only** application code, its image,
 and its Kubernetes manifests. Do not provision P02-owned standalone Azure
 infrastructure from this repo.
 
-## Next: Phase 7D — deploy to shared AKS via GitOps
+## Next: reviewed GitOps source switch, then Phase 7D deployment
 
 **P02 offline readiness gate: DONE + CI-verified 2026-09-22** (GitHub run 35740251227, conclusion success — all jobs green incl. the new manifest-validation):
 `scripts/validate-manifests.sh` + `scripts/test-validate-manifests.py`
@@ -36,8 +46,10 @@ CI `ci-gate`. Ported principles from P01 7C, sized to P02's workload set
 P02's Node app has no evidence of needing writable temp like P01's .NET
 `Path.GetTempPath()` path, and imports must be justified, not copied.
 
-Blocked behind platform Phase 7B (AKS capacity gate is currently BLOCKED on a
-manual quota approval) and 7C (P01 first deployment).
+The imported subtree is prepared for a source switch but no Argo CD sync or
+cluster deployment is authorized. The source switch requires a reviewed Argo
+Application diff and explicit approval; the later Phase 7D deployment also
+requires the platform's Azure capacity/cost approval.
 
 Before 7D, close these known gaps:
 

@@ -1,12 +1,18 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-- **Updated:** 2026-10-02 (after Phase B CI enforcement and the Phase F workload foundation)
+- **Updated:** 2026-10-20 (after the LegacyApp subtree import and A0.1 honesty pass)
 - **Wave:** Execution Wave 1 = Phase A + B + C
 - **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
   dry-run profile. See
   [`../adr/014-azure-first-verification.md`](../adr/014-azure-first-verification.md).
 - **Canonical task list:** [`../../tasks/current.md`](../../tasks/current.md)
+
+> **A0 state:** `apps/legacy-inventory/` was imported with preserved history
+> and passed local subtree gates. It remains a reference workload; its `/sync`
+> endpoint is a no-op simulation, not an inventory integration. The maintained
+> Argo Application source switch and every live cluster operation remain
+> unapproved. See ADR-015 and `docs/evidence/a0-legacyapp-subtree-import.md`.
 
 ## Where the project actually is
 
