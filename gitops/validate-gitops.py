@@ -10,6 +10,17 @@ WHAT THIS VALIDATES (repo-owned, honest, offline)
    source/destination allowlists are non-empty, contain no `*` wildcard on
    sourceRepos, and every Application's source repo + destination namespace is
    actually allowed by its project.
+   EVERY AppProject FILE is validated, and TWO files may not declare the SAME
+   `metadata.name`: a duplicate is a FAIL naming both paths, never a silent
+   overwrite of one by the other. The same AppProject used to exist twice with
+   DIFFERENT `sourceRepos` (`gitops/projects/portfolio.yaml` allowed the
+   LegacyApp repository, `platform/argocd/appproject.yaml` allowed this
+   repository), so the verdict of this validator used to depend on the
+   iteration order of the project directories and one of the two allowlists
+   was never checked at all.
+   `platform/argocd/` is the CANONICAL directory for AppProjects (ADR-015);
+   an AppProject declared anywhere else fails as non-canonical, so the second
+   home cannot be re-introduced.
 3. No developer-machine assumptions: a hardcoded absolute or `~`-prefixed path
    in the mapping configuration is a hard FAIL, never a silent default.
 4. Every non-Application YAML under `kubernetes/` is classified by the manifest
@@ -52,9 +63,15 @@ except ImportError:
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APPS_DIR = os.path.join(ROOT, "platform", "argocd", "applications")
+# ADR-015: `platform/argocd/` is the canonical home for the platform's Argo CD
+# objects. An AppProject may only be declared here; a second file declaring
+# the same project name is a FAIL, and an AppProject declared in any other
+# directory is a FAIL too (non-canonical). Both project directories are still
+# SCANNED — scanning is how a duplicate is detected. Only one is canonical.
+CANONICAL_PROJECTS_DIR = os.path.join(ROOT, "platform", "argocd")
 PROJECTS_DIRS = [
     os.path.join(ROOT, "gitops", "projects"),
-    os.path.join(ROOT, "platform", "argocd"),
+    CANONICAL_PROJECTS_DIR,
 ]
 INVENTORY = os.path.join(ROOT, "MANIFEST-INVENTORY.md")
 
@@ -124,9 +141,30 @@ def repo_tail(url):
 
 
 # ---------------------------------------------------------------- projects ----
+def is_canonical(path):
+    """Is this AppProject file in the canonical directory (ADR-015)?"""
+    return os.path.dirname(os.path.realpath(path)) == os.path.realpath(
+        CANONICAL_PROJECTS_DIR
+    )
+
+
 def collect_projects(rep):
-    """Load every AppProject found in the repo-owned project directories."""
-    projects = {}
+    """Load EVERY AppProject file in the repo-owned project directories.
+
+    Returns (by_name, entries) where `by_name` maps a project name to the list
+    of files declaring it and `entries` is the flat list of every AppProject
+    document found, so no file is skipped.
+
+    WHY THIS IS NOT A DICTIONARY OF DOCUMENTS. The previous implementation keyed
+    the projects by `metadata.name` and assigned
+    `projects[key] = (doc, rel)`. Two files declaring the same name therefore
+    meant that the SECOND one silently replaced the first: the earlier file was
+    never validated, and the verdict depended on the iteration order of
+    PROJECTS_DIRS. Here a duplicate is reported as a FAIL naming both paths,
+    and every file is validated on its own.
+    """
+    by_name = {}
+    entries = []
     for d in PROJECTS_DIRS:
         if not os.path.isdir(d):
             continue
@@ -142,15 +180,63 @@ def collect_projects(rep):
             if not key:
                 rep.add("appproject-name", rel, FAIL, "AppProject has no metadata.name")
                 continue
-            projects[key] = (doc, rel)
-    return projects
+            entries.append((key, doc, rel))
+            by_name.setdefault(key, []).append((doc, rel))
+
+    canonical_rel = os.path.relpath(CANONICAL_PROJECTS_DIR, ROOT)
+
+    # A name declared by more than one file is a conflict, not a preference.
+    for key, items in sorted(by_name.items()):
+        if len(items) > 1:
+            paths = [rel for _doc, rel in items]
+            rep.add(
+                "appproject-duplicate-name",
+                key,
+                FAIL,
+                f"AppProject {key!r} is declared in {len(items)} files: "
+                f"{', '.join(paths)} — one object, one owner; the canonical "
+                f"directory is {canonical_rel}",
+            )
+
+    # A project outside the canonical directory is the second home that caused
+    # the duplicate in the first place.
+    for key, _doc, rel in entries:
+        if not is_canonical(os.path.join(ROOT, rel)):
+            rep.add(
+                "appproject-canonical-dir",
+                rel,
+                FAIL,
+                f"AppProject {key!r} is not in the canonical directory "
+                f"{canonical_rel}",
+            )
+
+    return by_name, entries
 
 
-def check_projects(rep, projects):
-    if not projects:
-        rep.add("appproject-present", "gitops/projects", FAIL, "no AppProject found")
+def resolve_project(by_name, name):
+    """The AppProject document an Application is checked against.
+
+    The canonical one wins; a non-canonical copy is already a FAIL and is only
+    used as a fallback so the Application checks still report something useful.
+    """
+    items = by_name.get(name) or []
+    for doc, rel in items:
+        if is_canonical(os.path.join(ROOT, rel)):
+            return doc
+    return items[0][0] if items else None
+
+
+def check_projects(rep, entries):
+    if not entries:
+        rep.add(
+            "appproject-present",
+            os.path.relpath(CANONICAL_PROJECTS_DIR, ROOT),
+            FAIL,
+            "no AppProject found",
+        )
         return
-    for name, (doc, rel) in sorted(projects.items()):
+    # EVERY file is checked, not one file per name.
+    for name, doc, rel in entries:
         spec = doc.get("spec") or {}
         repos = spec.get("sourceRepos") or []
         dests = spec.get("destinations") or []
@@ -191,7 +277,7 @@ def project_allows(project_doc, repo_url, namespace):
 
 
 # ------------------------------------------------------------ applications ----
-def check_applications(rep, projects, repo_map):
+def check_applications(rep, by_name, repo_map):
     if not os.path.isdir(APPS_DIR):
         rep.add("applications-present", "platform/argocd/applications", FAIL, "directory missing")
         return
@@ -210,9 +296,10 @@ def check_applications(rep, projects, repo_map):
 
         # --- locally verifiable fields -------------------------------------
         proj = spec.get("project")
+        project_doc = resolve_project(by_name, proj) if proj else None
         if not proj:
             rep.add("app-project", target, FAIL, "spec.project is required")
-        elif proj not in projects:
+        elif project_doc is None:
             rep.add(
                 "app-project", target, FAIL, f"project {proj!r} not declared in this repo"
             )
@@ -239,8 +326,8 @@ def check_applications(rep, projects, repo_map):
         ns = dest.get("namespace")
         if ns in (None, "", "default"):
             rep.add("app-namespace", target, FAIL, f"destination.namespace is {ns!r}")
-        elif proj in projects:
-            _, ok_ns = project_allows(projects[proj][0], repo_url, ns)
+        elif project_doc is not None:
+            _, ok_ns = project_allows(project_doc, repo_url, ns)
             rep.add(
                 "app-namespace",
                 target,
@@ -262,8 +349,8 @@ def check_applications(rep, projects, repo_map):
         )
 
         # --- cross-repo consistency against the AppProject -----------------
-        if proj in projects:
-            ok_repo, _ = project_allows(projects[proj][0], repo_url, ns)
+        if project_doc is not None:
+            ok_repo, _ = project_allows(project_doc, repo_url, ns)
             rep.add(
                 "app-sourceRepo-allowed",
                 target,
@@ -375,9 +462,9 @@ def main():
     repo_map = load_repo_map(args.repo_map) if args.repo_map else {}
 
     rep = Report()
-    projects = collect_projects(rep)
-    check_projects(rep, projects)
-    check_applications(rep, projects, repo_map)
+    by_name, entries = collect_projects(rep)
+    check_projects(rep, entries)
+    check_applications(rep, by_name, repo_map)
     check_inventory(rep)
 
     rc = rep.exit_code(args.require_external)
@@ -393,7 +480,8 @@ def main():
     print(
         f"\nGITOPS: {ok} passed, {len(rep.failed)} failed, "
         f"{len(rep.not_present)} not-present, {len(rep.rows)} total "
-        f"({len(projects)} AppProject(s), {len(repo_map)} external checkout(s) supplied)"
+        f"({len(entries)} AppProject file(s), {len(by_name)} distinct name(s), "
+        f"{len(repo_map)} external checkout(s) supplied)"
     )
     if rep.not_present:
         print(

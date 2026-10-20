@@ -44,8 +44,10 @@ fails CI.** There are no silent orphans.
 | `platform/envoy-gateway/proof-backend/kustomization.yaml` | `RENDERED` | Root for the temporary proof backend. |
 | `platform/envoy-gateway/proof-backend/*.yaml` | `RENDERED` | Deployment + Service used by the north-south proof; strict kubeconform. |
 | `platform/envoy-gateway/values.yaml` | `REFERENCE_NOT_RENDERED` | Helm chart values for the local Envoy Gateway install. A chart input, not a Kubernetes object; kubeconform would correctly reject it. |
-| `platform/argocd/appproject.yaml` | `RENDERED` | The AppProject both Applications live in. Validated by `gitops/validate-gitops.py`. |
+| `platform/argocd/appproject.yaml` | `RENDERED` | The AppProject both Applications live in — the **canonical** AppProject (ADR-015). Validated by `gitops/validate-gitops.py`, which now also FAILS on any duplicate AppProject name and on any AppProject declared outside `platform/argocd/`. |
 | `platform/argocd/applications/*.yaml` | `RENDERED` | The two maintained Argo CD Applications (`flashsale`, `legacyapp`). This is the directory `gitops/validate-gitops.py` validates and the negative control M-B1 mutates (ADR-015). |
+| `platform/argocd/VERSION` | `REFERENCE_NOT_RENDERED` | Not a Kubernetes object: the pinned Argo CD release tag (`v3.5.5`) and the single source of truth for the version. `scripts/bootstrap.sh` reads it and refuses anything that is not a `vMAJOR.MINOR.PATCH` tag. |
+| `gitops/projects/portfolio.yaml` | `REMOVED` | A second AppProject named `portfolio`, with **different** `sourceRepos` from the canonical one (`Productionized-LegacyApp` here vs `AKS-SRE-Platform` in `platform/argocd/appproject.yaml`). Two files owning one object name is last-writer-wins, and the validator keyed projects by `metadata.name`, so one of the two allowlists was never validated. ADR-015 makes `platform/argocd/` canonical; the duplicate was deleted and the validator now fails on duplicates instead of overwriting them. |
 | `gitops/applications/*.yaml` | `REMOVED` | Stale duplicates that drifted from the maintained Applications (old overlay path, `prune: true`). ADR-015 declares `platform/argocd/applications/` the only live Application source, so the duplicates were deleted instead of kept in sync. |
 
 ## `platform/observability/` — monitoring

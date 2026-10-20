@@ -28,10 +28,24 @@ asserts the outcome.
          - CI executes EVERY terraform root that owns a *.tftest.hcl
          - the test step still fails the job when the total is zero
          - the workflow's gate-matrix label matches the groups defined here
+    G11 the validator does not skip a project file (regression F3/F4):
+         - two files declaring the SAME AppProject name FAIL, and the failure
+           names BOTH paths
+         - the file that the old dictionary-keyed implementation would have
+           dropped is validated too (a wildcard allowlist in it is reported)
+         - an AppProject outside the canonical directory FAILS
+         - the verdict does not depend on the order of the project directories
+    G13 the install and the manifests are not able to lose data silently
+         (regressions F1/F2):
+         - scripts/bootstrap.sh applies the Argo CD manifest server-side
+         - no two YAML files in the repository declare the same object
+           (apiVersion/kind/namespace/name), so no dashboard ConfigMap or
+           AppProject can be silently overwritten again
 
 Run: python3 tests/test_gates.py
 """
 import inspect
+import json
 import os
 import re
 import shutil
@@ -50,7 +64,9 @@ WORKFLOW = os.path.join(REPO, ".github", "workflows", "pr-gate.yaml")
 # labelled with exactly this range: a label that stops at G1-G9 while G10
 # exists hides a group from the run log, and a label that runs ahead of this
 # file advertises a control that does not exist.
-GATE_GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10")
+GATE_GROUPS = (
+    "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G13",
+)
 
 APP_PROJECT = """apiVersion: argoproj.io/v1alpha1
 kind: AppProject
@@ -122,16 +138,28 @@ INVENTORY = "# Manifest Inventory\n\n| `kubernetes/thing.yaml` | `LEGACY_NOT_DEP
 RESULTS = []
 
 
-def build(root, *, app_yaml=APP, inventory=INVENTORY, project_yaml=APP_PROJECT):
-    """Create the minimal repo shape the validator expects, validator included."""
+def build(root, *, app_yaml=APP, inventory=INVENTORY, project_yaml=APP_PROJECT,
+          extra_projects=()):
+    """Create the minimal repo shape the validator expects, validator included.
+
+    The AppProject is written to the CANONICAL directory (`platform/argocd/`),
+    because that is where ADR-015 puts it and where the real repository keeps
+    it. Fixtures that need a second home use `extra_projects`.
+    """
     os.makedirs(os.path.join(root, "platform", "argocd", "applications"), exist_ok=True)
+    os.makedirs(os.path.join(root, "platform", "argocd"), exist_ok=True)
     os.makedirs(os.path.join(root, "gitops", "projects"), exist_ok=True)
     os.makedirs(os.path.join(root, "kubernetes"), exist_ok=True)
     shutil.copy2(SOURCE_VALIDATOR, os.path.join(root, "gitops", "validate-gitops.py"))
     with open(os.path.join(root, "platform", "argocd", "applications", "app.yaml"), "w") as fh:
         fh.write(app_yaml)
-    with open(os.path.join(root, "gitops", "projects", "portfolio.yaml"), "w") as fh:
+    with open(os.path.join(root, "platform", "argocd", "appproject.yaml"), "w") as fh:
         fh.write(project_yaml)
+    for rel, content in extra_projects:
+        path = os.path.join(root, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fh:
+            fh.write(content)
     if inventory is not None:
         with open(os.path.join(root, "MANIFEST-INVENTORY.md"), "w") as fh:
             fh.write(inventory)
@@ -161,6 +189,101 @@ def with_tmp(build_kwargs, fn):
         return fn(tmp)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def outcomes(json_text):
+    """The (check, target, outcome) triples of a --json validator run."""
+    data = json.loads(json_text)
+    return sorted((r["check"], r["target"], r["outcome"]) for r in data["checks"])
+
+
+def reverse_projects_dirs(tmp):
+    """Rewrite the COPIED validator so the project directories are reversed.
+
+    The copy is what the fixture runs, so this is a real change of the code
+    under test — not a mocked one.
+    """
+    path = os.path.join(tmp, "gitops", "validate-gitops.py")
+    src = open(path).read()
+    old = ('PROJECTS_DIRS = [\n'
+           '    os.path.join(ROOT, "gitops", "projects"),\n'
+           '    CANONICAL_PROJECTS_DIR,\n'
+           ']')
+    new = ('PROJECTS_DIRS = [\n'
+           '    CANONICAL_PROJECTS_DIR,\n'
+           '    os.path.join(ROOT, "gitops", "projects"),\n'
+           ']')
+    if old not in src:
+        raise AssertionError("PROJECTS_DIRS block not found in the copied validator")
+    with open(path, "w") as fh:
+        fh.write(src.replace(old, new))
+
+
+def duplicate_objects():
+    """Objects declared by two different files: (apiVersion, kind, ns, name).
+
+    Two files owning one object name is last-writer-wins on a cluster — the
+    Grafana dashboard ConfigMap (F2) and the AppProject (F4) were both lost
+    that way, silently.
+    """
+    roots = ["platform", "kubernetes", "deploy", "gitops", "apps"]
+    seen = {}
+    dupes = []
+    for r in roots:
+        for dirpath, dirnames, filenames in os.walk(os.path.join(REPO, r)):
+            dirnames[:] = [d for d in dirnames
+                           if d not in (".git", "node_modules", ".venv", ".terraform")]
+            for name in filenames:
+                if not name.endswith((".yaml", ".yml")):
+                    continue
+                path = os.path.join(dirpath, name)
+                try:
+                    docs = [d for d in yaml.safe_load_all(open(path)) if d]
+                except yaml.YAMLError:
+                    continue
+                for d in docs:
+                    if not isinstance(d, dict) or "kind" not in d:
+                        continue
+                    if d["kind"] == "Kustomization":
+                        # A build config, not an API object: several of them
+                        # legitimately exist and none of them is applied.
+                        continue
+                    meta = d.get("metadata") or {}
+                    key = (d.get("apiVersion", ""), d["kind"],
+                           meta.get("namespace", ""), meta.get("name"))
+                    rel = os.path.relpath(path, REPO)
+                    if key in seen and seen[key] != rel:
+                        dupes.append((key, seen[key], rel))
+                    else:
+                        seen[key] = rel
+    return dupes
+
+
+def g11_dup(tmp):
+    r = run_validator(tmp, "--json")
+    check("G11 a duplicate AppProject name fails", r.returncode != 0, f"rc={r.returncode}")
+    check("G11 the duplicate is reported", "appproject-duplicate-name" in r.stdout,
+          r.stdout[-400:])
+    check("G11 BOTH conflicting paths are named",
+          "platform/argocd/appproject.yaml" in r.stdout
+          and "gitops/projects/portfolio.yaml" in r.stdout,
+          r.stdout[-400:])
+    # The file the old dictionary-keyed implementation would have DROPPED must
+    # still be validated on its own: its wildcard allowlist has to surface.
+    check("G11 the previously-skipped file is validated too",
+          "appproject-sourceRepos" in r.stdout
+          and "gitops/projects/portfolio.yaml#portfolio" in r.stdout,
+          r.stdout[-400:])
+    check("G11 the wildcard allowlist of the skipped file is reported",
+          "wildcard sourceRepos" in r.stdout, r.stdout[-400:])
+
+def g11_order_independent(tmp):
+    forward = outcomes(run_validator(tmp, "--json").stdout)
+    reverse_projects_dirs(tmp)
+    backward = outcomes(run_validator(tmp, "--json").stdout)
+    check("G11 the verdict does not depend on the project directory order",
+          forward == backward,
+          f"forward={forward}\nbackward={backward}")
 
 
 def load_workflow():
@@ -351,6 +474,47 @@ def main():
               f"label(s) {labels}, groups printed here {sorted(printed)}, "
               f"groups declared {list(GATE_GROUPS)}")
     g10()
+
+    print("G11 the validator does not skip a project file (regression F3/F4)")
+    def g11():
+        # (a) Two files, ONE name. The old implementation keyed the projects by
+        # metadata.name and silently dropped the first file, so the verdict
+        # depended on the iteration order of the project directories.
+        # The second file carries a WILDCARD allowlist: under the old
+        # implementation it was the file that got dropped, so this allowlist
+        # was never validated at all. It must be reported now.
+        duplicate = APP_PROJECT.replace(
+            "    - https://github.com/example/other-repo.git",
+            "    - '*'",
+        )
+        fixture = {
+            "extra_projects": (
+                ("gitops/projects/portfolio.yaml", duplicate),
+            ),
+        }
+        with_tmp(fixture, g11_dup)
+        with_tmp(fixture, g11_order_independent)
+
+        # (b) An AppProject outside the canonical directory is a FAIL: it is
+        # the second home that made the duplicate possible.
+        def g11_non_canonical(tmp):
+            r = run_validator(tmp, "--json")
+            check("G11 non-canonical AppProject fails", r.returncode != 0, f"rc={r.returncode}")
+            check("G11 non-canonical path named", "appproject-canonical-dir" in r.stdout,
+                  r.stdout[-300:])
+        with_tmp({"extra_projects": (("gitops/projects/portfolio.yaml", APP_PROJECT),)}, g11_non_canonical)
+    g11()
+
+    print("G13 nothing can be overwritten silently (regressions F1/F2)")
+    def g13():
+        with open(os.path.join(REPO, "scripts", "bootstrap.sh")) as fh:
+            bootstrap = fh.read()
+        check("G13 the Argo CD manifest is applied server-side",
+              "--server-side" in bootstrap and "force-conflicts" in bootstrap)
+        duplicates = duplicate_objects()
+        check("G13 no two files declare the same object",
+              not duplicates, f"duplicate object(s): {duplicates}")
+    g13()
 
     passed = sum(1 for _n, ok in RESULTS if ok)
     failed = len(RESULTS) - passed

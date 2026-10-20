@@ -350,5 +350,5 @@ jobs:
       - run: >-
           pip install --require-hashes --only-binary ':all:' -r requirements.lock
 
-      - name: gate test matrix (G1-G10)
+      - name: gate test matrix (G1-G13)
         run: python3 tests/test_gates.py
