@@ -217,3 +217,40 @@ flowchart TD
 | **MAIA One-Command E2E Demo** | [`scripts/run_demo_e2e.sh`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/scripts/run_demo_e2e.sh) |
 | **MAIA Gate 8B Decision & ADR** | [`docs/adr/0006-answerability-vs-topical-similarity-gate.md`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/docs/adr/0006-answerability-vs-topical-similarity-gate.md) |
 | **MAIA MCP Protocol Implementation** | [`src/maia/mcp/`](https://github.com/imtarget05/Zero-Hallucination-Policy-Compliance-Decision-Support-Agent/blob/main/src/maia/mcp) (`protocol.py`, `bridge.py`, `servers/`) |
+## 5. Interview Readiness (5-Minute Pre-Interview Checklist)
+
+> Chạy checklist này trước **mọi** buổi phỏng vấn. Mục tiêu: recruiter mở repo
+> trong 2 phút đầu phải thấy CI xanh, badge sống, không branch mồ côi.
+
+### 5.1. Trạng thái 3 repo (cập nhật 2026-10-20)
+
+| Repo | GitHub | Branch chính | CI | Ghi chú |
+|------|--------|--------------|-----|---------|
+| **AKS-SRE-Platform** | [imtarget05/AKS-SRE-Platform](https://github.com/imtarget05/AKS-SRE-Platform) | `main` | `pr-gate` | Terraform offline tests + Trivy checksummed; kubeconform skip-list gồm Gateway API CRDs |
+| **QuanLyKho** | [imtarget05/QuanLyKho](https://github.com/imtarget05/QuanLyKho) | `main` | `ci.yml` + `ci-gitops.yml` | 387 passed / 8 skipped (2 lần chạy liên tiếp); ruff 0.17.0 sạch; migration `alembic upgrade head` chạy trong CI |
+| **OpsBridge (FlashSale-Backend)** | [imtarget05/FlashSale-Backend](https://github.com/imtarget05/FlashSale-Backend) | `main` | `ci.yml` (`ci-gate` aggregate) | `dotnet format --verify-no-changes` pass; Trivy image scan chặn HIGH+CRITICAL |
+
+### 5.2. Checklist 5 phút trước giờ G
+
+1. **CI xanh trên main của cả 3 repo** — mở tab GitHub Actions của từng repo,
+   xác nhận run mới nhất trên `main` là green (nếu đỏ: đừng demo, fix trước).
+2. **Badge README sống** — mở README từng repo ở chế độ public/ẩn danh, click
+   thử badge CI (badge trỏ repo cũ sau khi rename là lỗi kinh điển).
+3. **Không có branch "mồ côi"** — `gh api repos/imtarget05/<repo>/branches`
+   hoặc tab Branches: merge/xoá branch feature đã hoàn thành; giữ lại chỉ khi
+   đang kể chuyện "work in progress có chủ đích".
+4. **Working tree sạch trên máy local** — `git status` trong từng repo: mọi
+   thay đổi đã được commit + push, hoặc nằm trong `.gitignore` đúng nghĩa.
+5. **Link trong tài liệu không chết** — cheatsheet này và EVIDENCE.md chỉ được
+   phép chứa link GitHub tuyệt đối (`https://github.com/...`), không `file:///`.
+6. **Repo rename redirect** — nếu đã đổi tên repo (vd `BankOps` → `QuanLyKho`),
+   cập nhật `git remote set-url origin` và mọi link trong CV/docs.
+
+### 5.3. Kịch bản 2 phút của recruiter (tự đối chiếu)
+
+- Mở repo → đọc README 30s → **nhìn badge CI** → mở tab Actions.
+- Thấy CI đỏ = kết luận "không chạy được" mà không cần đọc code.
+- Thấy branch chính có thay đổi chưa merge = "code này có được review không?".
+- Kết luận: bề mặt repo **chính là** ấn tượng đầu tiên; nội dung sâu chỉ được
+  đọc sau khi bề mặt đã qua.
+
