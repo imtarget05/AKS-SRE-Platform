@@ -32,6 +32,17 @@ jobs:
     defaults:
       run:
         working-directory: terraform/aks-foundation
+    env:
+      # Every terraform root that owns a *.tftest.hcl, repository-relative.
+      # `terraform test` only executes the CURRENT module's tests/ directory,
+      # so a job that stays in terraform/aks-foundation asserts 2 of the 5 run
+      # blocks and the two module suites are never executed by any CI step.
+      # tests/test_gates.py (G10) asserts this list against the repository, so
+      # a new module cannot be added without being wired in here.
+      TERRAFORM_TEST_ROOTS: |
+        terraform/aks-foundation
+        terraform/modules/acr_attachment
+        terraform/modules/aks_cluster
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
@@ -62,33 +73,145 @@ jobs:
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
-      - name: tflint (recursive)
-        run: tflint --recursive --format=compact
+      # Plugin cache. tflint installs third-party rulesets under
+      # ~/.tflint.d/plugins. setup-tflint v5 (the pinned version) exposes no
+      # plugin-cache input, so the cache is declared here, exactly as the
+      # setup-tflint README documents it. The key hashes terraform/.tflint.hcl,
+      # so a change to the pinned ruleset version cannot be served from a
+      # stale cache, and runner.os keeps a Linux binary out of a macOS runner.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-plugins-${{ hashFiles('terraform/.tflint.hcl') }}
+
+      # --init installs the pinned AzureRM ruleset declared in
+      # terraform/.tflint.hcl. It is a SEPARATE step from the lint: tflint
+      # refuses to run a plugin it has not installed, so the lint would fail
+      # with "plugin not found" on a cold runner instead of with a lint
+      # finding. GITHUB_TOKEN avoids the unauthenticated GitHub API rate
+      # limit (60/hour/IP) that a shared CI address can hit.
+      #
+      # The retry is deliberate, not defensive noise: tflint verifies the
+      # plugin's signature through the sigstore TUF root, and that fetch
+      # failed with "connection reset by peer" on 1 of 5 cold installs here.
+      # Retrying keeps the signature verification (nothing is downgraded to
+      # signature = "none") and turns a network blip into a slower step
+      # instead of a red job. A genuinely missing plugin fails all three
+      # attempts and the job goes red with the real error.
+      - name: tflint init (pinned azurerm plugin)
+        working-directory: terraform
+        run: |
+          set -uo pipefail
+          for attempt in 1 2 3; do
+            if tflint --init --config "$(pwd)/.tflint.hcl"; then
+              exit 0
+            fi
+            echo "::warning::tflint --init failed (attempt ${attempt}/3); retrying"
+            sleep 5
+          done
+          echo "::error::tflint --init failed after 3 attempts"
+          exit 1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      # Lint from the terraform/ ROOT so every root below it is covered:
+      # aks-foundation, modules/aks_cluster, modules/acr_attachment, legacy
+      # and data-protection. Running from a single root left the other three
+      # roots unlinted.
+      #
+      # --config is an ABSOLUTE path on purpose. Measured on this tree with
+      # tflint v0.64.0: an absolute path loads the AzureRM ruleset in every
+      # root (rc=0, 0 issues); a relative path HARD FAILS in all 9
+      # subdirectories ("Failed to load TFLint config", rc=1); NO --config at
+      # all makes the subdirectories silently fall back to the bundled
+      # terraform ruleset, where an AzureRM finding (a resource missing its
+      # tags) is MISSED (rc=0). Only the absolute path both loads the ruleset
+      # everywhere and keeps a missing ruleset loud.
+      - name: tflint (recursive, every terraform root)
+        working-directory: terraform
+        run: tflint --recursive --config "$(pwd)/.tflint.hcl" --format=compact
 
       # Truthful native-test accounting. Zero tests is reported as
       # NOT_IMPLEMENTED and fails this step on purpose: `terraform test` exiting 0
       # with "0 passed, 0 failed" is not verification, and letting it through is
       # how an empty suite gets mistaken for a green one.
       #
+      # Every root that owns a *.tftest.hcl is executed, not only the one the
+      # job happens to sit in: `terraform test` runs the CURRENT module's
+      # tests/ directory and nothing else, so a single-root run asserts 2 of
+      # the 5 run blocks and the two module suites stay invisible. The step
+      # walks TERRAFORM_TEST_ROOTS, prints the per-root count, and the guard
+      # below is evaluated against the TOTAL across all roots (5 today), not
+      # against one root.
+      #
       # Phase D resolved the computed-block blocker cleanly: the ACR role assignment
       # boundary is decoupled into `modules/acr_attachment` and the cluster foundation
       # into `modules/aks_cluster`, without fake mock fallbacks. `terraform test`
       # evaluates semantic assertions against the offline mock provider.
-      - name: terraform test
+      #
+      # if: always() is the other half of the comment above the tflint steps.
+      # That comment states the rule: a failing step must not hide the controls
+      # after it. Moving tflint before this step stopped the TEST failure from
+      # hiding the LINT control, but a failing LINT step would then hide THIS
+      # control, which is the same blindness with the arrow reversed. always()
+      # runs this step whatever happened above it; the job still fails when
+      # either step fails, so no control is weakened.
+      - name: terraform test (every test root)
+        if: always()
+        working-directory: .
         run: |
-          set -o pipefail
-          terraform test 2>&1 | tee terraform-test.log
-          echo "::group::test output"
-          cat terraform-test.log
-          echo "::endgroup::"
-          TOTAL=$(grep -oE '[0-9]+ passed' terraform-test.log | head -1 | grep -oE '[0-9]+' || echo 0)
+          set -uo pipefail
+          # The roots below are repository-relative and the job default
+          # working-directory is terraform/aks-foundation, so anchor at the
+          # repository root before walking them.
+          cd "${GITHUB_WORKSPACE:-$PWD}"
+          : > terraform-test.log
+          TOTAL=0
+          FAILED=0
+          for root in ${TERRAFORM_TEST_ROOTS}; do
+            log="terraform-test-$(printf '%s' "$root" | tr '/' '-').log"
+            echo "::group::terraform test $root"
+            ( cd "$root" && terraform init -backend=false -input=false && terraform test ) > "$log" 2>&1
+            rc=$?
+            cat "$log"
+            echo "::endgroup::"
+            cat "$log" >> terraform-test.log
+            count=$(grep -oE '[0-9]+ passed' "$log" | tail -1 | grep -oE '[0-9]+' || echo 0)
+            echo "TERRAFORM_TEST_PASSED[$root]=$count"
+            TOTAL=$((TOTAL + count))
+            if [ "$rc" -ne 0 ]; then
+              FAILED=1
+              echo "::error title=TERRAFORM_NATIVE_TESTS=FAILED::$root exited $rc"
+            fi
+            if [ "$count" -eq 0 ]; then
+              FAILED=1
+              echo "::error title=TERRAFORM_NATIVE_TESTS=NOT_IMPLEMENTED::$root contributed 0 passing assertions"
+            fi
+          done
+          echo "TERRAFORM_TEST_TOTAL=$TOTAL"
           echo "TERRAFORM_TEST_PASSED=$TOTAL" >> "$GITHUB_ENV"
           if [ "${TOTAL:-0}" -eq 0 ]; then
             echo "::error title=TERRAFORM_NATIVE_TESTS=NOT_IMPLEMENTED::"
-            echo "terraform test collected 0 passing assertions. Terraform behaviour is"
-            echo "NOT VERIFIED and must not be claimed. Phase D adds the suite."
+            echo "terraform test collected 0 passing assertions across every root."
+            echo "Terraform behaviour is NOT VERIFIED and must not be claimed."
             exit 1
           fi
+          if [ "$FAILED" -ne 0 ]; then
+            echo "::error title=TERRAFORM_NATIVE_TESTS=FAILED::"
+            echo "at least one terraform test root failed. See terraform-test*.log."
+            exit 1
+          fi
+
+      # The logs are uploaded from the job that PRODUCES them. Each job runs on
+      # its own runner with its own checkout, so an upload step in another job
+      # would look for files that were never written there.
+      - name: upload terraform test logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: terraform-test-log
+          path: terraform-test*.log
+          if-no-files-found: ignore
 
   kubernetes:
     name: kubernetes (render, schema, inventory, policy)
@@ -227,13 +350,5 @@ jobs:
       - run: >-
           pip install --require-hashes --only-binary ':all:' -r requirements.lock
 
-      - name: gate test matrix (G1-G9)
+      - name: gate test matrix (G1-G10)
         run: python3 tests/test_gates.py
-
-      - name: upload terraform test log
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: terraform-test-log
-          path: terraform/aks-foundation/terraform-test.log
-          if-no-files-found: ignore
