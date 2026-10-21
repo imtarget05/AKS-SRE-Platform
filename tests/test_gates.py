@@ -46,6 +46,14 @@ asserts the outcome.
          - no two YAML files in the repository declare the same object
            (apiVersion/kind/namespace/name), so no dashboard ConfigMap or
            AppProject can be silently overwritten again
+    G14 the demo workload's npm start script runs the REAL entrypoint
+         (regression: `npm start` was a no-op):
+         - app/sre-demo-api/package.json `scripts.start` points at a file that
+           exists and actually calls server.listen()
+         - the file it points at is NOT a module-only file (a file that only
+           exports a factory and never listens is what made the script a no-op)
+         - the Dockerfile CMD runs the SAME entrypoint, so the image and the
+           npm script cannot drift apart again
 
 Run: python3 tests/test_gates.py
 """
@@ -71,6 +79,7 @@ WORKFLOW = os.path.join(REPO, ".github", "workflows", "pr-gate.yaml")
 # file advertises a control that does not exist.
 GATE_GROUPS = (
     "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13",
+    "G14",
 )
 
 APP_PROJECT = """apiVersion: argoproj.io/v1alpha1
@@ -549,6 +558,46 @@ def main():
         check("G13 no two files declare the same object",
               not duplicates, f"duplicate object(s): {duplicates}")
     g13()
+
+    print("G14 the demo workload's npm start script runs the real entrypoint")
+    def g14():
+        # Regression: `npm start` pointed at src/server.js, which only exports
+        # createServer(). The script exited immediately and the process never
+        # listened, so `curl /health` returned 000 while the Dockerfile CMD
+        # (src/index.js) worked. The gate makes the two impossible to separate.
+        app_dir = os.path.join(REPO, "app", "sre-demo-api")
+        pkg_path = os.path.join(app_dir, "package.json")
+        check("G14 app/sre-demo-api/package.json exists", os.path.isfile(pkg_path))
+        if not os.path.isfile(pkg_path):
+            return
+        with open(pkg_path) as fh:
+            pkg = json.load(fh)
+        start = (pkg.get("scripts") or {}).get("start", "")
+        check("G14 the npm start script is defined", bool(start), f"got {start!r}")
+        m = re.search(r"node\s+(\S+)", start or "")
+        target = os.path.join(app_dir, m.group(1)) if m else ""
+        check("G14 the npm start script names a file that exists",
+              bool(m) and os.path.isfile(target),
+              f"start={start!r}")
+        if m and os.path.isfile(target):
+            with open(target) as fh:
+                src = fh.read()
+            check("G14 the npm start target actually listens",
+                  ".listen(" in src,
+                  f"{m.group(1)} contains no listen() call")
+        # The Dockerfile must run the SAME entrypoint: the bug was that the
+        # image worked while the npm script did not.
+        dockerfile = os.path.join(app_dir, "Dockerfile")
+        cmd = ""
+        if os.path.isfile(dockerfile):
+            with open(dockerfile) as fh:
+                for line in fh:
+                    if line.strip().startswith("CMD"):
+                        cmd = line.strip()
+        check("G14 the Dockerfile CMD runs the same entrypoint as npm start",
+              bool(cmd) and bool(m) and m.group(1) in cmd,
+              f"CMD={cmd!r} start={start!r}")
+    g14()
 
     passed = sum(1 for _n, ok in RESULTS if ok)
     failed = len(RESULTS) - passed
