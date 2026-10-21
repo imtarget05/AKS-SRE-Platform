@@ -51,7 +51,7 @@ So at the start of this run the Argo CD / self-heal claims of §9 of the
 re-verification document were **not re-establishable**: the cluster existed,
 but it carried **none** of the platform.
 
-## 2. The images were already built — no rebuild needed
+## 2. The images were already built — the first rebuild was not needed
 
 ```console
 $ docker images | grep -E 'flashsale/(order-api|order-worker|payment-service)'
@@ -220,6 +220,8 @@ application.argoproj.io/flashsale annotated
 $ kubectl -n argocd get application flashsale -o wide
 NAME        SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
 flashsale   Synced        Healthy         f00b827fce3106689dea6b1b1d239e7436645533   portfolio
+# (this was the state at 13:0x; the final revision after the upstream rewrite
+#  and the payment-service rebuild is fa08185… — see §6)
 
 $ kubectl -n argocd get application flashsale -o jsonpath='{.status.operationState.message}'
 successfully synced (all tasks run)
@@ -233,28 +235,85 @@ $ kubectl -n flashsale logs job/order-migrate --tail=2
 {"EventId":0,"LogLevel":"Information","Category":"Migration","Message":"Migration entrypoint finished with exit code 0","State":{"ExitCode":0, ...}}
 ```
 
-**The upstream revision moved.** Argo resolved `main` =
-`f00b827fce3106689dea6b1b1d239e7436645533` (the 2026-10-20 run resolved
-`8adcbeff002b503f556f0e4fb7a892f8aeffae43`). The **local images were not
-rebuilt** — the `:local` tags were already present — and the Application
-reconciled to the new revision with the **existing** images.
+## 6. The upstream repository moved mid-run — and the local image had to follow
 
-**Final workload state:**
+This is the most important operational finding of this run, and it is
+**recorded here rather than smoothed away**.
+
+**Timeline (2026-10-21, local):**
+
+| Time | Event |
+|---|---|
+| ~13:0x | Argo resolves `main` = **`f00b827fce3106689dea6b1b1d239e7436645533`** → `flashsale` **`Synced` / `Healthy`**. The three `:local` images (built from the **older** upstream revision) work fine against it. |
+| ~13:3x | The **upstream repository `FlashSale-Backend` is rewritten** — `main` gains a large batch of commits (transactional outbox, `Payment.Service` implementation, the OpsBridge foundation, …). Argo re-resolves to **`4c74c6d`**, then to **`fa08185`**. |
+| ~13:4x | The **`payment-service` Deployment crash-loops**: the new upstream manifest probes **`/health/live` and `/health/ready`**, the loaded image still served **`/health`**, so the probe got **404** and the kubelet killed the container. |
+| ~13:5x | `flashsale/payment-service:local` is **rebuilt from `fa08185`** (`Dockerfile.payment`), **re-loaded** into all 3 nodes with `local/kind/load-image.sh` (3/3 OK), and the crash-looping pod is replaced. |
+| ~13:5x | `flashsale` is **`Synced` / `Healthy`** again, at revision **`fa081855609caf8889a4fdab12ab78ec6f390f17`**. |
+
+**The measured proof of the probe mismatch:**
 
 ```console
-$ kubectl -n flashsale get pods -o wide
-NAME                               READY   STATUS      RESTARTS   AGE     IP            NODE                     NOMINATED NODE   READINESS GATES
-kafka-0                            1/1     Running     0          10m     10.244.2.12   local-platform-worker2   <none>           <none>
-kafka-topic-init-k5dzm             0/1     Completed   0          8m21s   10.244.2.14   local-platform-worker2   <none>           <none>
-order-api-758cc56c9b-v7cnj         1/1     Running     5 (82s ago)  7m43s   10.244.2.16   local-platform-worker2   <none>           <none>
-order-api-758cc56c9b-zlvh8         1/1     Running     6 (42s ago)  7m43s   10.244.1.15   local-platform-worker    <none>           <none>
-order-migrate-bg46d                0/1     Completed   0          8m30s   10.244.2.13   local-platform-worker2   <none>           <none>
-order-worker-78796f7f86-l47wd      1/1     Running     0          7m43s   10.244.2.15   local-platform-worker2   <none>           <none>
-payment-service-544dd67484-vt2xs   1/1     Running     0          7m43s   10.244.2.17   local-platform-worker2   <none>           <none>
-postgres-0                         1/1     Running     0          10m     10.244.1.14   local-platform-worker    <none>           <none>
-rabbitmq-0                         1/1     Running     2 (2m8s ago)  10m     10.244.1.12   local-platform-worker    <none>           <none>
-redis-695b986ccc-kszsp             1/1     Running     0          10m     10.244.2.11   local-platform-worker2   <none>           <none>
+$ kubectl -n flashsale logs payment-service-75cbd758f9-6lvx7 --tail=15
+..."Message":"Request finished HTTP/1.1 GET http://10.244.2.18:8080/health/live - 404 0 - 0.2790ms"...
+..."Message":"Request finished HTTP/1.1 GET http://10.244.2.18:8080/health/ready - 404 0 - 0.1177ms"...
+..."Message":"Application is shutting down..."   # killed by the failed probe
 ```
+
+```console
+$ git -C /tmp/FlashSale-Backend diff f00b827 origin/main -- infrastructure/kubernetes/base/ | grep -E '^[+-].*path:'
+-              path: /health
++              path: /health/live
+-              path: /health
++              path: /health/ready
+```
+
+**The lesson, stated as a rule:** *a local `:local`-tagged image is pinned to
+the upstream revision it was built from. When upstream `main` moves, the
+manifests move with it and the image must be rebuilt and re-loaded — otherwise
+the Application stays `Synced` but the workload **crash-loops** on the new
+probe paths.* This is the single most common way a GitOps-forward-sync setup
+breaks on a laptop, and it is **not** a defect in this repository.
+
+**Only `payment-service` needed rebuilding.** `order-api` and `order-worker`
+kept working against the new revision with the images already loaded — the
+probe paths they use did not change.
+
+**Final state after the rebuild:**
+
+```console
+$ kubectl -n argocd get application flashsale -o wide
+NAME        SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+flashsale   Synced        Healthy         fa081855609caf8889a4fdab12ab78ec6f390f17   portfolio
+
+$ kubectl -n flashsale get pods -o wide
+NAME                               READY   STATUS      RESTARTS      AGE     IP            NODE                     NOMINATED NODE   READINESS GATES
+kafka-0                            1/1     Running     0             27m     10.244.2.12   local-platform-worker2   <none>           <none>
+kafka-topic-init-k5dzm             0/1     Completed   0             25m     10.244.2.14   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-v7cnj         1/1     Running     5 (18m ago)   25m     10.244.2.16   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-zlvh8         1/1     Running     6 (18m ago)   25m     10.244.1.15   local-platform-worker    <none>           <none>
+order-migrate-4klzv                0/1     Completed   0             12m     10.244.2.13   local-platform-worker2   <none>           <none>
+order-worker-78796f7f86-l47wd      1/1     Running     0             25m     10.244.2.15   local-platform-worker2   <none>           <none>
+payment-service-75cbd758f9-bzpgr   1/1     Running     0             45s     10.244.2.18   local-platform-worker2   <none>           <none>
+postgres-0                         1/1     Running     0             27m     10.244.1.14   local-platform-worker    <none>           <none>
+rabbitmq-0                         1/1     Running     3 (12m ago)   28m     10.244.1.12   local-platform-worker    <none>           <none>
+redis-695b986ccc-kszsp             1/1     Running     0             27m     10.244.2.11   local-platform-worker2   <none>           <none>
+
+$ kubectl -n flashsale get job order-migrate -o wide
+NAME            STATUS     COMPLETIONS   DURATION   AGE     CONTAINERS   IMAGES                      SELECTOR
+order-migrate   Complete   1/1           13s        12m     migrate      flashsale/order-api:local   batch.kubernetes.io/controller-uid=a582c978-570f-4d57-9dd2-d86c3143847d
+
+$ kubectl -n flashsale logs job/order-migrate --tail=2
+{"EventId":0,"LogLevel":"Information","Category":"Migration","Message":"Schema is now at head.", ...}
+{"EventId":0,"LogLevel":"Information","Category":"Migration","Message":"Migration entrypoint finished with exit code 0","State":{"ExitCode":0, ...}}
+```
+
+> **The `order-migrate` hook ran **twice** in this session** — once for
+> `f00b827` and once for `fa08185` — and **both went green** (`exit code 0`).
+> That is itself a piece of evidence that the hook is re-runnable against an
+> already-migrated database, not just a first-run path.
+
+**The `order-api` / `order-worker` restart counts (5 and 6) are the host
+memory-pressure artefact of §7, not a property of the manifests.**
 
 ## 7. The host instability, measured again (§11 #6 / §13.4)
 
@@ -391,7 +450,8 @@ kubectl -n flashsale logs job/order-migrate --tail=2       # → "exit code 0"
 ```
 
 **Total measured wall-clock on 2026-10-21: ≈ 65 minutes** (12:16 → 13:29),
-of which the image load was ≈ 13 min and the cluster's own re-creation by
+of which the image load was ≈ 13 min, the `payment-service` rebuild + reload
+(after the upstream rewrite, §6) ≈ 20 min, and the cluster's own re-creation by
 the other actor (before this slice started) was ≈ 1 min.
 
 ## 11. Evidence files in this directory
@@ -412,7 +472,7 @@ the other actor (before this slice started) was ≈ 1 min.
 |---|---|---|
 | kind cluster 3/3 Ready, v1.36.1 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
 | Argo CD 7/7 Running, pinned v3.5.5 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
-| `flashsale` Application `Synced` + `Healthy` | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, revision `f00b827…` (this document) |
+| `flashsale` Application `Synced` + `Healthy` | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, final revision `fa08185…` (this document, §6) |
 | `order-migrate` PreSync hook `Complete 1/1`, exit 0 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
 | AppProject allowlist refuses a bad destination | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, 1/1 negative control (this document) |
 | spec-drift / deletion self-heal | **HISTORICAL** (2026-10-20) | **not re-measured here** — see §9 |

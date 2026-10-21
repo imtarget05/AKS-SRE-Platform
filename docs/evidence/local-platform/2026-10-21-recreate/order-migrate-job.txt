@@ -1,2 +1,2 @@
-NAME            STATUS     COMPLETIONS   DURATION   AGE     CONTAINERS   IMAGES                      SELECTOR
-order-migrate   Complete   1/1           6s         8m42s   migrate      flashsale/order-api:local   batch.kubernetes.io/controller-uid=f136f428-f6f4-48a6-87a1-69a8149a1954
+NAME            STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                      SELECTOR
+order-migrate   Complete   1/1           13s        12m   migrate      flashsale/order-api:local   batch.kubernetes.io/controller-uid=a582c978-570f-4d57-9dd2-d86c3143847d

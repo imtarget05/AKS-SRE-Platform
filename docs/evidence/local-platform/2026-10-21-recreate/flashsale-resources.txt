@@ -1,33 +1,33 @@
-NAME                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE     SELECTOR
-service/kafka             ClusterIP   10.105.172.193   <none>        9092/TCP,9093/TCP   10m     app=kafka,part-of=flash-sale-order-platform,project=flash-sale
-service/order-api         ClusterIP   10.105.69.24     <none>        80/TCP              7m56s   app=order-api,part-of=flash-sale-order-platform,project=flash-sale
-service/payment-service   ClusterIP   10.106.231.40    <none>        80/TCP              7m56s   app=payment-service,part-of=flash-sale-order-platform,project=flash-sale
-service/postgres          ClusterIP   10.109.14.237    <none>        5432/TCP            10m     app=postgres,part-of=flash-sale-order-platform,project=flash-sale
-service/rabbitmq          ClusterIP   10.109.190.114   <none>        5672/TCP            10m     app=rabbitmq,part-of=flash-sale-order-platform,project=flash-sale
-service/rabbitmq-mgmt     ClusterIP   10.111.163.164   <none>        15672/TCP           10m     app=rabbitmq
-service/redis             ClusterIP   10.99.126.169    <none>        6379/TCP            10m     app=redis,part-of=flash-sale-order-platform,project=flash-sale
+NAME                      TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)             AGE   SELECTOR
+service/kafka             ClusterIP   10.105.172.193   <none>        9092/TCP,9093/TCP   27m   app=kafka,part-of=flash-sale-order-platform,project=flash-sale
+service/order-api         ClusterIP   10.105.69.24     <none>        80/TCP              25m   app=order-api,part-of=flash-sale-order-platform,project=flash-sale
+service/payment-service   ClusterIP   10.106.231.40    <none>        80/TCP              25m   app=payment-service,part-of=flash-sale-order-platform,project=flash-sale
+service/postgres          ClusterIP   10.109.14.237    <none>        5432/TCP            27m   app=postgres,part-of=flash-sale-order-platform,project=flash-sale
+service/rabbitmq          ClusterIP   10.109.190.114   <none>        5672/TCP            27m   app=rabbitmq,part-of=flash-sale-order-platform,project=flash-sale
+service/rabbitmq-mgmt     ClusterIP   10.111.163.164   <none>        15672/TCP           27m   app=rabbitmq
+service/redis             ClusterIP   10.99.126.169    <none>        6379/TCP            27m   app=redis,part-of=flash-sale-order-platform,project=flash-sale
 
-NAME                              READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS        IMAGES                            SELECTOR
-deployment.apps/order-api         2/2     2            2           7m55s   order-api         flashsale/order-api:local         app=order-api,part-of=flash-sale-order-platform,project=flash-sale
-deployment.apps/order-worker      1/1     1            1           7m55s   order-worker      flashsale/order-worker:local      app=order-worker,part-of=flash-sale-order-platform,project=flash-sale
-deployment.apps/payment-service   1/1     1            1           7m55s   payment-service   flashsale/payment-service:local   app=payment-service,part-of=flash-sale-order-platform,project=flash-sale
-deployment.apps/redis             1/1     1            1           10m     redis             redis:7-alpine                    app=redis,part-of=flash-sale-order-platform,project=flash-sale
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS        IMAGES                            SELECTOR
+deployment.apps/order-api         2/2     2            2           25m   order-api         flashsale/order-api:local         app=order-api,part-of=flash-sale-order-platform,project=flash-sale
+deployment.apps/order-worker      1/1     1            1           25m   order-worker      flashsale/order-worker:local      app=order-worker,part-of=flash-sale-order-platform,project=flash-sale
+deployment.apps/payment-service   1/1     1            1           25m   payment-service   flashsale/payment-service:local   app=payment-service,part-of=flash-sale-order-platform,project=flash-sale
+deployment.apps/redis             1/1     1            1           27m   redis             redis:7-alpine                    app=redis,part-of=flash-sale-order-platform,project=flash-sale
 
 NAME                        READY   AGE   CONTAINERS   IMAGES
-statefulset.apps/kafka      1/1     10m   kafka        apache/kafka:3.8.0
-statefulset.apps/postgres   1/1     10m   postgres     postgres:15-alpine
-statefulset.apps/rabbitmq   1/1     10m   rabbitmq     rabbitmq:3-management-alpine
+statefulset.apps/kafka      1/1     27m   kafka        apache/kafka:3.8.0
+statefulset.apps/postgres   1/1     27m   postgres     postgres:15-alpine
+statefulset.apps/rabbitmq   1/1     28m   rabbitmq     rabbitmq:3-management-alpine
 
-NAME                         STATUS     COMPLETIONS   DURATION   AGE     CONTAINERS    IMAGES                      SELECTOR
-job.batch/kafka-topic-init   Complete   1/1           36s        8m33s   init-topics   apache/kafka:3.8.0          batch.kubernetes.io/controller-uid=047d50ea-41af-40e4-b3fd-90fb44f1e416
-job.batch/order-migrate      Complete   1/1           6s         8m42s   migrate       flashsale/order-api:local   batch.kubernetes.io/controller-uid=f136f428-f6f4-48a6-87a1-69a8149a1954
+NAME                         STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS    IMAGES                      SELECTOR
+job.batch/kafka-topic-init   Complete   1/1           36s        25m   init-topics   apache/kafka:3.8.0          batch.kubernetes.io/controller-uid=047d50ea-41af-40e4-b3fd-90fb44f1e416
+job.batch/order-migrate      Complete   1/1           13s        12m   migrate       flashsale/order-api:local   batch.kubernetes.io/controller-uid=a582c978-570f-4d57-9dd2-d86c3143847d
 
 NAME                                            HOSTNAMES             AGE
-httproute.gateway.networking.k8s.io/flashsale   ["flashsale.local"]   7m55s
+httproute.gateway.networking.k8s.io/flashsale   ["flashsale.local"]   25m
 
 NAME                                SCALETARGETKIND      SCALETARGETNAME   MIN   MAX   READY   ACTIVE   FALLBACK   PAUSED   TRIGGERS   AUTHENTICATIONS   AGE
-scaledobject.keda.sh/order-worker   apps/v1.Deployment   order-worker      1     4     True    True     False      False    kafka                        7m55s
+scaledobject.keda.sh/order-worker   apps/v1.Deployment   order-worker      1     4     True    True     False      False    kafka                        25m
 
 NAME                                    STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
-persistentvolumeclaim/data-postgres-0   Bound    pvc-45f35ac2-1a01-44b1-8c00-9174e5738a8e   1Gi        RWO            standard       <unset>                 10m   Filesystem
-persistentvolumeclaim/data-rabbitmq-0   Bound    pvc-a662bd51-8771-41e9-9489-9d944dcf46e4   1Gi        RWO            standard       <unset>                 10m   Filesystem
+persistentvolumeclaim/data-postgres-0   Bound    pvc-45f35ac2-1a01-44b1-8c00-9174e5738a8e   1Gi        RWO            standard       <unset>                 27m   Filesystem
+persistentvolumeclaim/data-rabbitmq-0   Bound    pvc-a662bd51-8771-41e9-9489-9d944dcf46e4   1Gi        RWO            standard       <unset>                 28m   Filesystem
