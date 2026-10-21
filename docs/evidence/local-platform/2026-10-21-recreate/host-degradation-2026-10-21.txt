@@ -1,0 +1,33 @@
+# Host-level degradation of the local kind cluster — 2026-10-21 07:19Z .. 08:03Z
+# (observed AFTER the self-heal re-measurement of 06:52Z-06:54Z; NOT caused by it)
+# captured: 2026-10-21T08:04:15Z
+
+=== host load / swap (measured) ===
+15:04  up 15 days, 17 hrs, 1 user, load averages: 24.96 33.08 42.16
+vm.swapusage: total = 12288.00M  used = 11595.75M  free = 692.25M  (encrypted)
+
+=== Docker VM memory per container (7.75 GiB limit) ===
+local-platform-worker2	1.372GiB / 7.75GiB	38.76%
+local-platform-control-plane	1.338GiB / 7.75GiB	36.90%
+local-platform-worker	1.337GiB / 7.75GiB	28.97%
+
+=== kube-apiserver container creation time (it was re-created) ===
+CONTAINER           IMAGE               CREATED             STATE               NAME                ATTEMPT             POD ID              POD                                           NAMESPACE
+c56d6ac0766c4       4923943f21256       8 minutes ago       Running             kube-apiserver      1                   3b72d26531d4a       kube-apiserver-local-platform-control-plane   kube-system
+
+=== pod state at capture ===
+NAME                               READY   STATUS             RESTARTS         AGE    IP            NODE                     NOMINATED NODE   READINESS GATES
+kafka-0                            1/1     Running            0                105m   10.244.2.12   local-platform-worker2   <none>           <none>
+kafka-topic-init-k5dzm             0/1     Completed          0                103m   10.244.2.14   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-lcnlk         0/1     CrashLoopBackOff   22 (4m2s ago)    71m    10.244.2.20   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-zlvh8         1/1     Running            26 (7m31s ago)   102m   10.244.1.15   local-platform-worker    <none>           <none>
+order-migrate-4klzv                0/1     Completed          0                90m    10.244.1.16   local-platform-worker    <none>           <none>
+order-worker-78796f7f86-l47wd      1/1     Running            0                102m   10.244.2.15   local-platform-worker2   <none>           <none>
+payment-service-75cbd758f9-sqgmp   1/1     Running            10 (36m ago)     70m    10.244.2.21   local-platform-worker2   <none>           <none>
+postgres-0                         1/1     Running            2 (9m31s ago)    105m   10.244.1.14   local-platform-worker    <none>           <none>
+rabbitmq-0                         1/1     Running            17 (90s ago)     105m   10.244.1.12   local-platform-worker    <none>           <none>
+redis-695b986ccc-kszsp             1/1     Running            2 (45m ago)      105m   10.244.2.11   local-platform-worker2   <none>           <none>
+
+=== application status ===
+NAME        SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+flashsale   Synced        Progressing     fa081855609caf8889a4fdab12ab78ec6f390f17   portfolio

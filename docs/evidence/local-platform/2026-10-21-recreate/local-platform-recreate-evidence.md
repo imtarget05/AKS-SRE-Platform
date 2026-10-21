@@ -470,12 +470,13 @@ the other actor (before this slice started) was ≈ 1 min.
 | `selfheal-case-b-resource-deletion.txt` | case B raw: command, before/after, 1 s poll log, controller-log excerpt, verdict |
 | `selfheal-argocd-controller.log.txt` | the raw `argocd-application-controller` log lines for 06:52–06:54Z |
 | `selfheal-application-syncpolicy.txt` | the live Application YAML (syncPolicy / ignoreDifferences / revision) |
+| `host-degradation-2026-10-21.txt` | the raw capture of the **host-level** degradation that hit the cluster at ~07:19Z, ~25 min after the self-heal measurement (host load/swap, Docker VM memory, `kube-apiserver` re-creation, pod states) |
 
 ## 12. Status of every claim after this run
 
 | Claim | Kind | State |
 |---|---|---|
-| kind cluster 3/3 Ready, v1.36.1 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
+| kind cluster 3/3 Ready, v1.36.1 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) — **but the host degraded it again at ~07:19Z**; see `selfheal-reverification-2026-10-21.md` §8 |
 | Argo CD 7/7 Running, pinned v3.5.5 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
 | `flashsale` Application `Synced` + `Healthy` | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, final revision `fa08185…` (this document, §6) |
 | `order-migrate` PreSync hook `Complete 1/1`, exit 0 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |

@@ -74,7 +74,19 @@ cluster).
   refused. ⚠️ **The earlier "DEGRADED" end state (Docker daemon crashed 6×,
   `order-api` crash-looping, `rabbitmq-0` not booting) is SUPERSEDED** — that
   was the state of the *destroyed* cluster (evidence §15.5). The cluster that
-  exists now is **green**.
+  exists now was **green at 06:54Z**…
+  > ⚠️ **…and the HOST degraded it again at ~07:19Z** (measured, evidence §8 of
+  > the self-heal document): host load **50–78**, host swap **11.1–11.6 of
+  > 12 GB used**, `postgres`/`redis`/`kafka`/`rabbitmq` probes timing out,
+  > `rabbitmq-0` hitting the Erlang `system_memory_high_watermark` alarm and
+  > crash-looping, `kube-apiserver` re-created inside the control-plane
+  > container at ~07:56Z, `order-api` crash-looping on the RabbitMQ
+  > dependency. At 08:04Z the Application is **`Synced` / `Progressing`** —
+  > GitOps healthy, workload degraded. **This is the host, not the
+  > repository** (§16.4 / §13.5 — the same class of event, and the reason the
+  > kind cluster must be isolated in its own Docker context / VM before any
+  > runtime claim is treated as durable). **No cluster mutation was performed
+  > by this slice.**
 - **Self-heal RE-MEASURED on the restored cluster, 2026-10-21 13:52–13:54
   local** (evidence §17): spec drift (`scale deploy/order-api --replicas=1`)
   reverted in **21 s** (06:52:26Z → 06:52:47Z, `spec.replicas` back to the

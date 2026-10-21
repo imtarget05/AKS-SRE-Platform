@@ -235,3 +235,63 @@ revision family. The difference is **what the clock was measuring**.
 **Owner for the open items: P03** — (1) the billable Azure cluster
 (`docs/runbooks/azure-teardown-runbook.md`, prepared, not executed), (2) the
 label-drift finding, (3) the orphaned `azurerm` remote state.
+
+---
+
+## 8. Addendum — the host degraded the cluster AGAIN, ~25 minutes after the measurement
+
+**This addendum is recorded because it happened after the measurement above
+and changes the "the cluster is green" statement.** It does **not** change the
+self-heal verdict.
+
+### 8.1 Timeline
+
+| Timestamp (UTC) | Observation |
+|---|---|
+| 06:54 | the self-heal measurement is complete; the cluster is healthy — `order-api` `readyReplicas=2` (since 06:53:10Z), `payment-service` `readyReplicas=1` (since 06:53:54Z), all other pods `Running` with **0 restarts** |
+| ~07:19 | the **host** saturates: `uptime` load average **50–78**, `vm.swapusage` **11.1–11.6 GB of 12 GB used** |
+| 07:2x | the data tier starts failing its own probes: `postgres-0` `pg_isready … timed out after 1s`, `redis` `redis-cli ping … timed out after 1s`, `kafka-0` `dial tcp …:9092: i/o timeout`, `rabbitmq-0` `rabbitmq-diagnostics -q ping … timed out after 10s` |
+| 07:2x | `rabbitmq-0` hits the Erlang **`system_memory_high_watermark`** alarm and crash-loops (17 restarts by 08:04) |
+| 07:3x | `order-api` cannot start: `AddOrderQueue` → `FlashSale.Infrastructure.Messaging.MessagingServiceCollectionExtensions.AddOrderQueue` throws at DI build time because RabbitMQ is down → both `order-api` pods `CrashLoopBackOff` (22 and 26 restarts) |
+| ~07:56 | `kube-apiserver` is **re-created inside the kind control-plane container** (`crictl ps` → `CREATED 8 minutes ago`), and the API server stops answering: `Unable to connect to the server: net/http: TLS handshake timeout` |
+| 08:02 | partial recovery: `rabbitmq-0` and one `order-api` pod reach `1/1`, then `rabbitmq-0` flaps back to `0/1` |
+| 08:04 (capture) | `flashsale` = **`Synced` / `Progressing`** — GitOps is fine, the *workload* is not |
+
+Raw capture: [`host-degradation-2026-10-21.txt`](host-degradation-2026-10-21.txt).
+
+### 8.2 Why this is NOT a self-heal regression
+
+- The measurement window (**06:52:26Z → 06:53:54Z**) is **35+ minutes before**
+  the first failure signal, and every artefact in §2 and §3 shows a healthy
+  cluster (0 restarts, `readyReplicas` reached, Argo CD `Synced`).
+- **The failure chain runs downwards through the data tier**, not through the
+  GitOps layer: memory pressure → `postgres`/`redis`/`kafka`/`rabbitmq` probe
+  timeouts → `order-api` cannot build its RabbitMQ queue service → crash loop.
+  Argo CD's own logs show no drift and no sync error; the Application never
+  left `Synced`.
+- **Nothing in the repository changed** between the green state and the
+  degraded state. The failure is a property of the **host**, which is shared
+  with other repositories' containers (`ob-*`, `kho-tra-sua-*`, `quanlykho-*`,
+  …) and is under **swap pressure**.
+
+This is the **same class** of event already documented in §2.1, §9.7, §11 #6,
+§13 and §16.4 — the third+ instance, and the reason §13.5's recommendation
+(isolate the kind cluster in its own Docker context / VM) is now a
+prerequisite for any durable runtime claim, not a nice-to-have.
+
+### 8.3 One accidental but useful confirmation
+
+`payment-service` — **the object Argo CD re-created at 06:53:38Z** — was still
+`1/1 Running` at 08:04 (10 restarts, all caused by the host event). The
+self-healed object therefore **survived the host degradation** and was never
+deleted again. That is not a separate claim; it is simply what the evidence
+shows.
+
+### 8.4 Status correction
+
+| Statement | State after this addendum |
+|---|---|
+| self-heal of spec drift / deleted resource | **unchanged — LOCAL_KIND_VERIFIED (re-measured 2026-10-21, 06:52–06:54Z)** |
+| the cluster is green **right now** | **NO — it is `Synced` / `Progressing` again**, degraded by the host at ~07:19Z. Recovery needs the host to free up, or the cluster to be isolated; **no cluster mutation was performed by this slice** |
+| `AZURE_CLOUD_APPLY_NOT_VERIFIED` | unchanged |
+| label-drift finding | unchanged, still open |
