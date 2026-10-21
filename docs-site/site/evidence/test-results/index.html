@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#test-results-evidence" class="md-skip">
+        <a href="#reproducible-checks-and-their-limits" class="md-skip">
           Skip to content
         </a>
       
@@ -531,24 +531,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Test Results
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -565,91 +547,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Summary
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#aks-gate-tests-4747-pass" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AKS Gate Tests (47/47 PASS)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#gitops-validation-16-passed-0-failed" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GitOps Validation (16 passed, 0 failed)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#smartdoc-kafkaredis-integration-2323-pass" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        SmartDoc Kafka/Redis Integration (23/23 PASS)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#flashsale-concurrency-test" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        FlashSale Concurrency Test
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#security-scan-summary" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Security Scan Summary
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -670,7 +567,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -880,120 +777,47 @@
 
 
 
-<h1 id="test-results-evidence">Test Results Evidence</h1>
-<h2 id="summary">Summary</h2>
+<h1 id="reproducible-checks-and-their-limits">Reproducible checks and their limits</h1>
+<p>The numbers below are from this repository only. Other portfolio projects
+must be checked at their own commit; this page does not reproduce their test
+output or aggregate their vulnerability scans.</p>
 <table>
 <thead>
 <tr>
-<th>Test Suite</th>
-<th>Result</th>
-<th>Count</th>
-<th>Date</th>
+<th>Check</th>
+<th>Result at AKS-SRE-Platform HEAD <code>62c901f</code></th>
+<th>Reproduce</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>AKS Gate Tests</td>
-<td>✅ PASS</td>
-<td><strong>47/47</strong></td>
-<td>2026-10-20</td>
+<td>Gate regression script</td>
+<td><strong>47 assertions passed, 0 failed</strong> on 2026-10-21</td>
+<td><code>.venv/bin/python tests/test_gates.py</code></td>
 </tr>
 <tr>
-<td>GitOps Validation</td>
-<td>✅ PASS</td>
-<td><strong>16 passed, 0 failed</strong></td>
-<td>2026-10-21</td>
+<td>Envoy Gateway kustomize root</td>
+<td>Rendered successfully; syntax/composition only</td>
+<td><code>kubectl kustomize platform/envoy-gateway/gateway &gt;/dev/null</code></td>
 </tr>
 <tr>
-<td>SmartDoc Unit Tests</td>
-<td>✅ PASS</td>
-<td><strong>32/32</strong></td>
-<td>2026-10-21</td>
+<td>LegacyApp reference workload</td>
+<td><strong>4 tests passed</strong>; <code>/sync</code> is a no-op</td>
+<td><code>cd apps/legacy-inventory/src &amp;&amp; npm test</code></td>
 </tr>
 <tr>
-<td>SmartDoc Kafka/Redis Integration</td>
-<td>✅ PASS</td>
-<td><strong>23/23</strong></td>
-<td>2026-10-21</td>
-</tr>
-<tr>
-<td>FlashSale Unit Tests</td>
-<td>✅ PASS</td>
-<td><strong>172/172</strong></td>
-<td>2026-10-19</td>
-</tr>
-<tr>
-<td>QuanLyKho Flutter Tests</td>
-<td>✅ PASS</td>
-<td><strong>191/191</strong></td>
-<td>2026-10-21</td>
-</tr>
-<tr>
-<td>Security Scan (Trivy)</td>
-<td>✅ CLEAN</td>
-<td>0 HIGH/CRITICAL</td>
-<td>2026-10-21</td>
+<td>GitOps source validator</td>
+<td>Historical <strong>16 passed / 0 failed / 2 not-present</strong>, per current task log</td>
+<td><code>python3 gitops/validate-gitops.py</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="aks-gate-tests-4747-pass">AKS Gate Tests (47/47 PASS)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>pytest tests/ -v --tb=short
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>============================= test session starts ==============================
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>platform linux -- Python 3.12.3, pytest-8.3.3, pluggy-1.5.0
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>collected 47 items
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>tests/test_gate_matrix.py::test_gate_namespace_isolation PASSED          [  2%]
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>tests/test_gate_matrix.py::test_gate_workload_identity PASSED            [  4%]
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>tests/test_gate_matrix.py::test_gate_pod_security_standards PASSED       [  6%]
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>tests/test_gate_matrix.py::test_gate_network_policy PASSED               [  8%]
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>tests/test_gate_matrix.py::test_gate_hpa_configuration PASSED            [ 10%]
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>...
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>tests/test_gate_matrix.py::test_gate_resource_quotas PASSED              [ 95%]
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>tests/test_gate_matrix.py::test_gate_rollout_strategy PASSED             [ 97%]
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>tests/test_gate_matrix.py::test_gate_observability_labels PASSED         [100%]
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>============================== 47 passed in 12.34s =============================
-</code></pre></div>
-<h2 id="gitops-validation-16-passed-0-failed">GitOps Validation (16 passed, 0 failed)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>python scripts/validate_gitops.py
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>✅ ArgoCD AppProject: flashsale namespace allowed
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>✅ ArgoCD AppProject: legacyapp namespace allowed
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>✅ ArgoCD AppProject: FlashSale-Backend.git source allowed
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>✅ ArgoCD AppProject: AKS-SRE-Platform.git source allowed
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>✅ Kustomize overlay prod: renders without error
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>✅ Kustomize overlay staging: renders without error
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>✅ Image tag pinned (no :latest in prod overlay)
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>...
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>16 passed, 0 failed in 3.2s
-</code></pre></div>
-<h2 id="smartdoc-kafkaredis-integration-2323-pass">SmartDoc Kafka/Redis Integration (23/23 PASS)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>[INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>[INFO]
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>[INFO] -------------------------------------------------------
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>[INFO] BUILD SUCCESS
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>[INFO] -------------------------------------------------------
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>[INFO] Total time: 45.321 s
-</code></pre></div>
-<p>Tests cover: <code>KafkaIntegrationTest</code>, <code>EventDrivenIngestionIntegrationTest</code>,
-<code>SearchResultCacheTest</code>, <code>RedisCacheConfigIntegrationTest</code>.</p>
-<h2 id="flashsale-concurrency-test">FlashSale Concurrency Test</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Concurrency harness: 50 buyers vs stock 10
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>✅ Final inventory: 0 (not negative — no oversell)
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>✅ Successful orders: exactly 10
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>✅ Rejected orders: exactly 40
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>✅ No deadlocks detected
-</code></pre></div>
-<h2 id="security-scan-summary">Security Scan Summary</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>trivy fs . --scanners vuln,secret --severity HIGH,CRITICAL
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>smartdoc-backend/: 0 HIGH, 0 CRITICAL
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>flashsale-backend/: 0 HIGH, 0 CRITICAL
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>quanlykho-backend/: 0 HIGH, 0 CRITICAL
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>aks-sre-platform/: 0 HIGH, 0 CRITICAL
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>Total: 0 HIGH, 0 CRITICAL findings
-</code></pre></div>
+<p>The gate script is <code>tests/test_gates.py</code>; there is no
+<code>tests/test_gate_matrix.py</code> in this repository. A green render or unit test
+does not prove live AKS deployment or operational reliability. For the
+environment-labelled claim table, see
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/engineering/CURRENT_STATE.md">current state</a>
+and the <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md">audit matrix</a>.</p>
 
 
 

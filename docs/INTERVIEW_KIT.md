@@ -74,7 +74,9 @@ Talk through the results:
 2. The LegacyApp tests prove health, JSON 404/error behavior, request logging
    and its current `/sync` reference behavior.
 3. Rendering a kustomize root proves syntactic composition only. It is not an
-   AKS deployment claim.
+   AKS deployment claim. In the gate output, show a **negative fixture** such
+   as `G8 orphan manifest detection`: the fixture must fail validation while
+   the regression assertion passes. This is the failure path of the demo.
 4. Open [`CURRENT_STATE.md`](engineering/CURRENT_STATE.md) and map each claim to
    `LOCAL`, `KIND`, `CI`, or `AZURE_VALIDATION` evidence.
 
@@ -111,3 +113,5 @@ Talk through the results:
 | Subtree boundary and source-switch decision | [ADR-015](adr/015-legacyapp-subtree-import.md) |
 | Azure-vs-local verification policy | [ADR-014](adr/014-azure-first-verification.md) |
 | Local platform walkthrough | [`interview-demo/local-platform.md`](interview-demo/local-platform.md) |
+| Commit-pinned business-to-evidence claim matrix and prioritized gaps | [`evidence/portfolio-audit-2026-10-21.md`](evidence/portfolio-audit-2026-10-21.md) |
+| Four-product narrative and three-role Q&A | [`PORTFOLIO_INTERVIEW_CHEATSHEET.md`](PORTFOLIO_INTERVIEW_CHEATSHEET.md) |

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#workload-identity-evidence" class="md-skip">
+        <a href="#workload-identity-and-private-image-pull-historical-proof" class="md-skip">
           Skip to content
         </a>
       
@@ -557,7 +557,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -587,24 +587,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Workload Identity
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -621,69 +603,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-was-proved" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        What Was Proved
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#resources-created" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Resources Created
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verification-command" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Verification Command
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#evidence-file" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Evidence File
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -858,73 +777,39 @@
 
 
 
-<h1 id="workload-identity-evidence">Workload Identity Evidence</h1>
-<div class="admonition success">
-<p class="admonition-title">Zero Static Secrets — Production Pattern</p>
-<p>All workloads authenticate to Azure via Workload Identity Federation.
-No Kubernetes Secrets containing Azure credentials.</p>
-</div>
-<h2 id="what-was-proved">What Was Proved</h2>
-<pre class="mermaid"><code>sequenceDiagram
-    participant Pod as K8s Pod
-    participant OIDC as AKS OIDC Issuer
-    participant ENTRA as Microsoft Entra ID
-    participant ACR as Private ACR
-
-    Pod-&gt;&gt;OIDC: Request service account token
-    OIDC--&gt;&gt;Pod: Signed JWT (iss: eastasia.oic.prod-aks.azure.com)
-    Pod-&gt;&gt;ENTRA: Exchange JWT for Azure access token
-    Note over ENTRA: Federated Credential validates&lt;br/&gt;subject &amp; issuer match
-    ENTRA--&gt;&gt;Pod: Azure access token (no static secret)
-    Pod-&gt;&gt;ACR: Pull image by digest (token auth)
-    ACR--&gt;&gt;Pod: Image layers
-    Note over Pod: imagePullSecrets: [] ✅</code></pre>
-<h2 id="resources-created">Resources Created</h2>
+<h1 id="workload-identity-and-private-image-pull-historical-proof">Workload Identity and private image pull — historical proof</h1>
+<p>The Phase 7A run proved two <strong>different</strong> credential paths on real AKS:</p>
+<ol>
+<li>A proof pod's Kubernetes ServiceAccount token was exchanged through an
+   Entra federated credential for a scoped Azure <code>Reader</code> operation.</li>
+<li>The <strong>kubelet managed identity</strong> pulled a private ACR image by digest
+   without an <code>imagePullSecret</code>.</li>
+</ol>
+<p>The pod did not use its Workload Identity to pull the image. The run did not
+prove that all workloads use federation, nor that an application pod read a
+Key Vault secret. The temporary proof identity, pool and AKS cluster were
+deleted after validation.</p>
 <table>
 <thead>
 <tr>
-<th>Resource</th>
-<th>Name</th>
-<th>Purpose</th>
+<th>Claim</th>
+<th>Primary evidence</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>User-Assigned MI</td>
-<td><code>mi-aks-wi-proof-dev</code></td>
-<td>Federated workload identity</td>
+<td>Federated token exchange and scoped read</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/workload-identity-runtime-PASS.md">Workload Identity runtime report</a></td>
 </tr>
 <tr>
-<td>Federated Credential</td>
-<td><code>github-oidc-fed</code></td>
-<td>GitHub Actions OIDC trust</td>
-</tr>
-<tr>
-<td>Role Assignment</td>
-<td>AcrPull on ACR</td>
-<td>Kubelet pulls images</td>
-</tr>
-<tr>
-<td>AKS OIDC Issuer</td>
-<td>Enabled on cluster</td>
-<td>Issues service account tokens</td>
+<td>Kubelet ACR pull by digest, no pull secret</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/private-acr-pull-PASS.md">Private ACR pull report</a></td>
 </tr>
 </tbody>
 </table>
-<h2 id="verification-command">Verification Command</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Pod using Workload Identity — no imagePullSecrets</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>run<span class="w"> </span>wi-test<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--image<span class="o">=</span>crportfolioa3deec.azurecr.io/test:latest<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>--overrides<span class="o">=</span><span class="s1">'{"spec":{"imagePullSecrets":[]}}'</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>--serviceaccount<span class="o">=</span>wi-proof-sa
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="c1"># Verify token exchange</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>kubectl<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>wi-test<span class="w"> </span>--<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span>curl<span class="w"> </span>-H<span class="w"> </span><span class="s2">"Authorization: Bearer </span><span class="k">$(</span>cat<span class="w"> </span>/var/run/secrets/azure/tokens/azure-identity-token<span class="k">)</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span>https://management.azure.com/subscriptions/a3deec78.../providers/Microsoft.ContainerRegistry/...
-</code></pre></div>
-<h2 id="evidence-file">Evidence File</h2>
-<p>Committed at: <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/workload-identity-runtime-PASS.md"><code>docs/evidence/phase7a/workload-identity-runtime-PASS.md</code></a></p>
+<p>The demo uses saved, sanitized evidence. Do not run an old <code>kubectl</code> command
+against an unspecified context: the Azure cluster in that report no longer
+exists, and the active local context may be kind.</p>
 
 
 

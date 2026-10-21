@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#finops-cost-management" class="md-skip">
+        <a href="#finops-boundary-for-transient-aks-proof" class="md-skip">
           Skip to content
         </a>
       
@@ -554,7 +554,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -704,24 +704,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cost & FinOps
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -738,86 +720,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#current-monthly-cost-estimate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Monthly Cost Estimate
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cost-controls" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cost Controls
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Cost Controls">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#scale-to-zero-container-apps" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scale-to-Zero (Container Apps)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#aks-node-pool-stopstart" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AKS Node Pool Stop/Start
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#budget-alert" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Budget Alert
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -875,103 +777,21 @@
 
 
 
-<h1 id="finops-cost-management">FinOps &amp; Cost Management</h1>
-<h2 id="current-monthly-cost-estimate">Current Monthly Cost Estimate</h2>
-<table>
-<thead>
-<tr>
-<th>Resource</th>
-<th>SKU</th>
-<th>Region</th>
-<th>~USD/month</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>AKS (1 node DS2_v2)</td>
-<td>Standard</td>
-<td>EastAsia</td>
-<td>~$70</td>
-</tr>
-<tr>
-<td>ACA Environment (cae-portfolio-env)</td>
-<td>Consumption</td>
-<td>SEA</td>
-<td>~$0 (idle)</td>
-</tr>
-<tr>
-<td>ACA smartdoc-api (0.5 vCPU)</td>
-<td>Consumption</td>
-<td>SEA</td>
-<td>~$8</td>
-</tr>
-<tr>
-<td>ACA kho-tra-sua-api (0.5 vCPU)</td>
-<td>Consumption</td>
-<td>SEA</td>
-<td>~$8</td>
-</tr>
-<tr>
-<td>ACR crportfolioa3deec (Basic)</td>
-<td>Basic</td>
-<td>SEA</td>
-<td>~$5</td>
-</tr>
-<tr>
-<td>ACR acrflashsalep6 (Basic)</td>
-<td>Basic</td>
-<td>SEA</td>
-<td>~$5</td>
-</tr>
-<tr>
-<td>Log Analytics Workspace</td>
-<td>Pay-per-GB</td>
-<td>SEA</td>
-<td>~$2</td>
-</tr>
-<tr>
-<td>Cloudflare Pages/Workers</td>
-<td>Free</td>
-<td>Global</td>
-<td>$0</td>
-</tr>
-<tr>
-<td><strong>Total</strong></td>
-<td></td>
-<td></td>
-<td><strong>~$98/month</strong></td>
-</tr>
-</tbody>
-</table>
-<h2 id="cost-controls">Cost Controls</h2>
-<h3 id="scale-to-zero-container-apps">Scale-to-Zero (Container Apps)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Scale smartdoc-api to 0 when not demoing</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>az<span class="w"> </span>containerapp<span class="w"> </span>update<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span>--name<span class="w"> </span>smartdoc-api<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-portfolio-prod<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span>--min-replicas<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span>--max-replicas<span class="w"> </span><span class="m">1</span>
-</code></pre></div>
-<h3 id="aks-node-pool-stopstart">AKS Node Pool Stop/Start</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Stop AKS when not in use (~$70/day saving)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>az<span class="w"> </span>aks<span class="w"> </span>stop<span class="w"> </span>--name<span class="w"> </span>aks-portfolio-dev<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-aks-platform-dev
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Restart when needed</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>az<span class="w"> </span>aks<span class="w"> </span>start<span class="w"> </span>--name<span class="w"> </span>aks-portfolio-dev<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-aks-platform-dev
-</code></pre></div>
-<h3 id="budget-alert">Budget Alert</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Set $150/month budget alert</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>az<span class="w"> </span>consumption<span class="w"> </span>budget<span class="w"> </span>create<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--budget-name<span class="w"> </span>portfolio-monthly-budget<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span>--amount<span class="w"> </span><span class="m">150</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span>--time-grain<span class="w"> </span>Monthly<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--time-period-start<span class="w"> </span><span class="k">$(</span>date<span class="w"> </span>+%Y-%m-01<span class="k">)</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span>--time-period-end<span class="w"> </span><span class="m">2027</span>-01-01<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span>--category<span class="w"> </span>Cost<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span>--notifications<span class="w"> </span><span class="s2">"{'actual_GreaterThan_80_Percent':{'enabled':true,'operator':'GreaterThan','threshold':80,'contact-emails':['binhtan5734@gmail.com']}}"</span>
-</code></pre></div>
+<h1 id="finops-boundary-for-transient-aks-proof">FinOps boundary for transient AKS proof</h1>
+<p>The AKS validation cluster was <strong>deleted on 2026-10-21</strong>. A monthly estimate
+for a continuously running cluster would misstate this project's current cost.
+The recorded 10-vCPU regional quota is a point-in-time capacity measurement,
+not an Azure invoice or a guarantee that today's quota is unchanged.</p>
+<p>The validation design uses one 2-vCPU system node and up to three 2-vCPU user
+nodes, leaving two vCPU under the measured quota. Autoscaler and full
+observability are separate experiment profiles under that envelope; they have
+not been proven together on AKS.</p>
+<p>For any future Azure run: remeasure quota and price, review a saved Terraform
+plan and explicit approval, record start/end and resources, capture runtime
+proof, then follow the
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/runbooks/azure-teardown-runbook.md">teardown runbook</a>.
+Budget alerts warn; they do not stop spend automatically. Do not infer actual
+cost from a VM SKU table without Cost Management data.</p>
 
 
 

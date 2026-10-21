@@ -1,52 +1,22 @@
-# Workload Identity Evidence
+# Workload Identity and private image pull — historical proof
 
-!!! success "Zero Static Secrets — Production Pattern"
-    All workloads authenticate to Azure via Workload Identity Federation.
-    No Kubernetes Secrets containing Azure credentials.
+The Phase 7A run proved two **different** credential paths on real AKS:
 
-## What Was Proved
+1. A proof pod's Kubernetes ServiceAccount token was exchanged through an
+   Entra federated credential for a scoped Azure `Reader` operation.
+2. The **kubelet managed identity** pulled a private ACR image by digest
+   without an `imagePullSecret`.
 
-```mermaid
-sequenceDiagram
-    participant Pod as K8s Pod
-    participant OIDC as AKS OIDC Issuer
-    participant ENTRA as Microsoft Entra ID
-    participant ACR as Private ACR
+The pod did not use its Workload Identity to pull the image. The run did not
+prove that all workloads use federation, nor that an application pod read a
+Key Vault secret. The temporary proof identity, pool and AKS cluster were
+deleted after validation.
 
-    Pod->>OIDC: Request service account token
-    OIDC-->>Pod: Signed JWT (iss: eastasia.oic.prod-aks.azure.com)
-    Pod->>ENTRA: Exchange JWT for Azure access token
-    Note over ENTRA: Federated Credential validates<br/>subject & issuer match
-    ENTRA-->>Pod: Azure access token (no static secret)
-    Pod->>ACR: Pull image by digest (token auth)
-    ACR-->>Pod: Image layers
-    Note over Pod: imagePullSecrets: [] ✅
-```
+| Claim | Primary evidence |
+|---|---|
+| Federated token exchange and scoped read | [Workload Identity runtime report](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/workload-identity-runtime-PASS.md) |
+| Kubelet ACR pull by digest, no pull secret | [Private ACR pull report](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/private-acr-pull-PASS.md) |
 
-## Resources Created
-
-| Resource | Name | Purpose |
-|----------|------|---------|
-| User-Assigned MI | `mi-aks-wi-proof-dev` | Federated workload identity |
-| Federated Credential | `github-oidc-fed` | GitHub Actions OIDC trust |
-| Role Assignment | AcrPull on ACR | Kubelet pulls images |
-| AKS OIDC Issuer | Enabled on cluster | Issues service account tokens |
-
-## Verification Command
-
-```bash
-# Pod using Workload Identity — no imagePullSecrets
-kubectl run wi-test \
-  --image=crportfolioa3deec.azurecr.io/test:latest \
-  --overrides='{"spec":{"imagePullSecrets":[]}}' \
-  --serviceaccount=wi-proof-sa
-
-# Verify token exchange
-kubectl exec wi-test -- \
-  curl -H "Authorization: Bearer $(cat /var/run/secrets/azure/tokens/azure-identity-token)" \
-  https://management.azure.com/subscriptions/a3deec78.../providers/Microsoft.ContainerRegistry/...
-```
-
-## Evidence File
-
-Committed at: [`docs/evidence/phase7a/workload-identity-runtime-PASS.md`](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/workload-identity-runtime-PASS.md)
+The demo uses saved, sanitized evidence. Do not run an old `kubectl` command
+against an unspecified context: the Azure cluster in that report no longer
+exists, and the active local context may be kind.

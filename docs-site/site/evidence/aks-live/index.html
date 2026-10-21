@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -29,7 +29,7 @@
     
     
       
-        <title>AKS Live Run - AKS SRE Platform — Portfolio Evidence</title>
+        <title>Historical AKS Validation - AKS SRE Platform — Portfolio Evidence</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#aks-live-run-evidence" class="md-skip">
+        <a href="#historical-aks-validation-cluster-deleted" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              AKS Live Run
+              Historical AKS Validation
             
           </span>
         </div>
@@ -559,24 +559,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    AKS Live Run
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -584,7 +566,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -593,80 +575,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#cluster-details" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cluster Details
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kubectl-get-nodes" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        kubectl get nodes
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#kubectl-get-pods-a-all-running" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        kubectl get pods -A (All Running)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#terraform-apply" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Terraform Apply
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#phase-7a-evidence-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Phase 7A Evidence Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -869,100 +777,46 @@
 
 
 
-<h1 id="aks-live-run-evidence">AKS Live Run Evidence</h1>
-<div class="admonition success">
-<p class="admonition-title">AZURE_K8S_LIVE_VERIFIED</p>
-<p>Kubernetes cluster running on Azure AKS — independently re-verified 2026-10-21.</p>
-</div>
-<h2 id="cluster-details">Cluster Details</h2>
+<h1 id="historical-aks-validation-cluster-deleted">Historical AKS validation — cluster deleted</h1>
+<p><strong>Evidence status:</strong> <code>AZURE_K8S_LIVE_VERIFIED</code> for the historical control-plane
+observation; <code>AZURE_CLOUD_APPLY_NOT_VERIFIED</code> for Terraform apply because no
+command output from that apply was committed. These labels describe different
+claims. The cluster <code>aks-portfolio-dev</code> was deleted on <strong>2026-10-21</strong>.</p>
 <table>
 <thead>
 <tr>
-<th>Property</th>
-<th>Value</th>
+<th>Observation</th>
+<th>Evidence</th>
+<th>Limit</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Cluster Name</td>
-<td><code>aks-portfolio-dev</code></td>
+<td>AKS control plane, one Ready system node at Kubernetes v1.36.4</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/live-aks-azure-2026-10-21/aks-azure-evidence.md">Read-only Azure re-verification</a></td>
+<td>Point-in-time observation; cluster no longer exists</td>
 </tr>
 <tr>
-<td>Resource Group</td>
-<td><code>rg-aks-platform-dev</code></td>
+<td>System/user pool placement, private ACR digest pull, scoped Workload Identity token exchange</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/phase7a/phase7a-FINAL-PASS.md">Phase 7A final report</a></td>
+<td>Earlier transient run; proof identities/pools were deleted</td>
 </tr>
 <tr>
-<td>Location</td>
-<td><code>eastasia</code></td>
+<td>Saved Terraform plan</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/live-aks-2026-10-20/terraform-plan.txt">Plan artifact</a></td>
+<td>Does not establish that apply command ran</td>
 </tr>
 <tr>
-<td>Kubernetes Version</td>
-<td><code>1.36.4</code></td>
-</tr>
-<tr>
-<td>Node SKU</td>
-<td><code>Standard_DS2_v2</code></td>
-</tr>
-<tr>
-<td>Node Count</td>
-<td>1 (Ready)</td>
-</tr>
-<tr>
-<td>OIDC Enabled</td>
-<td>✅ Yes</td>
-</tr>
-<tr>
-<td>Workload Identity</td>
-<td>✅ Enabled</td>
-</tr>
-<tr>
-<td>API Server</td>
-<td><code>https://aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io:443</code></td>
+<td>Teardown</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/runbooks/azure-teardown-runbook.md">Runbook execution transcript</a></td>
+<td>Historical completion, not a live resource check today</td>
 </tr>
 </tbody>
 </table>
-<h2 id="kubectl-get-nodes">kubectl get nodes</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>NAME                               STATUS   ROLES   AGE   VERSION
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>aks-sys-13411604-vmss000000        Ready    agent   1d    v1.36.4
-</code></pre></div>
-<h2 id="kubectl-get-pods-a-all-running">kubectl get pods -A (All Running)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>NAMESPACE     NAME                                  READY   STATUS    RESTARTS
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kube-system   azure-cns-xxxxx                       1/1     Running   0
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>kube-system   azure-ip-masq-agent-xxxxx             1/1     Running   0
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>kube-system   azure-npm-xxxxx                       1/1     Running   0
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>kube-system   azure-wi-webhook-controller-xxxxx     1/1     Running   0
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>kube-system   cloud-node-manager-xxxxx              1/1     Running   0
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>kube-system   coredns-xxxxx                         1/1     Running   0
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>kube-system   coredns-autoscaler-xxxxx              1/1     Running   0
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>kube-system   csi-azuredisk-node-xxxxx              3/3     Running   0
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>kube-system   csi-azurefile-node-xxxxx              3/3     Running   0
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>kube-system   konnectivity-agent-xxxxx              1/1     Running   0
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>kube-system   kube-proxy-xxxxx                      1/1     Running   0
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>kube-system   metrics-server-xxxxx                  2/2     Running   0
-</code></pre></div>
-<h2 id="terraform-apply">Terraform Apply</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>Plan: 2 to add, 0 to change, 0 to destroy.
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>...
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>Apply complete! Resources: 2 added, 0 changed, 0 destroyed.
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>Outputs:
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>cluster_name              = "aks-portfolio-dev"
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>resource_group            = "rg-aks-platform-dev"
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>location                  = "eastasia"
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>kubernetes_version         = "1.36"
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>oidc_issuer_url           = "https://eastasia.oic.prod-aks.azure.com/..."
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>workload_identity_enabled  = true
-</code></pre></div>
-<h2 id="phase-7a-evidence-files">Phase 7A Evidence Files</h2>
-<p>All evidence files committed at:
-<a href="https://github.com/imtarget05/AKS-SRE-Platform/tree/main/docs/evidence/phase7a"><code>docs/evidence/phase7a/</code></a></p>
-<ul>
-<li><code>phase7a-FINAL-PASS.md</code> — Full phase evidence log</li>
-<li><code>system-foundation-PASS.md</code> — System node pool verification</li>
-<li><code>user-pool-placement-PASS.md</code> — User node pool placement proof</li>
-<li><code>workload-identity-runtime-PASS.md</code> — Federated credential runtime proof</li>
-<li><code>private-acr-pull-PASS.md</code> — Private ACR digest pull without imagePullSecrets</li>
-</ul>
+<p>No Argo CD, Gateway API, Prometheus/Grafana runtime, autoscaler scale-out,
+NetworkPolicy deny probe, or production SLO history is proven by this Azure
+run. The local <a href="../../architecture/overview/">architecture page</a> names the
+separate kind proof.</p>
 
 
 

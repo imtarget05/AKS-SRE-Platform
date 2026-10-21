@@ -1,83 +1,46 @@
-# AKS SRE Platform — Portfolio Evidence
+# AKS SRE Platform — evidence, not a live cluster
 
-<div class="grid cards" markdown>
+> **Current state (2026-10-21):** `aks-portfolio-dev` and its resource group were
+> deleted after a transient Azure validation run. The AKS evidence below is
+> historical; the local kind environment is a separate dry-run profile. See the
+> [teardown record](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/runbooks/azure-teardown-runbook.md)
+> and [engineering checkpoint](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/engineering/CURRENT_STATE.md).
 
--   :material-cloud: **Azure AKS Live**
-    ---
-    Cluster `aks-portfolio-dev` provisioned on Azure (EastAsia).
-    Kubernetes v1.36 with 1 node running all addons.
+This project addresses a platform team's need to review infrastructure changes,
+reject invalid manifests before deployment, and say precisely which runtime
+claims have been measured. The reference workload is deliberately small; its
+`/sync` route is a no-op, not an enterprise inventory integration.
 
-    [:octicons-arrow-right-24: AKS Evidence](evidence/aks-live.md)
+| Capability | Evidence level | Source |
+|---|---|---|
+| AKS node placement, private ACR pull by digest, federated Workload Identity token exchange | **Historical Azure validation**, cluster deleted | [AKS run](evidence/aks-live.md) · [identity](evidence/workload-identity.md) |
+| Argo CD reconciliation, Gateway API/Envoy, Prometheus/Grafana alert cycle | **Local kind only** | [architecture](architecture/overview.md) |
+| HPA/Cluster Autoscaler, NetworkPolicy deny, PDB/drain, 30-day SLO, DR | **Not verified** | [claim matrix](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md) |
 
--   :material-shield-check: **Zero-Trust Identity**
-    ---
-    Workload Identity Federation — zero static secrets.
-    Private ACR pull by digest verified.
-
-    [:octicons-arrow-right-24: Workload Identity Proof](evidence/workload-identity.md)
-
--   :material-test-tube: **47/47 Gate Tests**
-    ---
-    All SRE gate tests pass. 16/0 GitOps validation.
-    Security scans: 0 HIGH/CRITICAL findings.
-
-    [:octicons-arrow-right-24: Test Results](evidence/test-results.md)
-
--   :material-book-open: **SRE Runbooks**
-    ---
-    Production-grade incident response procedures.
-    FinOps cost controls & scaling guides.
-
-    [:octicons-arrow-right-24: Runbooks](runbooks/incident-response.md)
-
-</div>
-
-## Project Overview
+## Delivery path
 
 ```mermaid
-flowchart TD
-    subgraph CF["Cloudflare (Demo Layer)"]
-        P1["smart-doc-chatbot.pages.dev"]
-        P2["opsbridge-dashboard.pages.dev"]
-        P3["quan-ly-kho-tra-sua.workers.dev"]
-        P4["aks-sre-platform.pages.dev"]
-    end
-    subgraph AZURE["Microsoft Azure"]
-        subgraph SEA["Southeast Asia"]
-            ACA1["smartdoc-api (ACA)"]
-            ACA2["kho-tra-sua-api (ACA)"]
-            ACR["crportfolioa3deec.azurecr.io"]
-        end
-        subgraph EA["East Asia"]
-            AKS["aks-portfolio-dev (AKS v1.36)"]
-            ARGO["ArgoCD GitOps"]
-        end
-    end
-    P1 --> ACA1
-    P3 --> ACA2
-    P2 --> AKS
-    P4 -.->|evidence| AKS
-    ARGO --> AKS
+flowchart LR
+  A[Reviewed Git change] --> B[CI: Terraform, render, policy, ownership]
+  B --> C[Canonical GitOps source]
+  C --> D[Argo CD on local kind: measured]
+  D --> E[Reference workload]
+  E --> F[Local metrics and alert proof]
+  B -. invalid change rejected .-> A
 ```
 
-## 4 Portfolio Projects
+The GitOps, Gateway and observability nodes in this diagram were tested on
+**kind**, not AKS. A fresh AKS run would need a saved reviewed Terraform plan,
+explicit owner approval, runtime probes, and teardown under the repository's
+cost-safety rules.
 
-| # | Project | Demo URL | Stack | Status |
-|---|---------|----------|-------|--------|
-| 1 | Enterprise RAG Document Intelligence | [smart-doc-chatbot.pages.dev](https://smart-doc-chatbot.pages.dev) | Spring Boot · React · LangChain · Kafka · Redis | ✅ Live |
-| 2 | FlashSale Microservices + OpsBridge | [opsbridge-dashboard.pages.dev](https://opsbridge-dashboard.pages.dev) | .NET 10 · CQRS · PostgreSQL · RabbitMQ | ✅ Live |
-| 3 | Quản Lý Kho Trà Sữa | [quan-ly-kho-tra-sua.tanmainguyenbinh.workers.dev](https://quan-ly-kho-tra-sua.tanmainguyenbinh.workers.dev) | Flutter Web · FastAPI · PostgreSQL · CF Worker | ✅ Live |
-| 4 | AKS SRE Platform | [aks-sre-platform.pages.dev](https://aks-sre-platform.pages.dev) | Terraform · ArgoCD · Prometheus · AKS | ✅ This site |
+## Four-repository portfolio
 
-## Key Technical Highlights
-
-- **GitOps on AKS**: ArgoCD managing `FlashSale-Backend` + `AKS-SRE-Platform` repos
-- **Zero-Trust Identity**: Workload Identity Federation — zero static secrets in K8s
-- **Event-Driven Architecture**: Kafka backbone for cross-service async communication
-- **Observability**: Prometheus + Grafana on AKS; OpenTelemetry instrumentation
-- **DevSecOps**: Trivy scans, 0 HIGH/CRITICAL findings across all 4 repos
-- **FinOps**: Scale-to-zero Container Apps, AKS node pool cost controls
-
----
-
-*Built by [Tan Nguyen Binh](https://github.com/imtarget05) · Contact: tanmainguyenbinh@gmail.com*
+This site owns the **AKS-SRE-Platform** claims. The other products have their
+own code and evidence: [OpsBridge](https://github.com/imtarget05/OpsBridge),
+[QuanLyKho](https://github.com/imtarget05/QuanLyKho), and
+[SmartDocumentChatbot](https://github.com/imtarget05/Smart-Document-Chatbot).
+Their current deployment or test status must be checked in those repositories;
+the existence of a public demo URL does not establish a healthy business API.
+The [portfolio interview index](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/PORTFOLIO_INTERVIEW_CHEATSHEET.md)
+maps the cross-project narrative and its limits.

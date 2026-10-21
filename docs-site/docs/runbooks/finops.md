@@ -1,51 +1,18 @@
-# FinOps & Cost Management
+# FinOps boundary for transient AKS proof
 
-## Current Monthly Cost Estimate
+The AKS validation cluster was **deleted on 2026-10-21**. A monthly estimate
+for a continuously running cluster would misstate this project's current cost.
+The recorded 10-vCPU regional quota is a point-in-time capacity measurement,
+not an Azure invoice or a guarantee that today's quota is unchanged.
 
-| Resource | SKU | Region | ~USD/month |
-|----------|-----|--------|-----------|
-| AKS (1 node DS2_v2) | Standard | EastAsia | ~$70 |
-| ACA Environment (cae-portfolio-env) | Consumption | SEA | ~$0 (idle) |
-| ACA smartdoc-api (0.5 vCPU) | Consumption | SEA | ~$8 |
-| ACA kho-tra-sua-api (0.5 vCPU) | Consumption | SEA | ~$8 |
-| ACR crportfolioa3deec (Basic) | Basic | SEA | ~$5 |
-| ACR acrflashsalep6 (Basic) | Basic | SEA | ~$5 |
-| Log Analytics Workspace | Pay-per-GB | SEA | ~$2 |
-| Cloudflare Pages/Workers | Free | Global | $0 |
-| **Total** | | | **~$98/month** |
+The validation design uses one 2-vCPU system node and up to three 2-vCPU user
+nodes, leaving two vCPU under the measured quota. Autoscaler and full
+observability are separate experiment profiles under that envelope; they have
+not been proven together on AKS.
 
-## Cost Controls
-
-### Scale-to-Zero (Container Apps)
-```bash
-# Scale smartdoc-api to 0 when not demoing
-az containerapp update \
-  --name smartdoc-api \
-  --resource-group rg-portfolio-prod \
-  --min-replicas 0 \
-  --max-replicas 1
-```
-
-### AKS Node Pool Stop/Start
-```bash
-# Stop AKS when not in use (~$70/day saving)
-az aks stop --name aks-portfolio-dev \
-  --resource-group rg-aks-platform-dev
-
-# Restart when needed
-az aks start --name aks-portfolio-dev \
-  --resource-group rg-aks-platform-dev
-```
-
-### Budget Alert
-```bash
-# Set $150/month budget alert
-az consumption budget create \
-  --budget-name portfolio-monthly-budget \
-  --amount 150 \
-  --time-grain Monthly \
-  --time-period-start $(date +%Y-%m-01) \
-  --time-period-end 2027-01-01 \
-  --category Cost \
-  --notifications "{'actual_GreaterThan_80_Percent':{'enabled':true,'operator':'GreaterThan','threshold':80,'contact-emails':['binhtan5734@gmail.com']}}"
-```
+For any future Azure run: remeasure quota and price, review a saved Terraform
+plan and explicit approval, record start/end and resources, capture runtime
+proof, then follow the
+[teardown runbook](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/runbooks/azure-teardown-runbook.md).
+Budget alerts warn; they do not stop spend automatically. Do not infer actual
+cost from a VM SKU table without Cost Management data.

@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#incident-response-runbook" class="md-skip">
+        <a href="#incident-response-demonstration-boundary" class="md-skip">
           Skip to content
         </a>
       
@@ -554,7 +554,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -676,24 +676,6 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Incident Response
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -710,108 +692,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#1-phat-hien-su-co-detection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Phát Hiện Sự Cố (Detection)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#2-phan-loai-su-co-classification" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. Phân Loại Sự Cố (Classification)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#3-quy-trinh-xu-ly-response" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Quy Trình Xử Lý (Response)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="3. Quy Trình Xử Lý (Response)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#buoc-1-acknowledge-communicate" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bước 1: Acknowledge &amp; Communicate
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#buoc-2-rollback-neu-can" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bước 2: Rollback (Nếu Cần)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#buoc-3-root-cause-analysis-rca" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bước 3: Root Cause Analysis (RCA)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#4-post-incident-review" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Post-Incident Review
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -897,91 +777,23 @@
 
 
 
-<h1 id="incident-response-runbook">Incident Response Runbook</h1>
-<div class="admonition warning">
-<p class="admonition-title">Production Incident Response — SRE Standard</p>
-<p>Thời gian phản ứng: P0 &lt; 15 phút, P1 &lt; 1 giờ, P2 &lt; 4 giờ</p>
-</div>
-<h2 id="1-phat-hien-su-co-detection">1. Phát Hiện Sự Cố (Detection)</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Kiểm tra trạng thái cluster</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>kubectl<span class="w"> </span>get<span class="w"> </span>nodes
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>kubectl<span class="w"> </span>get<span class="w"> </span>pods<span class="w"> </span>--all-namespaces<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span>Running
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1"># Kiểm tra events gần đây</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>kubectl<span class="w"> </span>get<span class="w"> </span>events<span class="w"> </span>--sort-by<span class="o">=</span><span class="s1">'.lastTimestamp'</span><span class="w"> </span>-A<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-20
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Kiểm tra Container Apps</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>az<span class="w"> </span>containerapp<span class="w"> </span>show<span class="w"> </span>--name<span class="w"> </span>smartdoc-api<span class="w"> </span>--resource-group<span class="w"> </span>rg-portfolio-prod<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span>--query<span class="w"> </span><span class="s2">"properties.runningStatus"</span><span class="w"> </span>-o<span class="w"> </span>tsv
-</code></pre></div>
-<h2 id="2-phan-loai-su-co-classification">2. Phân Loại Sự Cố (Classification)</h2>
-<table>
-<thead>
-<tr>
-<th>Mức Độ</th>
-<th>Tiêu Chí</th>
-<th>SLA</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>P0 — Critical</strong></td>
-<td>Service down, data loss risk</td>
-<td>15 phút</td>
-</tr>
-<tr>
-<td><strong>P1 — High</strong></td>
-<td>Degraded performance, partial outage</td>
-<td>1 giờ</td>
-</tr>
-<tr>
-<td><strong>P2 — Medium</strong></td>
-<td>Single feature broken</td>
-<td>4 giờ</td>
-</tr>
-<tr>
-<td><strong>P3 — Low</strong></td>
-<td>Non-critical issue</td>
-<td>24 giờ</td>
-</tr>
-</tbody>
-</table>
-<h2 id="3-quy-trinh-xu-ly-response">3. Quy Trình Xử Lý (Response)</h2>
-<h3 id="buoc-1-acknowledge-communicate">Bước 1: Acknowledge &amp; Communicate</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Tạo incident channel (Slack/Teams)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Thông báo: "Incident P{level} - {summary} - Investigating"</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Assign Incident Commander (IC)</span>
-</code></pre></div>
-<h3 id="buoc-2-rollback-neu-can">Bước 2: Rollback (Nếu Cần)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Rollback AKS deployment</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kubectl<span class="w"> </span>rollout<span class="w"> </span>undo<span class="w"> </span>deployment/flashsale-api<span class="w"> </span>-n<span class="w"> </span>flashsale
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Rollback Container App revision</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>az<span class="w"> </span>containerapp<span class="w"> </span>revision<span class="w"> </span>list<span class="w"> </span>--name<span class="w"> </span>smartdoc-api<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-portfolio-prod<span class="w"> </span>-o<span class="w"> </span>table
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>az<span class="w"> </span>containerapp<span class="w"> </span>ingress<span class="w"> </span>traffic<span class="w"> </span><span class="nb">set</span><span class="w"> </span>--name<span class="w"> </span>smartdoc-api<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-portfolio-prod<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span>--revision-weight<span class="w"> </span>&lt;previous-revision&gt;<span class="o">=</span><span class="m">100</span>
-</code></pre></div>
-<h3 id="buoc-3-root-cause-analysis-rca">Bước 3: Root Cause Analysis (RCA)</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Thu thập logs</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>kubectl<span class="w"> </span>logs<span class="w"> </span>-l<span class="w"> </span><span class="nv">app</span><span class="o">=</span>flashsale-api<span class="w"> </span>-n<span class="w"> </span>flashsale<span class="w"> </span>--since<span class="o">=</span>1h<span class="w"> </span>&gt;<span class="w"> </span>incident-logs.txt
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Azure Monitor</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>az<span class="w"> </span>monitor<span class="w"> </span>activity-log<span class="w"> </span>list<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>--resource-group<span class="w"> </span>rg-portfolio-prod<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span>--start-time<span class="w"> </span><span class="k">$(</span>date<span class="w"> </span>-u<span class="w"> </span>-v-1H<span class="w"> </span>+%Y-%m-%dT%H:%M:%SZ<span class="k">)</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span>-o<span class="w"> </span>table
-</code></pre></div>
-<h2 id="4-post-incident-review">4. Post-Incident Review</h2>
-<ul>
-<li>Blameless postmortem trong 48h sau incident</li>
-<li>Timeline đầy đủ (detection → resolution)</li>
-<li>Root cause + contributing factors</li>
-<li>Action items với owner và deadline</li>
-<li>Cập nhật runbook nếu cần</li>
-</ul>
+<h1 id="incident-response-demonstration-boundary">Incident-response demonstration boundary</h1>
+<p>The current AKS cluster has been deleted. The repository contains a <strong>local
+kind alert fire/resolve proof</strong>, not production incident-response SLOs or
+contracted P0/P1 response times.</p>
+<p>For a local interview walkthrough, use the recorded
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/local-platform/l10-observability-PASS.md">alert cycle</a>:
+the metric source became unavailable, <code>LocalPlatformMetricSourceDown</code> fired,
+the source recovered, and the alert resolved. State the environment, timestamps
+and what was not measured. The separate
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/local-platform/2026-10-21-recreate/selfheal-reverification-2026-10-21.md">self-heal record</a>
+proves two Argo-owned resource recovery cases on kind.</p>
+<p>For a real incident, first identify the exact cluster context and affected
+service, preserve logs/metrics and timeline, assign an incident owner, and
+select the owning workload's rollback or repair runbook. A manual <code>kubectl
+rollout undo</code> against an Argo-managed resource can be overwritten by GitOps;
+the reviewed Git source must express the intended rollback. Azure commands
+in the historical teardown runbook are not a routine incident demo.</p>
 
 
 

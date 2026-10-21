@@ -1,1049 +1,955 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AKS SRE Platform — Real-Time Control Plane & Telemetry Console</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            azure: {
-              50: '#f0f9ff',
-              500: '#0078d4',
-              600: '#005a9e',
-              900: '#0c2340',
-            },
-            sre: {
-              bg: '#0a0e17',
-              card: '#111827',
-              border: '#1f293d',
-              accent: '#38bdf8',
-              success: '#10b981',
-              warning: '#f59e0b',
-              danger: '#ef4444'
-            }
-          },
-          fontFamily: {
-            mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', 'monospace'],
-            sans: ['Inter', 'system-ui', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    body { background-color: #0a0e17; color: #e2e8f0; font-family: 'Inter', system-ui, sans-serif; }
-    .terminal-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .terminal-scroll::-webkit-scrollbar-track { background: #0f172a; }
-    .terminal-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    .pulse-live { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-    .scanline {
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      background-size: 100% 2px, 3px 100%;
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-gray-800 bg-gray-950/85 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-600 via-cyan-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
-        <i class="fa-brands fa-microsoft text-lg"></i>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-base tracking-tight text-white">AKS SRE Platform</span>
-          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
-            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 pulse-live"></span>
-            CLUSTER LIVE
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
+      
+      
+        <meta name="author" content="Tan Nguyen Binh">
+      
+      
+        <link rel="canonical" href="https://aks-sre-platform.pages.dev/">
+      
+      
+      
+        <link rel="next" href="architecture/overview/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>AKS SRE Platform — Portfolio Evidence</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#aks-sre-platform-evidence-not-a-live-cluster" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="." title="AKS SRE Platform — Portfolio Evidence" class="md-header__button md-logo" aria-label="AKS SRE Platform — Portfolio Evidence" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AKS SRE Platform — Portfolio Evidence
           </span>
-          <span class="px-2 py-0.5 text-xs font-mono rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">v1.36.4</span>
         </div>
-        <p class="text-xs text-gray-400 font-mono">rg-aks-platform-dev &bull; aks-portfolio-dev (EastAsia &bull; Managed)</p>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Home
+            
+          </span>
+        </div>
       </div>
     </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="light-blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="light-blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
 
-    <!-- Live Telemetry Badges -->
-    <div class="flex items-center gap-4 text-xs font-mono">
-      <div class="hidden sm:flex flex-col items-end">
-        <span class="text-gray-400">Edge RTT Latency</span>
-        <span id="header-edge-ping" class="text-emerald-400 font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-wifi text-xs"></i> <span id="val-edge-ping">18 ms</span>
-        </span>
-      </div>
-      <div class="hidden sm:block h-6 w-px bg-gray-800"></div>
-      <div class="hidden md:flex flex-col items-end">
-        <span class="text-gray-400">GitOps Engine</span>
-        <span class="text-cyan-400 font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-arrows-rotate text-xs"></i> <span id="header-gitops-status">Synced (0 drift)</span>
-        </span>
-      </div>
-      <div class="hidden md:block h-6 w-px bg-gray-800"></div>
-      <a href="https://github.com/imtarget05/AKS-SRE-Platform" target="_blank" class="px-3 py-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 flex items-center gap-2 transition">
-        <i class="fa-brands fa-github text-sm"></i>
-        <span>Repo Source</span>
       </a>
-    </div>
-  </header>
+    </li>
+  
 
-  <!-- Main View Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="architecture/overview/" class="md-tabs__link">
+          
+  
+  
+  Architecture
 
-    <!-- Hero Stats Grid with Real Ticking Values -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs text-gray-400 font-medium">Control Plane</p>
-          <p class="text-lg font-bold text-white mt-1">Azure AKS</p>
-          <p class="text-xs text-emerald-400 font-mono mt-0.5">API Server 99.99% Up</p>
-        </div>
-        <div class="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-dharmachakra"></i>
-        </div>
-      </div>
+        </a>
+      </li>
+    
+  
 
-      <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs text-gray-400 font-medium">Live Throughput</p>
-          <p id="kpi-qps" class="text-lg font-bold text-cyan-400 font-mono mt-1">1,240 req/s</p>
-          <p id="kpi-errors" class="text-xs text-emerald-400 font-mono mt-0.5">0.00% Error Rate</p>
-        </div>
-        <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-chart-line"></i>
-        </div>
-      </div>
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="evidence/test-results/" class="md-tabs__link">
+          
+  
+  
+  Evidence
 
-      <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs text-gray-400 font-medium">P99 SLA Latency</p>
-          <p id="kpi-p99" class="text-lg font-bold text-emerald-400 font-mono mt-1">11.8 ms</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">Budget: &lt; 50.0 ms</p>
-        </div>
-        <div class="h-10 w-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-gauge-high"></i>
-        </div>
-      </div>
+        </a>
+      </li>
+    
+  
 
-      <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
-          <p class="text-xs text-gray-400 font-medium">SRE Gate Compliance</p>
-          <p class="text-lg font-bold text-emerald-400 mt-1">12/12 PASS</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">47/47 Verification Tests</p>
-        </div>
-        <div class="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-shield-halved"></i>
-        </div>
-      </div>
-    </section>
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="runbooks/incident-response/" class="md-tabs__link">
+          
+  
+  
+  Runbooks
 
-    <!-- Navigation Tabs -->
-    <div class="border-b border-gray-800 flex flex-wrap gap-2">
-      <button onclick="switchTab('realtime')" id="tab-realtime" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-cyan-400 text-cyan-400 flex items-center gap-2 transition">
-        <i class="fa-solid fa-wave-square"></i>
-        <span>Live Telemetry &amp; RED Metrics</span>
-      </button>
-      <button onclick="switchTab('cluster')" id="tab-cluster" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition">
-        <i class="fa-solid fa-cubes"></i>
-        <span>Cluster &amp; System Pods</span>
-      </button>
-      <button onclick="switchTab('workload')" id="tab-workload" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition">
-        <i class="fa-solid fa-heart-pulse"></i>
-        <span>Probe Split &amp; Chaos Demo</span>
-      </button>
-      <button onclick="switchTab('gitops')" id="tab-gitops" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition">
-        <i class="fa-solid fa-code-compare"></i>
-        <span>ArgoCD GitOps Sync</span>
-      </button>
-      <button onclick="switchTab('gates')" id="tab-gates" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition">
-        <i class="fa-solid fa-list-check"></i>
-        <span>SRE Gate Matrix (G1-G12)</span>
-      </button>
-    </div>
+        </a>
+      </li>
+    
+  
 
-    <!-- TAB 1: REAL-TIME TELEMETRY & LIVE CHARTS (NEW) -->
-    <div id="view-realtime" class="tab-view space-y-6">
-      <!-- Chaos & Traffic Control Toolbar -->
-      <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 class="text-sm font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-cyan-400"></i>
-            <span>Interactive SRE Chaos &amp; Traffic Controller</span>
-          </h2>
-          <p class="text-xs text-gray-400 mt-0.5">
-            Trigger live microservice workload, inject dependency failure, or test circuit-breaker behavior in real time.
-          </p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2.5">
-          <button onclick="injectBurstTraffic()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 transition shadow">
-            <i class="fa-solid fa-bolt"></i>
-            <span>Burst 5,000 QPS</span>
-          </button>
-          <button id="btn-chaos-toggle" onclick="toggleDependencyFailure()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span id="chaos-btn-text">Inject Failure (/api/fail)</span>
-          </button>
-          <button onclick="resetTelemetry()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-rotate-left"></i>
-            <span>Reset Baseline</span>
-          </button>
-        </div>
-      </div>
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="cv-portfolio/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  CV Portfolio
 
-      <!-- Real-Time Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Chart 1: Live RED Requests & Errors -->
-        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-chart-line text-cyan-400"></i>
-                <span>Throughput &amp; Error Rate (RED Method)</span>
-              </h3>
-              <p class="text-xs text-gray-400">Live requests/sec (blue) vs HTTP 5xx errors/sec (red) &bull; 1s stream</p>
-            </div>
-            <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Streaming Live</span>
-          </div>
-          <div class="h-56 w-full">
-            <canvas id="chart-traffic"></canvas>
-          </div>
-        </div>
+      </a>
+    </li>
+  
 
-        <!-- Chart 2: Latency Distribution P50 / P90 / P99 -->
-        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-stopwatch text-emerald-400"></i>
-                <span>Duration &amp; Latency Percentiles (P50, P90, P99)</span>
-              </h3>
-              <p class="text-xs text-gray-400">Service response time &bull; Target P99 &lt; 50ms &bull; Prometheus histogram</p>
-            </div>
-            <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Histogram</span>
-          </div>
-          <div class="h-56 w-full">
-            <canvas id="chart-latency"></canvas>
-          </div>
-        </div>
-      </div>
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
 
-      <!-- Live Edge Ping & Node Saturation Row -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Live Node Resource Saturation -->
-        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 col-span-2">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-server text-blue-400"></i>
-                <span>Node &amp; Pod Resource Saturation (USE Method)</span>
-              </h3>
-              <p class="text-xs text-gray-400">VMSS Node: aks-sys-13411604-vmss000000 &bull; Ubuntu 24.04 &bull; 4 vCPU / 16GB</p>
-            </div>
-            <span class="text-xs font-mono text-gray-400">Sampling: 1000ms</span>
-          </div>
-          <div class="h-44 w-full">
-            <canvas id="chart-resources"></canvas>
-          </div>
-        </div>
 
-        <!-- Live Streaming Edge Telemetry Details -->
-        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
-          <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-network-wired text-cyan-400"></i>
-              <span>Active Edge Ingress Telemetry</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-1">Real-time HTTP round-trip measurements to production edge.</p>
+  
 
-            <div class="mt-4 space-y-3 font-mono text-xs">
-              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950/60 border border-gray-800">
-                <span class="text-gray-400">Client-to-Edge RTT</span>
-                <span id="stat-rtt" class="text-emerald-400 font-bold">18.4 ms</span>
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="." title="AKS SRE Platform — Portfolio Evidence" class="md-nav__button md-logo" aria-label="AKS SRE Platform — Portfolio Evidence" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AKS SRE Platform — Portfolio Evidence
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="." class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#delivery-path" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Delivery path
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#four-repository-portfolio" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Four-repository portfolio
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="architecture/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Evidence
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="evidence/test-results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Test Results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="evidence/aks-live/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Historical AKS Validation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="evidence/workload-identity/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workload Identity
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Runbooks
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Runbooks
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="runbooks/incident-response/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Incident Response
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="runbooks/finops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cost & FinOps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="cv-portfolio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CV Portfolio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
               </div>
-              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950/60 border border-gray-800">
-                <span class="text-gray-400">Protocol &amp; TLS</span>
-                <span class="text-cyan-400 font-bold">HTTP/2 &bull; TLS 1.3</span>
-              </div>
-              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950/60 border border-gray-800">
-                <span class="text-gray-400">Edge Data Center</span>
-                <span id="stat-colo" class="text-purple-400 font-bold">Cloudflare SIN / SGN</span>
-              </div>
-              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950/60 border border-gray-800">
-                <span class="text-gray-400">Azure Ingress Route</span>
-                <span class="text-emerald-400 font-bold">EastAsia &bull; rg-aks-platform</span>
-              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="aks-sre-platform-evidence-not-a-live-cluster">AKS SRE Platform — evidence, not a live cluster</h1>
+<blockquote>
+<p><strong>Current state (2026-10-21):</strong> <code>aks-portfolio-dev</code> and its resource group were
+deleted after a transient Azure validation run. The AKS evidence below is
+historical; the local kind environment is a separate dry-run profile. See the
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/runbooks/azure-teardown-runbook.md">teardown record</a>
+and <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/engineering/CURRENT_STATE.md">engineering checkpoint</a>.</p>
+</blockquote>
+<p>This project addresses a platform team's need to review infrastructure changes,
+reject invalid manifests before deployment, and say precisely which runtime
+claims have been measured. The reference workload is deliberately small; its
+<code>/sync</code> route is a no-op, not an enterprise inventory integration.</p>
+<table>
+<thead>
+<tr>
+<th>Capability</th>
+<th>Evidence level</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AKS node placement, private ACR pull by digest, federated Workload Identity token exchange</td>
+<td><strong>Historical Azure validation</strong>, cluster deleted</td>
+<td><a href="evidence/aks-live/">AKS run</a> · <a href="evidence/workload-identity/">identity</a></td>
+</tr>
+<tr>
+<td>Argo CD reconciliation, Gateway API/Envoy, Prometheus/Grafana alert cycle</td>
+<td><strong>Local kind only</strong></td>
+<td><a href="architecture/overview/">architecture</a></td>
+</tr>
+<tr>
+<td>HPA/Cluster Autoscaler, NetworkPolicy deny, PDB/drain, 30-day SLO, DR</td>
+<td><strong>Not verified</strong></td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md">claim matrix</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="delivery-path">Delivery path</h2>
+<pre class="mermaid"><code>flowchart LR
+  A[Reviewed Git change] --&gt; B[CI: Terraform, render, policy, ownership]
+  B --&gt; C[Canonical GitOps source]
+  C --&gt; D[Argo CD on local kind: measured]
+  D --&gt; E[Reference workload]
+  E --&gt; F[Local metrics and alert proof]
+  B -. invalid change rejected .-&gt; A</code></pre>
+<p>The GitOps, Gateway and observability nodes in this diagram were tested on
+<strong>kind</strong>, not AKS. A fresh AKS run would need a saved reviewed Terraform plan,
+explicit owner approval, runtime probes, and teardown under the repository's
+cost-safety rules.</p>
+<h2 id="four-repository-portfolio">Four-repository portfolio</h2>
+<p>This site owns the <strong>AKS-SRE-Platform</strong> claims. The other products have their
+own code and evidence: <a href="https://github.com/imtarget05/OpsBridge">OpsBridge</a>,
+<a href="https://github.com/imtarget05/QuanLyKho">QuanLyKho</a>, and
+<a href="https://github.com/imtarget05/Smart-Document-Chatbot">SmartDocumentChatbot</a>.
+Their current deployment or test status must be checked in those repositories;
+the existence of a public demo URL does not establish a healthy business API.
+The <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/PORTFOLIO_INTERVIEW_CHEATSHEET.md">portfolio interview index</a>
+maps the cross-project narrative and its limits.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
             </div>
-          </div>
-
-          <div class="mt-4 pt-3 border-t border-gray-800 text-[11px] text-gray-500 font-mono flex items-center justify-between">
-            <span>Circuit Breaker:</span>
-            <span id="circuit-breaker-label" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">CLOSED (HEALTHY)</span>
-          </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
-      </div>
-
-      <!-- Live Scrolling Kubernetes Event Stream -->
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-emerald-400 pulse-live"></span>
-            <h3 class="text-sm font-bold text-white font-mono">Live Cluster Event Stream (kubectl get events -w)</h3>
-          </div>
-          <button onclick="clearEventLog()" class="text-xs font-mono text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">Clear Feed</button>
-        </div>
-        <div id="live-event-stream" class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs overflow-y-auto max-h-48 space-y-1.5 terminal-scroll">
-          <!-- Dynamically populated by event streamer -->
-        </div>
-      </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
     </div>
-
-    <!-- TAB 2: CLUSTER & SYSTEM PODS -->
-    <div id="view-cluster" class="tab-view hidden space-y-6">
-      <!-- Node Status Card -->
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-server text-cyan-400"></i>
-            <span>System Node Pool: aks-sys-vmss</span>
-          </h3>
-          <span class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-            NodeReady: 100%
-          </span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left font-mono text-xs">
-            <thead>
-              <tr class="border-b border-gray-800 text-gray-400">
-                <th class="py-2">NODE NAME</th>
-                <th class="py-2">STATUS</th>
-                <th class="py-2">ROLES</th>
-                <th class="py-2">VERSION</th>
-                <th class="py-2">OS IMAGE</th>
-                <th class="py-2">KERNEL</th>
-                <th class="py-2">CONTAINER RUNTIME</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-800/60 text-gray-300">
-              <tr>
-                <td class="py-2.5 text-white font-semibold">aks-sys-13411604-vmss000000</td>
-                <td class="py-2.5 text-emerald-400 font-bold">Ready</td>
-                <td class="py-2.5 text-gray-500">&lt;none&gt;</td>
-                <td class="py-2.5 text-cyan-400">v1.36.4</td>
-                <td class="py-2.5">Ubuntu 24.04.5 LTS</td>
-                <td class="py-2.5">6.8.0-1071-azure</td>
-                <td class="py-2.5 text-gray-400">containerd://2.3.3-3</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- System Pods Inventory Table -->
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-network-wired text-blue-400"></i>
-              <span>Core System &amp; Security Pods (kube-system)</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-0.5">Azure CNI, Network Policy Manager, CoreDNS &amp; Workload Identity Webhook</p>
-          </div>
-          <span class="text-xs font-mono text-gray-400">11/11 Running &bull; 0 Restarts</span>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="w-full text-left font-mono text-xs">
-            <thead>
-              <tr class="border-b border-gray-800 text-gray-400">
-                <th class="py-2">POD NAME</th>
-                <th class="py-2">READY</th>
-                <th class="py-2">STATUS</th>
-                <th class="py-2">RESTARTS</th>
-                <th class="py-2">CPU</th>
-                <th class="py-2">MEMORY</th>
-                <th class="py-2">ROLE</th>
-              </tr>
-            </thead>
-            <tbody id="cluster-pods-body" class="divide-y divide-gray-800/60 text-gray-300">
-              <!-- Rendered via JavaScript -->
-            </tbody>
-          </table>
-        </div>
-      </div>
+  </div>
+</footer>
+      
     </div>
-
-    <!-- TAB 3: PROBE SPLIT & WORKLOAD DEMO -->
-    <div id="view-workload" class="tab-view hidden space-y-6">
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-code-branch text-purple-400"></i>
-              <span>Probe Split Architecture: Liveness vs Readiness</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-1">
-              Load-bearing SRE decision: <code class="text-cyan-400 font-mono">/health/live</code> touches event loop ONLY; <code class="text-amber-400 font-mono">/health/ready</code> checks downstream dependency.
-            </p>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-4 rounded-lg bg-gray-950/80 border border-gray-800 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-cyan-400 font-mono">GET /health/live</span>
-              <span class="px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded">HTTP 200 OK</span>
-            </div>
-            <p class="text-xs text-gray-300">
-              Answers "is the Node.js event loop alive?". It NEVER touches the database or upstream dependencies. If dependencies slow down or fail, this probe remains healthy, preventing catastrophic Kubernetes restart loops!
-            </p>
-            <div class="p-2.5 bg-gray-900 rounded font-mono text-[11px] text-gray-400">
-              { "status": "live", "uptime_s": 1420.8 }
-            </div>
-          </div>
-
-          <div class="p-4 rounded-lg bg-gray-950/80 border border-gray-800 space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-amber-400 font-mono">GET /health/ready</span>
-              <span id="ready-status-badge" class="px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded">HTTP 200 READY</span>
-            </div>
-            <p class="text-xs text-gray-300">
-              Answers "should this pod receive traffic?". It DOES depend on downstream readiness. When a dependency fails, the Service drops the pod endpoint with <strong>0 RESTARTS</strong>.
-            </p>
-            <div id="ready-json-box" class="p-2.5 bg-gray-900 rounded font-mono text-[11px] text-emerald-400">
-              { "status": "ready", "dependency": true }
-            </div>
-          </div>
-        </div>
-
-        <!-- Interactive Probe Sandbox -->
-        <div class="pt-4 border-t border-gray-800 space-y-3">
-          <p class="text-xs font-semibold text-white">Live Interactive Probe Simulation:</p>
-          <div class="flex flex-wrap items-center gap-3">
-            <button onclick="toggleReadiness(true)" class="px-3 py-1.5 text-xs font-mono rounded bg-emerald-600 hover:bg-emerald-500 text-white">Restore Dependency (Ready = true)</button>
-            <button onclick="toggleReadiness(false)" class="px-3 py-1.5 text-xs font-mono rounded bg-amber-600 hover:bg-amber-500 text-white">Sever Dependency (Ready = false)</button>
-            <button onclick="triggerWorkload(5000)" class="px-3 py-1.5 text-xs font-mono rounded bg-cyan-600 hover:bg-cyan-500 text-white">Execute /api/work (n=5000)</button>
-          </div>
-          <div class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs text-gray-300 min-h-[48px] flex items-center">
-            <span id="live-console-log" class="text-emerald-400">HTTP/1.1 200 OK &bull; {"route":"/internal/readiness","ready":true} &bull; Endpoint active in kube-proxy</span>
-          </div>
-        </div>
-      </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
     </div>
-
-    <!-- TAB 4: ARGOCD GITOPS & SELF-HEALING -->
-    <div id="view-gitops" class="tab-view hidden space-y-6">
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-code-compare text-cyan-400"></i>
-              <span>ArgoCD GitOps Architecture &amp; AppProjects</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-1">Multi-application isolation pattern with Automated Prune &amp; Self-Heal SLA &le; 21s</p>
-          </div>
-          <span class="px-2.5 py-1 text-xs font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">v2.13.0 Pinned</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="p-4 rounded-lg bg-gray-950 border border-gray-800 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-white font-mono">AppProject: portfolio</span>
-              <span class="text-xs text-emerald-400 font-mono font-semibold">Strict Boundary</span>
-            </div>
-            <p class="text-xs text-gray-400">
-              Restricts source repos strictly to explicit repository URLs without wildcard leakage. Allowed cluster destinations: <code class="text-gray-300">https://kubernetes.default.svc</code>.
-            </p>
-            <div class="text-[11px] font-mono text-gray-500 pt-1">
-              File: platform/argocd/appproject.yaml &bull; 0 Wildcard rules
-            </div>
-          </div>
-
-          <div class="p-4 rounded-lg bg-gray-950 border border-gray-800 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold text-white font-mono">Application: flashsale</span>
-              <span class="text-xs text-emerald-400 font-mono font-semibold">Self-Heal Active</span>
-            </div>
-            <p class="text-xs text-gray-400">
-              Synchronizes Azure FlashSale microservice stack. Automated sync enabled with automated prune policy. Target namespace: <code class="text-gray-300">flashsale</code>.
-            </p>
-            <div class="text-[11px] font-mono text-gray-500 pt-1">
-              File: platform/argocd/applications/flashsale.yaml &bull; main
-            </div>
-          </div>
-        </div>
-
-        <!-- GitOps Verification Output -->
-        <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 font-mono text-xs text-gray-200">
-          <p class="text-cyan-400 font-bold mb-2">python scripts/validate-gitops.py output:</p>
-          <pre class="terminal-scroll overflow-x-auto text-gray-300">
-  PASS                         appproject-sourceRepos     platform/argocd/appproject.yaml#portfolio  (2 repo(s), no wildcard)
-  PASS                         appproject-destinations    platform/argocd/appproject.yaml#portfolio  (2 destination(s))
-  PASS                         app-project                platform/argocd/applications/flashsale.yaml#flashsale  (project portfolio)
-  PASS                         app-repoURL                platform/argocd/applications/flashsale.yaml#flashsale  (FlashSale-Backend)
-  PASS                         app-targetRevision         platform/argocd/applications/flashsale.yaml#flashsale  (main)
-  PASS                         app-path                   platform/argocd/applications/flashsale.yaml#flashsale  (infrastructure/kubernetes/overlays/local)
-  PASS                         app-namespace              platform/argocd/applications/flashsale.yaml#flashsale  (flashsale allowed by portfolio)
-  PASS                         app-automated-sync         platform/argocd/applications/flashsale.yaml#flashsale  (automated sync enabled)
-  PASS                         app-sourceRepo-allowed     platform/argocd/applications/flashsale.yaml#flashsale  (allowed by project)
-  PASS                         app-project                platform/argocd/applications/legacyapp.yaml#legacyapp  (project portfolio)
-  PASS                         app-repoURL                platform/argocd/applications/legacyapp.yaml#legacyapp  (AKS-SRE-Platform)
-  PASS                         app-targetRevision         platform/argocd/applications/legacyapp.yaml#legacyapp  (main)
-  PASS                         app-path                   platform/argocd/applications/legacyapp.yaml#legacyapp  (apps/legacy-inventory/infrastructure/kubernetes/overlays/prod)
-  PASS                         app-namespace              platform/argocd/applications/legacyapp.yaml#legacyapp  (legacyapp allowed by portfolio)
-  PASS                         app-automated-sync         platform/argocd/applications/legacyapp.yaml#legacyapp  (automated sync enabled)
-  PASS                         app-sourceRepo-allowed     platform/argocd/applications/legacyapp.yaml#legacyapp  (allowed by project)
-
-GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct applications)
-          </pre>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: SRE GATE MATRIX (G1-G12) -->
-    <div id="view-gates" class="tab-view hidden space-y-6">
-      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-list-check text-emerald-400"></i>
-              <span>Production SRE Compliance Gates (G1 &ndash; G12)</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-1">Verified architectural invariants across Terraform, GitOps, Kubernetes Probes and Observability</p>
-          </div>
-          <span class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">47/47 Clean</span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G1:</span> Terraform lock file present
-              <p class="text-gray-500 text-[11px] mt-0.5">.terraform.lock.hcl verified in git</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G2:</span> Provider versions pinned
-              <p class="text-gray-500 text-[11px] mt-0.5">azurerm pinned strictly without optimistic range</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G3:</span> Probe split verified
-              <p class="text-gray-500 text-[11px] mt-0.5">liveness /health/live isolated from dependencies</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G4:</span> Host header injection safe
-              <p class="text-gray-500 text-[11px] mt-0.5">URL routing parsed strictly by PATH component</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G5:</span> Multi-window burn rate alerts
-              <p class="text-gray-500 text-[11px] mt-0.5">1h/6h/24h windows configured for SLO burn</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G6:</span> GitOps drift SLA &le; 21.0s
-              <p class="text-gray-500 text-[11px] mt-0.5">Self-healing loop converges &le; 21s</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G7:</span> Zero-Trust Workload Identity
-              <p class="text-gray-500 text-[11px] mt-0.5">OIDC Federated credential without long-lived keys</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G8:</span> AppProject sourceRepos locked
-              <p class="text-gray-500 text-[11px] mt-0.5">Zero wildcard `*` allowed in Git sources</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G9:</span> Failure injection gated
-              <p class="text-gray-500 text-[11px] mt-0.5">/api/fail unreachable in production profile</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G10:</span> CI verification breadth
-              <p class="text-gray-500 text-[11px] mt-0.5">All 47 invariant tests execute in CI gates</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G11:</span> Project file collision
-              <p class="text-gray-500 text-[11px] mt-0.5">Distinct namespace boundaries validated</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-
-          <div class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between">
-            <div>
-              <span class="text-emerald-400 font-bold">G12:</span> Argo CD version pinned
-              <p class="text-gray-500 text-[11px] mt-0.5">Pinned strictly to v2.13.0</p>
-            </div>
-            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-gray-800 py-6 px-6 text-center text-xs text-gray-500 font-mono">
-    <span>AKS SRE Platform &bull; Production Blueprint &bull; Microsoft Azure EastAsia &bull; Terraform IaC &bull; ArgoCD GitOps</span>
-  </footer>
-
-  <!-- SRE Telemetry & Live Simulation Engine Script -->
-  <script>
-    // System Pods Data for Tab 2
-    const systemPods = [
-      { name: "azure-cns-8svsg", ready: "1/1", status: "Running", restarts: 0, cpu: "14m", mem: "62Mi", role: "Container Network Service" },
-      { name: "azure-ip-masq-agent-f2l5q", ready: "1/1", status: "Running", restarts: 0, cpu: "8m", mem: "24Mi", role: "IP Masquerade Agent" },
-      { name: "azure-npm-4c5kv", ready: "1/1", status: "Running", restarts: 0, cpu: "12m", mem: "48Mi", role: "Network Policy Manager" },
-      { name: "azure-wi-webhook-6998679c65-r86tb", ready: "1/1", status: "Running", restarts: 0, cpu: "6m", mem: "36Mi", role: "Workload Identity Webhook" },
-      { name: "azure-wi-webhook-6998679c65-rt5fv", ready: "1/1", status: "Running", restarts: 0, cpu: "5m", mem: "34Mi", role: "Workload Identity Webhook" },
-      { name: "cloud-node-manager-t8nfp", ready: "1/1", status: "Running", restarts: 0, cpu: "11m", mem: "42Mi", role: "Cloud Node Lifecycle" },
-      { name: "coredns-76df789c68-887cm", ready: "1/1", status: "Running", restarts: 0, cpu: "18m", mem: "28Mi", role: "Internal DNS Resolver" },
-      { name: "coredns-76df789c68-9h878", ready: "1/1", status: "Running", restarts: 0, cpu: "16m", mem: "29Mi", role: "Internal DNS Resolver" },
-      { name: "csi-azuredisk-node-68srs", ready: "3/3", status: "Running", restarts: 0, cpu: "22m", mem: "84Mi", role: "Azure Disk CSI Driver" },
-      { name: "csi-azurefile-node-qp5mj", ready: "4/4", status: "Running", restarts: 0, cpu: "26m", mem: "92Mi", role: "Azure File CSI Driver" },
-      { name: "metrics-server-749b4dd978-9lnnk", ready: "2/2", status: "Running", restarts: 0, cpu: "32m", mem: "110Mi", role: "HPA Cluster Metrics" }
-    ];
-
-    function renderClusterPods() {
-      const tbody = document.getElementById('cluster-pods-body');
-      if (!tbody) return;
-      tbody.innerHTML = systemPods.map(p => `
-        <tr class="hover:bg-gray-800/30 transition">
-          <td class="py-2.5 font-semibold text-white">${p.name}</td>
-          <td class="py-2.5 text-emerald-400 font-bold">${p.ready}</td>
-          <td class="py-2.5 text-emerald-400">${p.status}</td>
-          <td class="py-2.5 text-gray-400">${p.restarts}</td>
-          <td class="py-2.5 text-cyan-400">${p.cpu}</td>
-          <td class="py-2.5 text-purple-400">${p.mem}</td>
-          <td class="py-2.5 text-gray-400 text-[11px]">${p.role}</td>
-        </tr>
-      `).join('');
-    }
-    renderClusterPods();
-
-    // Tab Navigation
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(b => {
-        b.classList.remove('border-cyan-400', 'text-cyan-400');
-        b.classList.add('border-transparent', 'text-gray-400');
-      });
-      const targetView = document.getElementById('view-' + tabId);
-      if (targetView) targetView.classList.remove('hidden');
-      const activeBtn = document.getElementById('tab-' + tabId);
-      if (activeBtn) {
-        activeBtn.classList.add('border-cyan-400', 'text-cyan-400');
-        activeBtn.classList.remove('border-transparent', 'text-gray-400');
-      }
-    }
-
-    // --- REAL-TIME CHART.JS INITIALIZATION ---
-    const MAX_POINTS = 20;
-    const timeLabels = Array.from({ length: MAX_POINTS }, (_, i) => `${MAX_POINTS - i}s ago`);
-
-    // Chart 1: Traffic & Errors
-    const ctxTraffic = document.getElementById('chart-traffic').getContext('2d');
-    const chartTraffic = new Chart(ctxTraffic, {
-      type: 'line',
-      data: {
-        labels: [...timeLabels],
-        datasets: [
-          {
-            label: 'Requests / sec (QPS)',
-            data: Array(MAX_POINTS).fill(1200),
-            borderColor: '#38bdf8',
-            backgroundColor: 'rgba(56, 189, 248, 0.1)',
-            fill: true,
-            tension: 0.35,
-            borderWidth: 2,
-            pointRadius: 0
-          },
-          {
-            label: 'HTTP 5xx Errors / sec',
-            data: Array(MAX_POINTS).fill(0),
-            borderColor: '#f43f5e',
-            backgroundColor: 'rgba(244, 63, 94, 0.15)',
-            fill: true,
-            tension: 0.2,
-            borderWidth: 2,
-            pointRadius: 0
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: {
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#cbd5e1', font: { family: 'monospace', size: 11 } } }
-        }
-      }
-    });
-
-    // Chart 2: Latency Percentiles (P50, P90, P99)
-    const ctxLatency = document.getElementById('chart-latency').getContext('2d');
-    const chartLatency = new Chart(ctxLatency, {
-      type: 'line',
-      data: {
-        labels: [...timeLabels],
-        datasets: [
-          {
-            label: 'P99 Latency (ms)',
-            data: Array(MAX_POINTS).fill(12),
-            borderColor: '#f59e0b',
-            borderWidth: 2,
-            tension: 0.3,
-            pointRadius: 0
-          },
-          {
-            label: 'P50 Latency (ms)',
-            data: Array(MAX_POINTS).fill(6),
-            borderColor: '#10b981',
-            borderWidth: 1.5,
-            tension: 0.3,
-            pointRadius: 0
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: {
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#cbd5e1', font: { family: 'monospace', size: 11 } } }
-        }
-      }
-    });
-
-    // Chart 3: Node Resources
-    const ctxResources = document.getElementById('chart-resources').getContext('2d');
-    const chartResources = new Chart(ctxResources, {
-      type: 'line',
-      data: {
-        labels: [...timeLabels],
-        datasets: [
-          {
-            label: 'Node CPU Utilization (%)',
-            data: Array(MAX_POINTS).fill(28),
-            borderColor: '#818cf8',
-            backgroundColor: 'rgba(129, 140, 248, 0.1)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2,
-            pointRadius: 0
-          },
-          {
-            label: 'Memory Saturation (%)',
-            data: Array(MAX_POINTS).fill(42),
-            borderColor: '#a855f7',
-            borderWidth: 1.5,
-            tension: 0.2,
-            pointRadius: 0
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        scales: {
-          x: { display: false },
-          y: {
-            min: 0,
-            max: 100,
-            grid: { color: 'rgba(255,255,255,0.05)' },
-            ticks: { color: '#94a3b8', font: { family: 'monospace', size: 10 } }
-          }
-        },
-        plugins: {
-          legend: { labels: { color: '#cbd5e1', font: { family: 'monospace', size: 11 } } }
-        }
-      }
-    });
-
-    // --- TELEMETRY STATE & STREAMING LOOP ---
-    let stateChaosActive = false;
-    let stateBurstActive = false;
-    let baseQps = 1240;
-    let baseP99 = 11.8;
-    let baseCpu = 28.5;
-
-    function pushData(chart, datasetIdx, val) {
-      chart.data.datasets[datasetIdx].data.shift();
-      chart.data.datasets[datasetIdx].data.push(val);
-    }
-
-    // Live Streaming Ticker every 1000ms
-    setInterval(() => {
-      // 1. Compute dynamic values with jitter
-      let currentQps = baseQps + (Math.random() * 80 - 40);
-      let currentErrors = 0;
-      let currentP99 = baseP99 + (Math.random() * 2.5 - 1.2);
-      let currentP50 = (currentP99 * 0.45) + (Math.random() * 0.5);
-      let currentCpu = baseCpu + (Math.random() * 4 - 2);
-      let currentMem = 42.1 + (Math.random() * 0.8 - 0.4);
-
-      if (stateBurstActive) {
-        currentQps += 3800 + Math.random() * 300;
-        currentCpu = Math.min(88, currentCpu + 35);
-        currentP99 += 8.5;
-      }
-
-      if (stateChaosActive) {
-        currentErrors = currentQps * 0.92;
-        currentP99 = 145 + Math.random() * 40;
-        currentP50 = 35 + Math.random() * 10;
-        currentCpu += 15;
-      }
-
-      // 2. Update Charts
-      pushData(chartTraffic, 0, Math.round(currentQps));
-      pushData(chartTraffic, 1, Math.round(currentErrors));
-      chartTraffic.update();
-
-      pushData(chartLatency, 0, parseFloat(currentP99.toFixed(1)));
-      pushData(chartLatency, 1, parseFloat(currentP50.toFixed(1)));
-      chartLatency.update();
-
-      pushData(chartResources, 0, parseFloat(currentCpu.toFixed(1)));
-      pushData(chartResources, 1, parseFloat(currentMem.toFixed(1)));
-      chartResources.update();
-
-      // 3. Update Hero KPI badges
-      document.getElementById('kpi-qps').innerText = `${Math.round(currentQps).toLocaleString()} req/s`;
-      document.getElementById('kpi-p99').innerText = `${currentP99.toFixed(1)} ms`;
-
-      const kpiErr = document.getElementById('kpi-errors');
-      if (stateChaosActive) {
-        kpiErr.innerText = '92.4% Error Rate (Chaos)';
-        kpiErr.className = 'text-xs text-rose-400 font-mono mt-0.5 font-bold';
-      } else {
-        kpiErr.innerText = '0.00% Error Rate';
-        kpiErr.className = 'text-xs text-emerald-400 font-mono mt-0.5';
-      }
-    }, 1000);
-
-    // --- REAL NETWORK EDGE PING PROBE ---
-    async function measureRealEdgePing() {
-      try {
-        const start = performance.now();
-        await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
-        const rtt = (performance.now() - start).toFixed(1);
-        document.getElementById('val-edge-ping').innerText = `${rtt} ms`;
-        document.getElementById('stat-rtt').innerText = `${rtt} ms`;
-      } catch {
-        // Fallback
-        const simulated = (14 + Math.random() * 6).toFixed(1);
-        document.getElementById('val-edge-ping').innerText = `${simulated} ms`;
-        document.getElementById('stat-rtt').innerText = `${simulated} ms`;
-      }
-    }
-    setInterval(measureRealEdgePing, 3000);
-    measureRealEdgePing();
-
-    // --- LIVE KUBERNETES EVENT STREAM GENERATOR ---
-    const eventStream = document.getElementById('live-event-stream');
-    const clusterEventsPool = [
-      { comp: "kubelet/aks-sys-vmss000000", type: "Normal", msg: "NodeStatus = NodeReady (True); system disk capacity 128Gi" },
-      { comp: "hpa-controller", type: "Normal", msg: "Deployment/sre-demo-api currentReplicas=2, desiredReplicas=2, currentCPU=28%" },
-      { comp: "argocd-application-controller", type: "Normal", msg: "Application 'portfolio/flashsale' syncStatus=Synced (commit 88f219c)" },
-      { comp: "csi-azuredisk-node", type: "Normal", msg: "VolumeAttachment disk-pvc-azure-01 healthy, mountPath=/var/lib/data" },
-      { comp: "azure-wi-webhook", type: "Normal", msg: "Mutating webhook injected federated token for sa-sre-workload" },
-      { comp: "prometheus-operator", type: "Normal", msg: "Scraped 47/47 Prometheus metric series; rule evaluation 0.4s" },
-      { comp: "network-policy-manager", type: "Normal", msg: "Applied 4 iptables rules for Zero-Trust egress lockdown" },
-      { comp: "metrics-server", type: "Normal", msg: "Collected resource metrics for 1 nodes, 11 pods in 14ms" }
-    ];
-
-    function appendEvent(comp, type, msg, isError = false) {
-      if (!eventStream) return;
-      const timeStr = new Date().toTimeString().split(' ')[0];
-      const div = document.createElement('div');
-      div.className = `flex items-start gap-2 ${isError ? 'text-rose-400 font-bold' : 'text-gray-300'}`;
-      div.innerHTML = `
-        <span class="text-gray-500 shrink-0">[${timeStr}]</span>
-        <span class="font-semibold text-cyan-400 shrink-0">${comp}:</span>
-        <span class="flex-1">${msg}</span>
-      `;
-      eventStream.appendChild(div);
-      eventStream.scrollTop = eventStream.scrollHeight;
-
-      // Keep maximum 30 events in DOM
-      while (eventStream.children.length > 30) {
-        eventStream.removeChild(eventStream.firstChild);
-      }
-    }
-
-    // Initial event seed
-    clusterEventsPool.forEach(e => appendEvent(e.comp, e.type, e.msg));
-
-    // Stream random event every 2.5s
-    setInterval(() => {
-      if (stateChaosActive) {
-        appendEvent("kubelet/sre-demo-api-pod-1", "Warning", "Readiness probe failed: HTTP 503 (Dependency unready) • 0 RESTARTS", true);
-      } else {
-        const item = clusterEventsPool[Math.floor(Math.random() * clusterEventsPool.length)];
-        appendEvent(item.comp, item.type, item.msg);
-      }
-    }, 2800);
-
-    function clearEventLog() {
-      if (eventStream) eventStream.innerHTML = '';
-      appendEvent("system", "Normal", "Event feed buffer cleared by operator.");
-    }
-
-    // --- SRE ACTIONS & CHAOS ENGINEERING CONTROLS ---
-    function injectBurstTraffic() {
-      stateBurstActive = true;
-      appendEvent("load-generator", "Warning", "BURST: Generated 5,000 req/s load spike! HPA evaluating scaling threshold...");
-      setTimeout(() => {
-        stateBurstActive = false;
-        appendEvent("load-generator", "Normal", "BURST: Load spike completed. Traffic returning to baseline.");
-      }, 5000);
-    }
-
-    function toggleDependencyFailure() {
-      stateChaosActive = !stateChaosActive;
-      const btn = document.getElementById('btn-chaos-toggle');
-      const text = document.getElementById('chaos-btn-text');
-      const cb = document.getElementById('circuit-breaker-label');
-      const readyBadge = document.getElementById('ready-status-badge');
-      const readyJson = document.getElementById('ready-json-box');
-
-      if (stateChaosActive) {
-        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1.5 transition shadow";
-        text.innerText = "Recover Dependency (Heal)";
-        cb.innerText = "TRIPPED (503 FAILING)";
-        cb.className = "px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-bold";
-
-        if (readyBadge) {
-          readyBadge.className = 'px-2 py-0.5 text-xs font-mono bg-amber-500/10 text-amber-400 rounded';
-          readyBadge.innerText = 'HTTP 503 NOT-READY';
-        }
-        if (readyJson) {
-          readyJson.className = 'p-2.5 bg-gray-900 rounded font-mono text-[11px] text-amber-400';
-          readyJson.innerText = '{ "status": "not-ready", "dependency": false }';
-        }
-
-        appendEvent("chaos-engine", "Warning", "CHAOS INJECTED: Severed downstream database dependency! /health/ready returned HTTP 503", true);
-        appendEvent("kube-proxy", "Warning", "Endpoint removed from Service load balancer. Pod remains RUNNING with 0 Restarts!", true);
-      } else {
-        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow";
-        text.innerText = "Inject Failure (/api/fail)";
-        cb.innerText = "CLOSED (HEALTHY)";
-        cb.className = "px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold";
-
-        if (readyBadge) {
-          readyBadge.className = 'px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded';
-          readyBadge.innerText = 'HTTP 200 READY';
-        }
-        if (readyJson) {
-          readyJson.className = 'p-2.5 bg-gray-900 rounded font-mono text-[11px] text-emerald-400';
-          readyJson.innerText = '{ "status": "ready", "dependency": true }';
-        }
-
-        appendEvent("chaos-engine", "Normal", "RECOVERY: Dependency restored! Circuit breaker reset to CLOSED state.");
-        appendEvent("kube-proxy", "Normal", "Endpoint re-added to Service routing table. Latency recovered to 11ms.");
-      }
-    }
-
-    function resetTelemetry() {
-      stateChaosActive = false;
-      stateBurstActive = false;
-      const btn = document.getElementById('btn-chaos-toggle');
-      const text = document.getElementById('chaos-btn-text');
-      const cb = document.getElementById('circuit-breaker-label');
-      btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow";
-      text.innerText = "Inject Failure (/api/fail)";
-      cb.innerText = "CLOSED (HEALTHY)";
-      cb.className = "px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold";
-      appendEvent("system", "Normal", "Telemetry reset to standard steady-state baseline.");
-    }
-
-    function toggleReadiness(isReady) {
-      const badge = document.getElementById('ready-status-badge');
-      const log = document.getElementById('live-console-log');
-      const readyJson = document.getElementById('ready-json-box');
-      if (isReady) {
-        badge.className = 'px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded';
-        badge.innerText = 'HTTP 200 READY';
-        readyJson.className = 'p-2.5 bg-gray-900 rounded font-mono text-[11px] text-emerald-400';
-        readyJson.innerText = '{ "status": "ready", "dependency": true }';
-        log.className = 'text-emerald-400';
-        log.innerText = `HTTP/1.1 200 OK • {"route":"/internal/readiness","ready":true} • Endpoint active in kube-proxy`;
-        appendEvent("probe-monitor", "Normal", "Readiness probe succeeded: HTTP 200. Endpoint added to Service routing.");
-      } else {
-        badge.className = 'px-2 py-0.5 text-xs font-mono bg-amber-500/10 text-amber-400 rounded';
-        badge.innerText = 'HTTP 503 NOT-READY';
-        readyJson.className = 'p-2.5 bg-gray-900 rounded font-mono text-[11px] text-amber-400';
-        readyJson.innerText = '{ "status": "not-ready", "dependency": false }';
-        log.className = 'text-amber-400';
-        log.innerText = `HTTP/1.1 503 Service Unavailable • {"route":"/health/ready","status":"not-ready","dependency":false} • Pod dropped from traffic; 0 RESTARTS!`;
-        appendEvent("probe-monitor", "Warning", "Readiness probe failed: HTTP 503. Traffic drained with 0 restarts.", true);
-      }
-    }
-
-    function triggerWorkload(iterations) {
-      const log = document.getElementById('live-console-log');
-      log.className = 'text-cyan-300';
-      const checksum = (iterations * 141.42).toFixed(4);
-      log.innerText = `HTTP/1.1 200 OK • {"route":"/api/work","iterations":${iterations},"cpu_user_us":14800,"checksum":${checksum}}`;
-      appendEvent("workload", "Normal", `Executed /api/work?n=${iterations} in 14.8ms with checksum ${checksum}`);
-    }
-  </script>
-</body>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "content.code.copy", "content.code.annotate", "toc.integrate"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
 </html>

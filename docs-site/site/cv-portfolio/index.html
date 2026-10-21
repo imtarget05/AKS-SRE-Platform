@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cv-portfolio-for-recruiters" class="md-skip">
+        <a href="#four-project-portfolio-interview-map" class="md-skip">
           Skip to content
         </a>
       
@@ -552,7 +552,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -785,71 +785,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#live-demo-projects" class="md-nav__link">
+  <a href="#akssre-claim-to-defend" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🚀 Live Demo Projects
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="🚀 Live Demo Projects">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-enterprise-rag-document-intelligence-platform" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        1. Enterprise RAG Document Intelligence Platform
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-flashsale-microservices-opsbridge-observability" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        2. FlashSale Microservices + OpsBridge Observability
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-quan-ly-kho-tra-sua-inventory-management" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Quản Lý Kho Trà Sữa (Inventory Management)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-aks-sre-platform-blueprint" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. AKS SRE Platform Blueprint
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#technical-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Technical Profile
+        AKS/SRE claim to defend
       
     </span>
   </a>
@@ -881,88 +820,48 @@
 
 
 
-<h1 id="cv-portfolio-for-recruiters">CV Portfolio — For Recruiters</h1>
-<blockquote>
-<p><strong>Senior Software Engineer | Cloud Platform Engineer | DevSecOps</strong></p>
-<p>Contact: tanmainguyenbinh@gmail.com | GitHub: <a href="https://github.com/imtarget05">imtarget05</a></p>
-</blockquote>
-<hr />
-<h2 id="live-demo-projects">🚀 Live Demo Projects</h2>
-<h3 id="1-enterprise-rag-document-intelligence-platform">1. Enterprise RAG Document Intelligence Platform</h3>
-<p><strong>Demo:</strong> <a href="https://smart-doc-chatbot.pages.dev">smart-doc-chatbot.pages.dev</a></p>
-<p><strong>What it does:</strong> Upload any PDF/document → AI answers questions using Corrective RAG with self-evaluation</p>
-<p><strong>Tech:</strong> Spring Boot 3 · React (Vite) · LangChain Python Agent · Qdrant (vector DB) · Kafka · Redis · Azure Container Apps · Cloudflare Pages</p>
-<p><strong>Key achievements:</strong>
-- Corrective RAG with LangGraph agent that self-evaluates retrieval quality
-- Kafka event-driven cache invalidation reducing repeated search latency 80%
-- 55/55 unit tests + 23/23 Kafka integration tests — all pass in CI</p>
-<hr />
-<h3 id="2-flashsale-microservices-opsbridge-observability">2. FlashSale Microservices + OpsBridge Observability</h3>
-<p><strong>Demo:</strong> <a href="https://opsbridge-dashboard.pages.dev">opsbridge-dashboard.pages.dev</a></p>
-<p><strong>What it does:</strong> Flash sale platform handling 50 concurrent buyers with zero inventory oversell</p>
-<p><strong>Tech:</strong> .NET 10 · CQRS/EventSourcing · PostgreSQL · Redis · RabbitMQ · Azure AKS · GitOps/ArgoCD</p>
-<p><strong>Key achievements:</strong>
-- Concurrency-safe inventory: 50 simultaneous buyers, stock=10 → exactly 10 orders, 0 oversell
-- 172/172 unit tests PASS, 0 HIGH/CRITICAL Trivy findings
-- OpsBridge observability dashboard with real-time metrics via SignalR</p>
-<hr />
-<h3 id="3-quan-ly-kho-tra-sua-inventory-management">3. Quản Lý Kho Trà Sữa (Inventory Management)</h3>
-<p><strong>Demo:</strong> <a href="https://quan-ly-kho-tra-sua.tanmainguyenbinh.workers.dev">quan-ly-kho-tra-sua.tanmainguyenbinh.workers.dev</a></p>
-<p><strong>What it does:</strong> Real-time inventory tracking for bubble tea shop with AI forecasting</p>
-<p><strong>Tech:</strong> Flutter 3.47 Web · FastAPI · PostgreSQL · MLflow · Cloudflare Workers (BFF proxy) · Google OAuth 2.0</p>
-<p><strong>Key achievements:</strong>
-- 191/191 Flutter tests PASS
-- AI inventory forecasting with MLflow experiment tracking
-- Cloudflare Worker as edge BFF proxy (zero server-side latency overhead)</p>
-<hr />
-<h3 id="4-aks-sre-platform-blueprint">4. AKS SRE Platform Blueprint</h3>
-<p><strong>Evidence Site:</strong> <a href="https://aks-sre-platform.pages.dev">aks-sre-platform.pages.dev</a> (this site)</p>
-<p><strong>What it does:</strong> Production-grade Kubernetes platform on Azure with GitOps, SRE gates, and Zero-Trust identity</p>
-<p><strong>Tech:</strong> Terraform · Azure AKS (v1.36) · ArgoCD · Prometheus · Grafana · Workload Identity Federation</p>
-<p><strong>Key achievements:</strong>
-- 47/47 SRE gate tests PASS, 16/0 GitOps validation
-- Zero static secrets: Workload Identity Federation for all Azure resource access
-- Private ACR image pull by digest (imagePullSecrets: []) — verified on real AKS</p>
-<hr />
-<h2 id="technical-profile">Technical Profile</h2>
+<h1 id="four-project-portfolio-interview-map">Four-project portfolio — interview map</h1>
+<p>Each product addresses a separate business problem. These are the paths to
+the owning evidence; this AKS site does not certify another repo's current
+deployment, CI, test count, or security scan.</p>
 <table>
 <thead>
 <tr>
-<th>Domain</th>
-<th>Technologies</th>
+<th>Product</th>
+<th>Business question</th>
+<th>Evidence boundary</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Languages</strong></td>
-<td>Java (Spring Boot) · Python (FastAPI, LangChain) · Dart (Flutter) · C# (.NET 10) · TypeScript</td>
+<td><a href="https://github.com/imtarget05/OpsBridge">OpsBridge</a></td>
+<td>Can flash-sale orders avoid oversell and can operations reconcile asynchronous events?</td>
+<td>Concurrency, Saga, outbox/inbox and operational review live in its own repository.</td>
 </tr>
 <tr>
-<td><strong>Cloud</strong></td>
-<td>Azure (AKS, Container Apps, ACR, PostgreSQL Flexible, Redis, Event Hubs)</td>
+<td><a href="https://github.com/imtarget05/QuanLyKho">QuanLyKho</a></td>
+<td>Can a tea shop control lot/expiry inventory and require a different human checker before posting?</td>
+<td>FastAPI/PostgreSQL are business authority; AI is advisory.</td>
 </tr>
 <tr>
-<td><strong>Edge</strong></td>
-<td>Cloudflare Pages · Workers · Worker Assets</td>
+<td><a href="https://github.com/imtarget05/Smart-Document-Chatbot">SmartDocumentChatbot</a></td>
+<td>Can a user ask questions over owned documents with citations and a safe refusal?</td>
+<td>The live RAG path and experimental agent path require separate verification.</td>
 </tr>
 <tr>
-<td><strong>DevOps</strong></td>
-<td>GitHub Actions · ArgoCD GitOps · Terraform · Docker · Kubernetes</td>
-</tr>
-<tr>
-<td><strong>Data</strong></td>
-<td>PostgreSQL · Redis · Qdrant (vector) · Kafka · RabbitMQ · MLflow</td>
-</tr>
-<tr>
-<td><strong>Observability</strong></td>
-<td>Prometheus · Grafana · OpenTelemetry · Azure Monitor</td>
-</tr>
-<tr>
-<td><strong>Security</strong></td>
-<td>Trivy · Workload Identity · RBAC · Network Policies</td>
+<td><a href="https://github.com/imtarget05/AKS-SRE-Platform">AKS-SRE-Platform</a></td>
+<td>Can a team review platform changes and prove what ran on Azure versus local kind?</td>
+<td>Historical transient AKS evidence, local GitOps/observability proof, explicit non-claims.</td>
 </tr>
 </tbody>
 </table>
+<h2 id="akssre-claim-to-defend">AKS/SRE claim to defend</h2>
+<p>The platform validated node placement, ACR digest pull and token exchange
+on transient AKS, then deleted the cluster. GitOps reconciliation, Gateway
+API and alert fire/resolve were measured on local kind. Autoscaler, enforced
+NetworkPolicy, DR and production SLO history remain unverified.</p>
+<p>See the <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/PORTFOLIO_INTERVIEW_CHEATSHEET.md">cross-repository interview guide</a>
+and <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md">AKS claim matrix</a>.</p>
 
 
 

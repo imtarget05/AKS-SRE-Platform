@@ -1,71 +1,41 @@
-# Architecture Overview
-
-## Hub-Spoke Landing Zone on Azure
+# Architecture and verification boundary
 
 ```mermaid
-flowchart TD
-    subgraph AZURE["Microsoft Azure — Portfolio Landing Zone"]
-        subgraph EA["East Asia Region"]
-            subgraph RG_AKS["rg-aks-platform-dev"]
-                AKS["AKS: aks-portfolio-dev\nKubernetes v1.36 | 1 node DS2_v2\nWorkload Identity Enabled"]
-                OIDC["OIDC Issuer\nhttps://eastasia.oic.prod-aks.azure.com"]
-                subgraph NS["Namespaces"]
-                    NS_FS["flashsale\nFlashSale API + Worker"]
-                    NS_LA["legacyapp\nLegacy Inventory App"]
-                end
-            end
-        end
-        subgraph SEA["Southeast Asia Region"]
-            subgraph RG_PROD["rg-portfolio-prod"]
-                ACA_ENV["ACA Environment\ncae-portfolio-env"]
-                ACA1["smartdoc-api\nSpring Boot 3 :8080"]
-                ACR["crportfolioa3deec.azurecr.io\nBasic SKU"]
-            end
-            subgraph RG_FS["rg-flashsale"]
-                ACR2["acrflashsalep6.azurecr.io"]
-                ACA2["kho-tra-sua-api\nFastAPI :8000"]
-            end
-        end
-        ENTRA["Microsoft Entra ID\nOIDC Federation"]
-        MI["Managed Identity\nmi-aks-wi-proof-dev"]
-    end
-    subgraph CF["Cloudflare (Free Tier)"]
-        P1["smart-doc-chatbot.pages.dev"]
-        P2["opsbridge-dashboard.pages.dev"]
-        P3["quan-ly-kho-tra-sua.workers.dev"]
-        P4["aks-sre-platform.pages.dev"]
-    end
-    subgraph GH["GitHub Actions CI/CD"]
-        CI1["SmartDoc CI/CD"]
-        CI2["FlashSale DevSecOps"]
-        CI3["QuanLyKho Pipeline"]
-        CI4["AKS-SRE GitOps"]
-    end
-    P1 --> ACA1
-    P3 --> ACA2
-    GH --> CF
-    GH --> ACA1
-    GH --> ACA2
-    CI4 --> AKS
-    AKS --> ENTRA
-    ENTRA --> MI
-    MI --> ACR
-    AKS --> NS_FS & NS_LA
+flowchart LR
+  PR[Git PR] --> CI[Offline Terraform and manifest gates]
+  CI --> TF[AKS foundation: transient Azure validation]
+  CI --> GIT[GitOps manifests]
+  GIT --> ARGO[Argo CD: local kind proof]
+  ARGO --> WORK[FlashSale and LegacyApp reference workloads]
+  WORK --> OBS[Prometheus/Grafana: local kind proof]
+  TF -. target, not measured together .-> ARGO
 ```
 
-## Technology Decisions
+The AKS cluster was deleted on 2026-10-21. Its historical Azure evidence covers
+system/user pool isolation, private ACR pull by digest, and a scoped Workload
+Identity token exchange. It does **not** prove that Argo CD, Envoy Gateway or
+Prometheus/Grafana ran on AKS. Those components were exercised on local kind.
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Container Runtime | AKS (eastasia) + ACA (southeastasia) | AKS for GitOps workloads, ACA for scale-to-zero cost savings |
-| Registry | ACR Basic SKU | Managed, integrated with AKS via Kubelet Identity |
-| Identity | Workload Identity Federation | Zero static secrets — production security pattern |
-| Frontend | Cloudflare Pages/Workers | Free tier, global CDN, permanent URLs for CV |
-| Event Bus | Kafka (Azure Event Hubs compatible) | Enterprise async pattern for RAG ingestion |
-| GitOps | ArgoCD on AKS | Industry standard for K8s continuous delivery |
+## Ownership and trade-offs
 
-## ADR Log
+| Decision | Business reason | Trade-off / measured boundary |
+|---|---|---|
+| Terraform provisions platform infrastructure; application repositories own their workload contracts | Keep cloud boundary and workload release authority separate | Cross-repo source and destination must be validated before Argo sync |
+| GitOps reconciles declarative workload state | Detect drift and give a reviewed rollback path | Kind self-heal measured at 21 s for spec drift and 17 s to recreate a deleted Deployment; Azure runtime not measured |
+| System pool separated from user pool | Protect critical AKS components from tenant scheduling | Placement proven in transient Azure run; autoscaler scale-out not proven |
+| Workload Identity plus kubelet-managed ACR access | Avoid static Azure credentials in the tested paths | Pod token exchange and kubelet image pull are distinct identities; no general claim about every workload |
+| Azure-first proof with transient cluster | Demonstrate Azure-only behavior within 10-vCPU quota | Cluster is deleted after validation; no production uptime/SLO history |
 
-- **ADR-012**: Azure first verification — SE-Asia SKUs subscription-blocked, eastasia chosen
-- **ADR-014**: AKS over kind for production evidence — real Azure clusters required
-- **ADR-015**: Scale-to-zero on ACA for cost control during portfolio phase
+## Failure paths to explain
+
+1. A malformed or unowned manifest fails CI before a deployment claim.
+2. Manual spec drift or a deleted Argo-owned Deployment is detected and
+   reconciled on kind; evidence names the exact context and timing.
+3. A missing Azure-specific proof stays **not verified**. Applying a
+   NetworkPolicy object is not evidence that unwanted traffic was blocked.
+4. A failed deployment uses a reviewed Git revert as the desired-state rollback;
+   a live AKS rollback is not claimed in this repository.
+
+Read the [audit matrix](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md),
+[ADR-014](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/adr/014-azure-first-verification.md),
+and [current state](https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/engineering/CURRENT_STATE.md).

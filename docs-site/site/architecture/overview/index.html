@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure. Evidence portfolio for senior cloud/platform engineering interviews.">
+        <meta name="description" content="Environment-labelled evidence for a transient Azure Kubernetes validation and a separate local kind GitOps/SRE profile.">
       
       
         <meta name="author" content="Tan Nguyen Binh">
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#architecture-overview" class="md-skip">
+        <a href="#architecture-and-verification-boundary" class="md-skip">
           Skip to content
         </a>
       
@@ -493,10 +493,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hub-spoke-landing-zone-on-azure" class="md-nav__link">
+  <a href="#ownership-and-trade-offs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Hub-Spoke Landing Zone on Azure
+        Ownership and trade-offs
       
     </span>
   </a>
@@ -504,21 +504,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#technology-decisions" class="md-nav__link">
+  <a href="#failure-paths-to-explain" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Technology Decisions
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#adr-log" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ADR Log
+        Failure paths to explain
       
     </span>
   </a>
@@ -637,7 +626,7 @@
   <span class="md-ellipsis">
     
   
-    AKS Live Run
+    Historical AKS Validation
   
 
     
@@ -847,104 +836,69 @@
 
 
 
-<h1 id="architecture-overview">Architecture Overview</h1>
-<h2 id="hub-spoke-landing-zone-on-azure">Hub-Spoke Landing Zone on Azure</h2>
-<pre class="mermaid"><code>flowchart TD
-    subgraph AZURE["Microsoft Azure — Portfolio Landing Zone"]
-        subgraph EA["East Asia Region"]
-            subgraph RG_AKS["rg-aks-platform-dev"]
-                AKS["AKS: aks-portfolio-dev\nKubernetes v1.36 | 1 node DS2_v2\nWorkload Identity Enabled"]
-                OIDC["OIDC Issuer\nhttps://eastasia.oic.prod-aks.azure.com"]
-                subgraph NS["Namespaces"]
-                    NS_FS["flashsale\nFlashSale API + Worker"]
-                    NS_LA["legacyapp\nLegacy Inventory App"]
-                end
-            end
-        end
-        subgraph SEA["Southeast Asia Region"]
-            subgraph RG_PROD["rg-portfolio-prod"]
-                ACA_ENV["ACA Environment\ncae-portfolio-env"]
-                ACA1["smartdoc-api\nSpring Boot 3 :8080"]
-                ACR["crportfolioa3deec.azurecr.io\nBasic SKU"]
-            end
-            subgraph RG_FS["rg-flashsale"]
-                ACR2["acrflashsalep6.azurecr.io"]
-                ACA2["kho-tra-sua-api\nFastAPI :8000"]
-            end
-        end
-        ENTRA["Microsoft Entra ID\nOIDC Federation"]
-        MI["Managed Identity\nmi-aks-wi-proof-dev"]
-    end
-    subgraph CF["Cloudflare (Free Tier)"]
-        P1["smart-doc-chatbot.pages.dev"]
-        P2["opsbridge-dashboard.pages.dev"]
-        P3["quan-ly-kho-tra-sua.workers.dev"]
-        P4["aks-sre-platform.pages.dev"]
-    end
-    subgraph GH["GitHub Actions CI/CD"]
-        CI1["SmartDoc CI/CD"]
-        CI2["FlashSale DevSecOps"]
-        CI3["QuanLyKho Pipeline"]
-        CI4["AKS-SRE GitOps"]
-    end
-    P1 --&gt; ACA1
-    P3 --&gt; ACA2
-    GH --&gt; CF
-    GH --&gt; ACA1
-    GH --&gt; ACA2
-    CI4 --&gt; AKS
-    AKS --&gt; ENTRA
-    ENTRA --&gt; MI
-    MI --&gt; ACR
-    AKS --&gt; NS_FS &amp; NS_LA</code></pre>
-<h2 id="technology-decisions">Technology Decisions</h2>
+<h1 id="architecture-and-verification-boundary">Architecture and verification boundary</h1>
+<pre class="mermaid"><code>flowchart LR
+  PR[Git PR] --&gt; CI[Offline Terraform and manifest gates]
+  CI --&gt; TF[AKS foundation: transient Azure validation]
+  CI --&gt; GIT[GitOps manifests]
+  GIT --&gt; ARGO[Argo CD: local kind proof]
+  ARGO --&gt; WORK[FlashSale and LegacyApp reference workloads]
+  WORK --&gt; OBS[Prometheus/Grafana: local kind proof]
+  TF -. target, not measured together .-&gt; ARGO</code></pre>
+<p>The AKS cluster was deleted on 2026-10-21. Its historical Azure evidence covers
+system/user pool isolation, private ACR pull by digest, and a scoped Workload
+Identity token exchange. It does <strong>not</strong> prove that Argo CD, Envoy Gateway or
+Prometheus/Grafana ran on AKS. Those components were exercised on local kind.</p>
+<h2 id="ownership-and-trade-offs">Ownership and trade-offs</h2>
 <table>
 <thead>
 <tr>
 <th>Decision</th>
-<th>Choice</th>
-<th>Rationale</th>
+<th>Business reason</th>
+<th>Trade-off / measured boundary</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Container Runtime</td>
-<td>AKS (eastasia) + ACA (southeastasia)</td>
-<td>AKS for GitOps workloads, ACA for scale-to-zero cost savings</td>
+<td>Terraform provisions platform infrastructure; application repositories own their workload contracts</td>
+<td>Keep cloud boundary and workload release authority separate</td>
+<td>Cross-repo source and destination must be validated before Argo sync</td>
 </tr>
 <tr>
-<td>Registry</td>
-<td>ACR Basic SKU</td>
-<td>Managed, integrated with AKS via Kubelet Identity</td>
+<td>GitOps reconciles declarative workload state</td>
+<td>Detect drift and give a reviewed rollback path</td>
+<td>Kind self-heal measured at 21 s for spec drift and 17 s to recreate a deleted Deployment; Azure runtime not measured</td>
 </tr>
 <tr>
-<td>Identity</td>
-<td>Workload Identity Federation</td>
-<td>Zero static secrets — production security pattern</td>
+<td>System pool separated from user pool</td>
+<td>Protect critical AKS components from tenant scheduling</td>
+<td>Placement proven in transient Azure run; autoscaler scale-out not proven</td>
 </tr>
 <tr>
-<td>Frontend</td>
-<td>Cloudflare Pages/Workers</td>
-<td>Free tier, global CDN, permanent URLs for CV</td>
+<td>Workload Identity plus kubelet-managed ACR access</td>
+<td>Avoid static Azure credentials in the tested paths</td>
+<td>Pod token exchange and kubelet image pull are distinct identities; no general claim about every workload</td>
 </tr>
 <tr>
-<td>Event Bus</td>
-<td>Kafka (Azure Event Hubs compatible)</td>
-<td>Enterprise async pattern for RAG ingestion</td>
-</tr>
-<tr>
-<td>GitOps</td>
-<td>ArgoCD on AKS</td>
-<td>Industry standard for K8s continuous delivery</td>
+<td>Azure-first proof with transient cluster</td>
+<td>Demonstrate Azure-only behavior within 10-vCPU quota</td>
+<td>Cluster is deleted after validation; no production uptime/SLO history</td>
 </tr>
 </tbody>
 </table>
-<h2 id="adr-log">ADR Log</h2>
-<ul>
-<li><strong>ADR-012</strong>: Azure first verification — SE-Asia SKUs subscription-blocked, eastasia chosen</li>
-<li><strong>ADR-014</strong>: AKS over kind for production evidence — real Azure clusters required</li>
-<li><strong>ADR-015</strong>: Scale-to-zero on ACA for cost control during portfolio phase</li>
-</ul>
+<h2 id="failure-paths-to-explain">Failure paths to explain</h2>
+<ol>
+<li>A malformed or unowned manifest fails CI before a deployment claim.</li>
+<li>Manual spec drift or a deleted Argo-owned Deployment is detected and
+   reconciled on kind; evidence names the exact context and timing.</li>
+<li>A missing Azure-specific proof stays <strong>not verified</strong>. Applying a
+   NetworkPolicy object is not evidence that unwanted traffic was blocked.</li>
+<li>A failed deployment uses a reviewed Git revert as the desired-state rollback;
+   a live AKS rollback is not claimed in this repository.</li>
+</ol>
+<p>Read the <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/evidence/portfolio-audit-2026-10-21.md">audit matrix</a>,
+<a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/adr/014-azure-first-verification.md">ADR-014</a>,
+and <a href="https://github.com/imtarget05/AKS-SRE-Platform/blob/main/docs/engineering/CURRENT_STATE.md">current state</a>.</p>
 
 
 

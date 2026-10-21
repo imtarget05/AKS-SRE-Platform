@@ -38,13 +38,13 @@
 | `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
 | Repo-owned workload (`app/sre-demo-api`) | Node.js / K8s | **IMPLEMENTED_TESTED** (Unit tests pass; probes & failure injection decoupled) |
 
-## Measured constraints (2026-10-02 — do not re-litigate without re-measuring)
+## Measured constraints (historical observations; remeasure before a new apply)
 
-- **Regional vCPU ceiling: 10**, **2/10 used** (re-measured 2026-10-21 ~14:0x:
-  `az vm list-usage --location eastasia` → `Total Regional vCPUs  2  10`). The 2
-  in use are the **still-running** AKS cluster's system node
-  (`Standard_D2s_v6` = 2 vCPU). The 7A cluster was destroyed, so the quota
-  ADR-013 treated as a wall is otherwise free. Verify:
+- **Regional vCPU ceiling: 10** in the measured validation period. At
+  2026-10-21 ~14:0x, before teardown, usage was **2/10** from the then-running
+  AKS system node (`Standard_D2s_v6`). The later teardown evidence records
+  **0 Azure dev resources remaining**. Neither observation is a live quota
+  check for a future apply. Remeasure with:
   `az vm list-usage --location eastasia -o tsv | head -3`
 - **Validation capacity envelope: 8 vCPU** — system pool `1 × D2s_v6` (2) +
   user pool `max 3 × D2s_v6` (6). Leaves **2 vCPU** for observability and for
@@ -57,11 +57,11 @@
   storage account, `sttfmaia`, belongs to **MAIA** — do not inherit it. This
   repo needs its own Entra-authenticated state identity with `validation` and
   `prod` keys separate.
-  > **Updated 2026-10-21 ~14:0x.** The group list has changed —
-  > `az group list` now returns `rg-flashsale`, `NetworkWatcherRG`,
+  > **Historical snapshot 2026-10-21 ~14:0x, before teardown.** The group list then showed
+  > `az group list` returned `rg-flashsale`, `NetworkWatcherRG`,
   > `rg-aks-platform-dev` and
-  > `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` (the latter two belong
-  > to the **still-running** AKS cluster). This repo's **own** state backend
+  > `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` (the latter two belonged
+  > to the AKS cluster deleted later that day). This repo's **own** state backend
   > `rg-aks-tfstate` / `stakssre` was provisioned on 2026-10-02 but the
   > repository's backend was **switched to `local`** by commit `d628250` and
   > never switched back → the remote state is **orphaned** and a later
