@@ -82,11 +82,13 @@ cluster).
   > crash-looping, `kube-apiserver` re-created inside the control-plane
   > container at ~07:56Z, `order-api` crash-looping on the RabbitMQ
   > dependency. At 08:04Z the Application is **`Synced` / `Progressing`** —
-  > GitOps healthy, workload degraded. **This is the host, not the
+  > GitOps healthy, workload degraded.
+  > ✅ **It recovered on its own at 08:06:22Z** — `flashsale` → **`Synced` /
+  > `Healthy`**, every pod `1/1 Running`, host load back to 24. **No cluster
+  > mutation was performed by this slice.** **This is the host, not the
   > repository** (§16.4 / §13.5 — the same class of event, and the reason the
   > kind cluster must be isolated in its own Docker context / VM before any
-  > runtime claim is treated as durable). **No cluster mutation was performed
-  > by this slice.**
+  > runtime claim is treated as durable).
 - **Self-heal RE-MEASURED on the restored cluster, 2026-10-21 13:52–13:54
   local** (evidence §17): spec drift (`scale deploy/order-api --replicas=1`)
   reverted in **21 s** (06:52:26Z → 06:52:47Z, `spec.replicas` back to the

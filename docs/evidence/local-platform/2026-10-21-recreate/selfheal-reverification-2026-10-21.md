@@ -256,6 +256,7 @@ self-heal verdict.
 | ~07:56 | `kube-apiserver` is **re-created inside the kind control-plane container** (`crictl ps` → `CREATED 8 minutes ago`), and the API server stops answering: `Unable to connect to the server: net/http: TLS handshake timeout` |
 | 08:02 | partial recovery: `rabbitmq-0` and one `order-api` pod reach `1/1`, then `rabbitmq-0` flaps back to `0/1` |
 | 08:04 (capture) | `flashsale` = **`Synced` / `Progressing`** — GitOps is fine, the *workload* is not |
+| **08:06:22Z** | **full self-recovery**: `flashsale` → **`Synced` / `Healthy`**, every pod `1/1 Running` (`order-api` ×2, `rabbitmq-0`, `postgres-0`, `redis-0`, `kafka-0`, `order-worker`, `payment-service`), host load back to **24** |
 
 Raw capture: [`host-degradation-2026-10-21.txt`](host-degradation-2026-10-21.txt).
 
@@ -292,6 +293,13 @@ shows.
 | Statement | State after this addendum |
 |---|---|
 | self-heal of spec drift / deleted resource | **unchanged — LOCAL_KIND_VERIFIED (re-measured 2026-10-21, 06:52–06:54Z)** |
-| the cluster is green **right now** | **NO — it is `Synced` / `Progressing` again**, degraded by the host at ~07:19Z. Recovery needs the host to free up, or the cluster to be isolated; **no cluster mutation was performed by this slice** |
+| the cluster is green **right now** | **YES again — it recovered on its own at 08:06:22Z** (`Synced` / `Healthy`, every pod `1/1 Running`). It was **degraded** from ~07:19Z to ~08:06Z by the host. **No cluster mutation was performed by this slice** — the recovery was the platform's own, exactly as §16.4 describes. |
 | `AZURE_CLOUD_APPLY_NOT_VERIFIED` | unchanged |
 | label-drift finding | unchanged, still open |
+
+**The generalisable rule, now measured three times (§2.1, §9.7, §16.4 and
+now §8):** *a runtime claim measured on this kind cluster is valid for the
+minutes it was measured in, and no longer. The platform is fine; the
+measurement surface is not.* That is an argument for isolating the cluster in
+its own Docker context / VM (§13.5) — and for **publishing timestamps with
+every runtime claim**, which is what §2, §3 and §8 of this document do.
