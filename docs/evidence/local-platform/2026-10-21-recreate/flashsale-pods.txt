@@ -1,0 +1,11 @@
+NAME                               READY   STATUS      RESTARTS        AGE     IP            NODE                     NOMINATED NODE   READINESS GATES
+kafka-0                            1/1     Running     0               10m     10.244.2.12   local-platform-worker2   <none>           <none>
+kafka-topic-init-k5dzm             0/1     Completed   0               8m33s   10.244.2.14   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-v7cnj         1/1     Running     5 (94s ago)     7m55s   10.244.2.16   local-platform-worker2   <none>           <none>
+order-api-758cc56c9b-zlvh8         1/1     Running     6 (54s ago)     7m55s   10.244.1.15   local-platform-worker    <none>           <none>
+order-migrate-bg46d                0/1     Completed   0               8m42s   10.244.2.13   local-platform-worker2   <none>           <none>
+order-worker-78796f7f86-l47wd      1/1     Running     0               7m55s   10.244.2.15   local-platform-worker2   <none>           <none>
+payment-service-544dd67484-vt2xs   1/1     Running     0               7m55s   10.244.2.17   local-platform-worker2   <none>           <none>
+postgres-0                         1/1     Running     0               10m     10.244.1.14   local-platform-worker    <none>           <none>
+rabbitmq-0                         1/1     Running     2 (2m20s ago)   10m     10.244.1.12   local-platform-worker    <none>           <none>
+redis-695b986ccc-kszsp             1/1     Running     0               10m     10.244.2.11   local-platform-worker2   <none>           <none>

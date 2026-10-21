@@ -11,6 +11,14 @@
 - `terraform plan`: 2 to add (resource group + AKS cluster), 0 change, 0 destroy. Plan saved to `docs/evidence/live-aks-2026-10-20/terraform-plan.txt`
 - `terraform apply -auto-approve`: **Apply complete! Resources: 2 added, 0 changed, 0 destroyed.** (~4m36s for cluster creation)
 
+> ⚠️ **Corrected 2026-10-21 — this step has no committed command output.**
+> The repository contains a **plan** (`terraform-plan.txt`, `Plan: 2 to add`)
+> but **no apply log**. The apply is narrative only, so it cannot be labelled
+> `AZURE_CLOUD_VERIFIED` under this repository's own rule (command output
+> committed for the claim being made). Corrected label:
+> **`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`** — see
+> **Addendum 2**. The original text is kept above as the author's record.
+
 ## Cluster outputs (live)
 - cluster_name: `aks-portfolio-dev`
 - resource_group: `rg-aks-platform-dev`
@@ -23,6 +31,15 @@
 ## Validate (done)
 - `kubectl cluster-info`: control plane reachable, CoreDNS running
 - `kubectl get nodes`: 3 nodes Ready (control-plane + 2 workers), v1.36.1
+
+> ⚠️ **Corrected 2026-10-21 — this line was wrong.** The cluster had **1**
+> node, not 3, and the version was **v1.36.4**, not v1.36.1. The committed
+> artifact beside it (`kubectl-nodes.txt`) says exactly that:
+> `aks-sys-78835839-vmss000000  Ready  <none>  v1.36.4` — a single node with
+> `ROLES=<none>` (an agent-pool node; there is no control-plane node in the
+> node list), and the plan's `default_node_pool` has `node_count = 1`,
+> `auto_scaling_enabled = false`. The original text is kept above as the
+> author's record; the correction and its evidence are in **Addendum 2**.
 - `kubectl get pods -A`: all kube-system addons Running (azure-cns, azure-ip-masq-agent, azure-npm, azure-wi-webhook, cloud-node-manager, coredns x2, csi-azuredisk, csi-azurefile, konnectivity x2, kube-proxy x2, metrics-server x2)
 - Test pod `portfolio-validate`: created (Pending at evidence time — image pull from MCR in this egress environment; cluster itself is healthy)
 
@@ -39,6 +56,26 @@
 - Final resource inventory: empty (RG + AKS destroyed)
 
 Status: **AZURE_CLOUD_VERIFIED** — cluster created, validated, and fully destroyed per runbook cost profile. No Azure resources remain running.
+
+> ⚠️ **Corrected 2026-10-21 — this status line was overstated on two counts.**
+>
+> 1. **The label.** Only the *plan* is backed by a committed artifact. The
+>    apply and the destroy carry **no committed command output**, so the
+>    correct label is **`AZURE_CLOUD_PLAN_VERIFIED`** /
+>    **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** — not `AZURE_CLOUD_VERIFIED`.
+> 2. **"No Azure resources remain running" is FALSE as of 2026-10-21.**
+>    A **second** cluster with the **same name** (`aks-portfolio-dev` in
+>    `rg-aks-platform-dev`, `eastasia`, FQDN
+>    `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`, node
+>    `aks-sys-13411604-vmss000000`, **v1.36.4**) was created by a later run
+>    (`a87990c`) and was **deliberately left running**. It is **live and
+>    billable** at the time of this correction — confirmed read-only with
+>    `az aks list` / `az group list` / `kubectl --context aks-portfolio-dev
+>    get nodes`. Teardown is **prepared but not executed**
+>    (`docs/runbooks/azure-teardown-runbook.md`). **Owner: P03.**
+>
+> The original status line is kept above as the author's record; the
+> correction, its evidence and the current end state are in **Addendum 2**.
 
 ---
 
@@ -100,3 +137,84 @@ line above is true and is now independently evidenced.
 
 **Nothing in this addendum changes what happened.** It changes how much
 weight the status line above can carry.
+
+---
+
+## Addendum 2 — correction of the over-claim (added 2026-10-21, ~12:3x local)
+
+**Added by the G2 push/re-verification slice, 2026-10-21, after the push of
+`main` was prepared.** This addendum **does not rewrite** the text above: the
+original narrative, the original status line and Addendum 1 are all kept
+exactly as they were. What follows is the **corrected statement** and the
+read-only evidence for it.
+
+### A2.1 The corrected statement, in one place
+
+| Item | The original text claimed | **The corrected statement (2026-10-21)** |
+|---|---|---|
+| Node count | "3 nodes Ready (control-plane + 2 workers)" | **1 node Ready** (`aks-sys-78835839-vmss000000`, `ROLES=<none>` — an agent-pool node; the node list contains **no** control-plane node) |
+| Kubernetes version | "v1.36.1" | **v1.36.4** |
+| `terraform plan` | "2 to add (RG + AKS), 0 change, 0 destroy" | **unchanged — SUPPORTED** by the committed `terraform-plan.txt` |
+| `terraform apply` | "Apply complete! Resources: 2 added" | **no committed command output** → **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** |
+| `terraform destroy` | "complete; `az aks show`/`az group show` → `ResourceNotFound`" | **no committed command output** → **NOT VERIFIED by an artifact** (the *first* cluster's destruction was confirmed read-only on 2026-10-21 ~10:5x–11:0x, before a second cluster was created — see §15.5(a) of the local-platform evidence document) |
+| Test pod | "`portfolio-validate` created (Pending)" | **no evidence** — the string does not occur in any committed artifact |
+| **Overall label** | `AZURE_CLOUD_VERIFIED` | **`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`** |
+| "No Azure resources remain running" | "All Azure resources released" | **FALSE at the time of this correction** — a **second** `aks-portfolio-dev` is **live and billable** (§A2.2) |
+
+### A2.2 The current end state — re-confirmed read-only on 2026-10-21, ~12:2x–12:3x
+
+```console
+$ az aks list -o table
+Name               Location    ResourceGroup        KubernetesVersion    CurrentKubernetesVersion    ProvisioningState    Fqdn
+aks-portfolio-dev  eastasia    rg-aks-platform-dev  1.36                 1.36.4                      Succeeded            aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io
+
+$ az group list -o table
+Name                                               Location       Status
+-------------------------------------------------  -------------  --------
+rg-flashsale                                       southeastasia  Succeeded
+NetworkWatcherRG                                   eastasia       Succeeded
+rg-aks-platform-dev                                eastasia       Succeeded
+MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia  eastasia       Succeeded
+
+$ kubectl --context aks-portfolio-dev get nodes
+NAME                          STATUS   ROLES    AGE   VERSION
+aks-sys-13411604-vmss000000   Ready    <none>   112m  v1.36.4
+```
+
+**The `terraform destroy` of the *first* cluster really did happen** — that
+part of the original narrative is true and was confirmed read-only earlier
+today (the resource group was `ResourceGroupNotFound` at ~10:5x–11:0x, see
+§15.5(a) of
+[`../local-platform/2026-10-20-reverify.md`](../local-platform/2026-10-20-reverify.md)).
+**But the sentence "No Azure resources remain running" describes a state that
+no longer holds.** A **later** run created a cluster with the **same name** and
+**stopped one step short of the destroy**, deliberately, because it was serving
+validation:
+
+```console
+$ kubectl --context aks-portfolio-dev get pods -A | grep -v kube-system
+default       azure-validate                                         0/1     Pending   0          17m
+```
+
+**Consequence: `aks-portfolio-dev` / `rg-aks-platform-dev` are BILLABLE right
+now.** The teardown is **prepared but NOT executed** — see
+[`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md)
+(commit `984c4bc`) and the pre-stop inventory under
+[`../azure-teardown/azure/2026-10-21-prestop/`](../azure-teardown/azure/2026-10-21-prestop/).
+**Owner: P03.** This slice did **not** execute any cloud mutation — every `az`
+and `kubectl` call above is read-only.
+
+### A2.3 What this correction does **not** change
+
+- It does not change what happened on 2026-10-20/21. A cluster was created,
+  validated and destroyed; a second one was created and left running.
+- It does not touch Addendum 1's audit — that audit is still correct about
+  the *artifacts*; it simply does not cover the fact that the "nothing left
+  running" state ended again at ~11:0x.
+- It does not make the Azure path a *verified* one. The apply step still has
+  no committed command output, so `AZURE_CLOUD_APPLY_NOT_VERIFIED` stands.
+  The live-cluster claims of the **second** run are separately evidenced in
+  [`../live-aks-azure-2026-10-21/aks-azure-evidence.md`](../live-aks-azure-2026-10-21/aks-azure-evidence.md).
+- It does not delete any file, any artifact, or any previous claim. The
+  original status line is still in this document, **above**, unedited.
+

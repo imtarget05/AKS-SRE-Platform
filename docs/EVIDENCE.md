@@ -41,6 +41,7 @@ exchange.
 | **L10** | Live alert fire-and-resolve cycle (`LocalPlatformMetricSourceDown`) | Simulated scraper outage -> firing (`15:33:25Z`) -> resolved (`15:35:17Z`) | `docs/evidence/local-platform/l10-observability-PASS.md` | `Current` |
 | **L11** | Full interview demo script & automated test harness | `./scripts/demo-local-platform.sh` (100% green execution in <= 5 mins) | `docs/interview-demo/local-platform.md` | `Current` |
 | **L4/L9/L10** | 2026-10-20 re-verification and F1–F5 fixes: Argo CD CRDs installed server-side, no dashboard lost to a duplicate object name, duplicate AppProject names fail the gate, Argo CD version pinned in one file | `python3 tests/test_gates.py` (47 assertions — G14 added 2026-10-21 for the `npm start` entrypoint), `bash scripts/bootstrap.sh` on a clean kind cluster (CRD `applicationsets.argoproj.io` present, 7/7 Running) | `docs/evidence/local-platform/2026-10-20-reverify.md` | `recovery/g2-20261020` |
+| **L4/L9** | **2026-10-21 — the local platform was re-created and re-measured from scratch** (the cluster it was originally measured on had been destroyed, which made those rows historical): `flashsale` `Synced`/`Healthy`, PreSync hook `order-migrate` `Complete 1/1` (exit 0), Argo CD 7/7 Running (pinned v3.5.5), AppProject allowlist refuses a bad destination (1/1 negative control) | `kubectl -n argocd get applications` → `flashsale Synced Healthy`; `kubectl -n flashsale get job order-migrate` → `Complete 1/1`; `bash local/kind/load-image.sh` → 21/21 OK on 3/3 nodes | `docs/evidence/local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md` | `recovery/g2-20261020` |
 
 ---
 
@@ -60,20 +61,32 @@ exchange.
 
 ## Boundaries & Non-Claims
 
-1. **No Azure cluster is currently running.** The AKS foundation was applied
-   once on 2026-09-21 (see `evidence/phase7a/`) and then stopped and torn down;
-   a **second** AKS cluster (`aks-portfolio-dev`) was applied and destroyed on
-   2026-10-20/21 — see `evidence/live-aks-2026-10-20/` and its audit in
+1. **An Azure cluster IS currently running, and it is billable.** The AKS
+   foundation was applied once on 2026-09-21 (see `evidence/phase7a/`) and
+   then stopped and torn down; a **second** AKS cluster (`aks-portfolio-dev`)
+   was applied and destroyed on 2026-10-20/21 — see
+   `evidence/live-aks-2026-10-20/` and its audit in
    `evidence/local-platform/2026-10-20-reverify.md` §15.3. A **third** cluster
    with the same name was applied on 2026-10-21 and is **still running** —
    see `evidence/live-aks-azure-2026-10-21/` (§15.3d, §15.5b). **This
    statement was true at ~11:0x on 2026-10-21 and is false from ~11:1x
    onwards**; it is reproduced here with that timestamp because the
    "nothing running" state is a point-in-time fact, not a property.
+   **Re-confirmed still running at ~12:2x–12:3x on 2026-10-21** (read-only
+   `az aks list` / `az group list` / `kubectl --context aks-portfolio-dev get
+   nodes`). The teardown is **prepared but NOT executed** —
+   `docs/runbooks/azure-teardown-runbook.md`, pre-stop inventory under
+   `docs/evidence/azure-teardown/azure/2026-10-21-prestop/`. **Owner: P03.**
    Nothing above is Azure evidence except what is explicitly labelled
    `AZURE_VALIDATION` — which, as of this writing, is the 7A foundation only.
    The cluster autoscaler, pod autoscaler, enforced NetworkPolicy, PDB and drain
    proofs have **never** been run on Azure.
+   **The Terraform path is labelled `AZURE_CLOUD_PLAN_VERIFIED` /
+   `AZURE_CLOUD_APPLY_NOT_VERIFIED`** — the *plan* is committed, the *apply*
+   is not. See
+   `evidence/live-aks-2026-10-20/aks-live-evidence.md` **Addendum 2** and
+   `evidence/live-aks-azure-2026-10-21/aks-azure-evidence.md`
+   **Addendum 2**.
 2. **Local success is not Azure success.** Every kind row above is
    `PRE_AZURE_DRY_RUN`. It shows the manifests and the operating model work on
    the same Kubernetes minor line. It does not show that an AKS-managed control

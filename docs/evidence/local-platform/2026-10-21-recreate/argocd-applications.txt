@@ -1,0 +1,2 @@
+NAME        SYNC STATUS   HEALTH STATUS   REVISION                                   PROJECT
+flashsale   Synced        Healthy         f00b827fce3106689dea6b1b1d239e7436645533   portfolio

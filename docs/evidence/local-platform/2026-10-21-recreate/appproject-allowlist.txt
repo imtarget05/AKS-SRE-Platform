@@ -1,0 +1,2 @@
+["https://github.com/imtarget05/FlashSale-Backend.git","https://github.com/imtarget05/AKS-SRE-Platform.git"]
+[{"namespace":"flashsale","server":"https://kubernetes.default.svc"},{"namespace":"legacyapp","server":"https://kubernetes.default.svc"}]

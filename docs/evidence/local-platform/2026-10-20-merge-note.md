@@ -318,6 +318,14 @@ not overstate what was verified:
   metrics-server reachable, `azure-validate` `Pending`) were **independently
   re-verified read-only** on 2026-10-21 at ~11:3x. **It also leaves a billable
   cluster running.** See the evidence document §15.3(d) and §15.5(b).)*
+  *(Updated again 2026-10-21 ~12:3x: the first document's status line was
+  **over-claimed** and has been **corrected** — the correct label is
+  **`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`**, the
+  node count is **1** (not 3) at **v1.36.4** (not v1.36.1), and "no Azure
+  resources remain running" is **false** — `aks-portfolio-dev` is **live and
+  billable**. See
+  [`live-aks-2026-10-20/aks-live-evidence.md`](live-aks-2026-10-20/aks-live-evidence.md)
+  **Addendum 2**.)*
 - **No `legacyapp` deployment.** `scripts/bootstrap.sh` still refuses
   `legacyapp.yaml` unless `APPLY_LEGACYAPP=1` (ADR-015 source switch not
   approved).
@@ -329,6 +337,20 @@ not overstate what was verified:
   (§10 of the evidence document), explicitly **not** as a pass.
 - **No fix for the second Argo CD install in the `default` namespace.** It is
   pre-existing and needs an explicit decision.
+  *(Updated 2026-10-21 ~13:0x: on the **re-created** cluster this install did
+  **not** reappear — the `default`-namespace copy is **absent**. The item
+  stays open only for any older cluster instance.)*
+
+> **Local kind cluster — re-established 2026-10-21.** The kind cluster that
+> this branch's evidence was measured on had been **destroyed**, which made
+> the Argo CD / self-heal / hook rows **historical**. On **2026-10-21,
+> 12:16–13:29**, it was **re-created and re-measured from scratch**:
+> `flashsale` `Synced`/`Healthy`, `order-migrate` `Complete 1/1` (exit 0),
+> Argo CD **7/7 Running** (pinned v3.5.5), AppProject **1/1** negative control
+> refused. The **self-heal** rows were **not** re-injected and remain
+> historical. Evidence:
+> [`local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md`](local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md),
+> and §16 of the re-verification document.
 
 The open items and their owners are listed in §11 of
 [`2026-10-20-reverify.md`](2026-10-20-reverify.md).
