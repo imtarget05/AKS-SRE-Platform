@@ -1,0 +1,74 @@
+# Argo CD Application 'flashsale' — live syncPolicy / ignoreDifferences
+# captured: 2026-10-21T07:00:28Z
+# kubectl --context kind-local-platform -n argocd get application flashsale -o yaml
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"finalizers":["resources-finalizer.argocd.argoproj.io"],"name":"flashsale","namespace":"argocd"},"spec":{"destination":{"namespace":"flashsale","server":"https://kubernetes.default.svc"},"ignoreDifferences":[{"group":"batch","jsonPointers":["/spec/selector","/spec/template/metadata/labels/controller-uid","/spec/template/metadata/labels/batch.kubernetes.io~1controller-uid"],"kind":"Job"}],"project":"portfolio","source":{"path":"infrastructure/kubernetes/overlays/local","repoURL":"https://github.com/imtarget05/FlashSale-Backend.git","targetRevision":"main"},"syncPolicy":{"automated":{"prune":false,"selfHeal":true},"retry":{"backoff":{"duration":"10s","factor":2,"maxDuration":"3m"},"limit":5},"syncOptions":["PrunePropagationPolicy=foreground","RespectIgnoreDifferences=true"]}}}
+  creationTimestamp: "2026-10-21T06:15:55Z"
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+  generation: 78
+  name: flashsale
+  namespace: argocd
+  resourceVersion: "14355"
+  uid: ecd36e7b-6612-434a-bb74-127e78e300e0
+spec:
+  destination:
+    namespace: flashsale
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: batch
+    jsonPointers:
+    - /spec/selector
+    - /spec/template/metadata/labels/controller-uid
+    - /spec/template/metadata/labels/batch.kubernetes.io~1controller-uid
+    kind: Job
+  project: portfolio
+  source:
+    path: infrastructure/kubernetes/overlays/local
+    repoURL: https://github.com/imtarget05/FlashSale-Backend.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+      limit: 5
+    syncOptions:
+    - PrunePropagationPolicy=foreground
+    - RespectIgnoreDifferences=true
+status:
+  controllerNamespace: argocd
+  health:
+    lastTransitionTime: "2026-10-21T06:53:18Z"
+    status: Progressing
+  history:
+  - deployStartedAt: "2026-10-21T06:16:02Z"
+    deployedAt: "2026-10-21T06:21:53Z"
+    id: 0
+    initiatedBy:
+      automated: true
+    revision: f00b827fce3106689dea6b1b1d239e7436645533
+    source:
+      path: infrastructure/kubernetes/overlays/local
+      repoURL: https://github.com/imtarget05/FlashSale-Backend.git
+      targetRevision: main
+  - deployStartedAt: "2026-10-21T06:34:09Z"
+    deployedAt: "2026-10-21T06:34:47Z"
+    id: 1
+    initiatedBy:
+      automated: true
+    revision: 4c74c6d608cd2e0d59d603d24bafcb7355078122
+    source:
+      path: infrastructure/kubernetes/overlays/local
+      repoURL: https://github.com/imtarget05/FlashSale-Backend.git
+      targetRevision: main
+  operationState:

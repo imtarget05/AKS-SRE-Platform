@@ -391,7 +391,7 @@ asked for.)
 
 | Item | Status | Reason |
 |---|---|---|
-| **Self-heal of spec drift / deleted resource** | **NOT VERIFIED (this run)** | The 2026-10-20 run measured it (§9.5). This run did **not** re-inject drift. The `selfHeal: true` policy is still in `platform/argocd/applications/flashsale.yaml` and the Application is `Synced`/`Healthy`, but **no drift was injected here**, so no new self-heal claim is made. |
+| **Self-heal of spec drift / deleted resource** | **NOT VERIFIED (this run)** → **superseded later the same day** | The 2026-10-20 run measured it (§9.5). **This run** did **not** re-inject drift. → **A later slice on 2026-10-21, 06:52–06:54 UTC (13:52–13:54 local), re-injected both classes of drift on this same restored cluster and measured them**: spec drift reverted in **21 s**, a deleted Deployment was re-created and ready in **17 s**. See **[`selfheal-reverification-2026-10-21.md`](selfheal-reverification-2026-10-21.md)**. The `selfHeal: true` policy was not changed to achieve it. |
 | **Label-drift self-heal** | **FINDING, still open** | Unchanged: Argo CD v3.5.5 does not diff an *added* `metadata.labels` entry (§10 of the re-verification document). Not re-tested here. |
 | **`legacyapp` Application** | **NOT VERIFIED** | `scripts/bootstrap.sh` skips it unless `APPLY_LEGACYAPP=1` — ADR-015 source switch not approved. |
 | **Business E2E / concurrency flow** | **NOT VERIFIED** | Only the deployment plane was proven. |
@@ -465,6 +465,11 @@ the other actor (before this slice started) was ≈ 1 min.
 | `flashsale-pods.txt` | `kubectl -n flashsale get pods -o wide` — the full workload |
 | `flashsale-resources.txt` | `kubectl -n flashsale get svc,deploy,sts,job,httproute,scaledobject,pvc -o wide` |
 | `order-migrate-job.txt` | `kubectl -n flashsale get job order-migrate -o wide` — `Complete 1/1` |
+| `selfheal-reverification-2026-10-21.md` | **the self-heal re-measurement** (later the same day, 13:52–13:54 local): both drift classes re-injected on the restored cluster, with timestamps and verdicts |
+| `selfheal-case-a-spec-drift.txt` | case A raw: command, before/after, 1 s poll log, controller-log excerpt, verdict |
+| `selfheal-case-b-resource-deletion.txt` | case B raw: command, before/after, 1 s poll log, controller-log excerpt, verdict |
+| `selfheal-argocd-controller.log.txt` | the raw `argocd-application-controller` log lines for 06:52–06:54Z |
+| `selfheal-application-syncpolicy.txt` | the live Application YAML (syncPolicy / ignoreDifferences / revision) |
 
 ## 12. Status of every claim after this run
 
@@ -475,7 +480,8 @@ the other actor (before this slice started) was ≈ 1 min.
 | `flashsale` Application `Synced` + `Healthy` | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, final revision `fa08185…` (this document, §6) |
 | `order-migrate` PreSync hook `Complete 1/1`, exit 0 | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21** (this document) |
 | AppProject allowlist refuses a bad destination | **LOCAL_KIND_VERIFIED** | **re-measured 2026-10-21**, 1/1 negative control (this document) |
-| spec-drift / deletion self-heal | **HISTORICAL** (2026-10-20) | **not re-measured here** — see §9 |
+| spec-drift self-heal | **LOCAL_KIND_VERIFIED (re-measured 2026-10-21)** | **re-measured later the same day** — 21 s drift → Synced (06:52:26Z → 06:52:47Z); see `selfheal-reverification-2026-10-21.md` |
+| deletion self-heal | **LOCAL_KIND_VERIFIED (re-measured 2026-10-21)** | **re-measured later the same day** — 17 s delete → `readyReplicas=1` (06:53:37Z → 06:53:54Z); see `selfheal-reverification-2026-10-21.md` |
 | extra `metadata.labels` are NOT self-healed | **FINDING, open** | unchanged (§10 of the re-verification document) |
 | `legacyapp` deployed | **NOT VERIFIED** | not approved (ADR-015) |
 | business E2E / concurrency flow | **NOT VERIFIED** | not re-run |

@@ -1,0 +1,83 @@
+# CASE A — self-heal of SPEC drift (scale) on the restored kind cluster
+# Date: 2026-10-21, 06:52:26Z .. 06:53:10Z UTC (= 13:52 .. 13:53 local +07:00)
+# Cluster: kind-local-platform (kind, 3 nodes, v1.36.1), Argo CD v3.5.5
+# Context pinned on EVERY kubectl call: --context kind-local-platform
+# App: flashsale, revision fa081855609caf8889a4fdab12ab78ec6f390f17
+# Poll interval: 1 s. "GONE" would mean the object does not exist.
+
+=== BEFORE ===
+replicas=2 ready=2
+
+T0_SCALED_AT=2026-10-21T06:52:26Z
+$ kubectl --context kind-local-platform -n flashsale scale deploy/order-api --replicas=1
+deployment.apps/order-api scaled
+
+REVERTED_AT=2026-10-21T06:52:47Z (after 5s)
+REVERT_SECONDS=21
+
+=== AFTER ===
+replicas=2 ready=1
+sync=Synced health=Progressing revision=fa081855609caf8889a4fdab12ab78ec6f390f17
+
+--- 1 s-resolution poll log (Argo CD Application sync/health + live spec.replicas) ---
+2026-10-21T06:52:21Z app=Synced/Healthy/op=Succeeded:successfully synced (all tasks run) order-api=2/2
+2026-10-21T06:52:28Z app=Synced/Healthy/op=Succeeded:successfully synced (all tasks run) order-api=1/2
+2026-10-21T06:52:33Z app=Synced/Healthy/op=Succeeded:successfully synced (all tasks run) order-api=1/2
+2026-10-21T06:52:39Z app=Synced/Healthy/op=Succeeded:successfully synced (all tasks run) order-api=1/1
+2026-10-21T06:52:42Z app=OutOfSync/Healthy/op=Running: order-api=1/1
+2026-10-21T06:52:45Z app=OutOfSync/Healthy/op=Succeeded:successfully synced (all tasks run) order-api=2/1
+2026-10-21T06:52:47Z app=Synced/Progressing/op=Succeeded:successfully synced (all tasks run) order-api=2/1
+2026-10-21T06:52:49Z app=Synced/Progressing/op=Succeeded:successfully synced (all tasks run) order-api=2/1
+
+--- final convergence ---
+READY2_AT=2026-10-21T06:53:10Z
+replicas=2 ready=2 available=2
+sync=Synced health=Healthy
+
+--- manifest value the cluster was reverted TO ---
+$ kubectl --context kind-local-platform -n flashsale get deploy order-api -o jsonpath='{.spec.replicas}'
+2
+
+The manifest value is 2 because the upstream overlay pins it:
+$ curl -sS "https://raw.githubusercontent.com/imtarget05/FlashSale-Backend/fa081855609caf8889a4fdab12ab78ec6f390f17/infrastructure/kubernetes/overlays/local/kustomization.yaml"
+  ...
+  replicas:
+    - name: order-api
+      count: 2
+  ...
+(upstream revision fa08185 = the revision Argo CD had resolved for the Application;
+the local overlay does NOT touch replica counts beyond this explicit pin)
+
+--- Argo CD application-controller log for this window ---
+(excerpt; the full excerpt is in selfheal-argocd-controller.log.txt)
+
+2026-10-21T06:52:31Z  Requesting app refresh caused by object update   kind=Deployment name=order-api
+2026-10-21T06:52:40Z  Requesting app refresh caused by object update   kind=Deployment name=order-api
+2026-10-21T06:52:41Z  Initiated automated sync to 'fa081855609caf8889a4fdab12ab78ec6f390f17'
+2026-10-21T06:52:41Z  Updated sync status: Synced -> OutOfSync     reason=ResourceUpdated
+2026-10-21T06:52:42Z  Initialized new operation: ... SelfHealAttemptsCount:1 ...
+                       resources=[apps/Deployment:flashsale/order-api, batch/Job:flashsale/order-migrate]
+2026-10-21T06:52:42Z  Tasks (dry-run): [Sync/0 resource apps/Deployment:flashsale/order-api obj->obj (,,)]
+2026-10-21T06:52:43Z  Applying resource Deployment/order-api in cluster: https://10.96.0.1:443, namespace=flashsale
+2026-10-21T06:52:45Z  Adding resource result, status: 'Synced', phase: 'Running', message: 'deployment.apps/order-api configured'
+2026-10-21T06:52:45Z  Updated operation state. phase: Running -> Succeeded, message: 'successfully synced (all tasks run)'
+2026-10-21T06:52:45Z  Partial sync operation to fa08185... succeeded   reason=OperationCompleted
+2026-10-21T06:52:46Z  Updated sync status: OutOfSync -> Synced     reason=ResourceUpdated
+2026-10-21T06:52:47Z  Skipping auto-sync: application status is Synced
+
+--- verdict ---
+VERDICT: PASS — self-heal of SPEC drift re-measured on the restored cluster.
+
+  T0  06:52:26Z  kubectl scale deploy/order-api --replicas=1   (drift injected)
+  T1  06:52:41Z  Argo CD reports OutOfSync                   (+15 s after T0)
+  T2  06:52:43Z  Argo CD applies the manifest back            (+17 s after T0)
+  T3  06:52:47Z  Application Synced, spec.replicas == 2        (+21 s after T0)  <-- REVERT
+  T4  06:53:10Z  readyReplicas back to 2 / available 2        (+44 s after T0)
+
+  spec.replicas final value = 2 == the manifest value. Nothing was changed in the
+  repository, the Application manifest or the upstream source to achieve this.
+
+  NOTE on the earlier figure: the 2026-10-20 run recorded "~1 s" for this class.
+  Today's re-measurement on the restored cluster is 21 s from drift to Synced.
+  The re-measured number is the one that is claimed from now on (see
+  docs/evidence/local-platform/2026-10-21-recreate/selfheal-reverification-2026-10-21.md).
