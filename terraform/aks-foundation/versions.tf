@@ -8,12 +8,8 @@ terraform {
     }
   }
 
-  backend "azurerm" {
-    resource_group_name  = "rg-aks-tfstate"
-    storage_account_name = "stakssre"
-    container_name       = "tfstate"
-    key                  = "aks-sre/validation.terraform.tfstate"
-    use_azuread_auth     = true
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }
 

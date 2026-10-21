@@ -1,0 +1,131 @@
+
+Terraform used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  [32m+[0m create[0m
+
+Terraform will perform the following actions:
+
+[1m  # module.aks.azurerm_kubernetes_cluster.aks[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_kubernetes_cluster" "aks" {
+      [32m+[0m[0m ai_toolchain_operator_enabled       = false
+      [32m+[0m[0m current_kubernetes_version          = (known after apply)
+      [32m+[0m[0m dns_prefix                          = "aksportfoliodev"
+      [32m+[0m[0m fqdn                                = (known after apply)
+      [32m+[0m[0m http_application_routing_zone_name  = (known after apply)
+      [32m+[0m[0m id                                  = (known after apply)
+      [32m+[0m[0m kube_admin_config                   = (sensitive value)
+      [32m+[0m[0m kube_admin_config_raw               = (sensitive value)
+      [32m+[0m[0m kube_config                         = (sensitive value)
+      [32m+[0m[0m kube_config_raw                     = (sensitive value)
+      [32m+[0m[0m kubernetes_version                  = "1.36"
+      [32m+[0m[0m location                            = "eastasia"
+      [32m+[0m[0m name                                = "aks-portfolio-dev"
+      [32m+[0m[0m node_os_upgrade_channel             = "NodeImage"
+      [32m+[0m[0m node_resource_group                 = (known after apply)
+      [32m+[0m[0m node_resource_group_id              = (known after apply)
+      [32m+[0m[0m oidc_issuer_enabled                 = true
+      [32m+[0m[0m oidc_issuer_url                     = (known after apply)
+      [32m+[0m[0m portal_fqdn                         = (known after apply)
+      [32m+[0m[0m private_cluster_enabled             = false
+      [32m+[0m[0m private_cluster_public_fqdn_enabled = false
+      [32m+[0m[0m private_dns_zone_id                 = (known after apply)
+      [32m+[0m[0m private_fqdn                        = (known after apply)
+      [32m+[0m[0m resource_group_name                 = "rg-aks-platform-dev"
+      [32m+[0m[0m role_based_access_control_enabled   = true
+      [32m+[0m[0m run_command_enabled                 = true
+      [32m+[0m[0m sku_tier                            = "Free"
+      [32m+[0m[0m support_plan                        = "KubernetesOfficial"
+      [32m+[0m[0m tags                                = {
+          [32m+[0m[0m "environment" = "validation"
+          [32m+[0m[0m "owner"       = "student"
+          [32m+[0m[0m "purpose"     = "platform-foundation"
+        }
+      [32m+[0m[0m workload_identity_enabled           = true
+
+      [32m+[0m[0m auto_scaler_profile (known after apply)
+
+      [32m+[0m[0m bootstrap_profile (known after apply)
+
+      [32m+[0m[0m default_node_pool {
+          [32m+[0m[0m auto_scaling_enabled         = false
+          [32m+[0m[0m kubelet_disk_type            = (known after apply)
+          [32m+[0m[0m max_pods                     = (known after apply)
+          [32m+[0m[0m name                         = "sys"
+          [32m+[0m[0m node_count                   = 1
+          [32m+[0m[0m node_labels                  = (known after apply)
+          [32m+[0m[0m only_critical_addons_enabled = true
+          [32m+[0m[0m orchestrator_version         = (known after apply)
+          [32m+[0m[0m os_disk_size_gb              = (known after apply)
+          [32m+[0m[0m os_disk_type                 = "Managed"
+          [32m+[0m[0m os_sku                       = (known after apply)
+          [32m+[0m[0m scale_down_mode              = "Delete"
+          [32m+[0m[0m type                         = "VirtualMachineScaleSets"
+          [32m+[0m[0m ultra_ssd_enabled            = false
+          [32m+[0m[0m vm_size                      = "Standard_D2s_v6"
+          [32m+[0m[0m workload_runtime             = (known after apply)
+        }
+
+      [32m+[0m[0m identity {
+          [32m+[0m[0m principal_id = (known after apply)
+          [32m+[0m[0m tenant_id    = (known after apply)
+          [32m+[0m[0m type         = "SystemAssigned"
+        }
+
+      [32m+[0m[0m kubelet_identity (known after apply)
+
+      [32m+[0m[0m network_profile {
+          [32m+[0m[0m dns_service_ip     = (known after apply)
+          [32m+[0m[0m ip_versions        = (known after apply)
+          [32m+[0m[0m load_balancer_sku  = "standard"
+          [32m+[0m[0m network_data_plane = "azure"
+          [32m+[0m[0m network_mode       = (known after apply)
+          [32m+[0m[0m network_plugin     = "azure"
+          [32m+[0m[0m network_policy     = "azure"
+          [32m+[0m[0m outbound_type      = "loadBalancer"
+          [32m+[0m[0m pod_cidr           = (known after apply)
+          [32m+[0m[0m pod_cidrs          = (known after apply)
+          [32m+[0m[0m service_cidr       = (known after apply)
+          [32m+[0m[0m service_cidrs      = (known after apply)
+
+          [32m+[0m[0m load_balancer_profile (known after apply)
+
+          [32m+[0m[0m nat_gateway_profile (known after apply)
+        }
+
+      [32m+[0m[0m node_provisioning_profile {
+          [32m+[0m[0m default_node_pools = "Auto"
+          [32m+[0m[0m mode               = "Manual"
+        }
+
+      [32m+[0m[0m windows_profile (known after apply)
+    }
+
+[1m  # module.aks.azurerm_resource_group.aks[0m will be created
+[0m  [32m+[0m[0m resource "azurerm_resource_group" "aks" {
+      [32m+[0m[0m id       = (known after apply)
+      [32m+[0m[0m location = "eastasia"
+      [32m+[0m[0m name     = "rg-aks-platform-dev"
+      [32m+[0m[0m tags     = {
+          [32m+[0m[0m "environment" = "validation"
+          [32m+[0m[0m "owner"       = "student"
+          [32m+[0m[0m "purpose"     = "platform-foundation"
+        }
+    }
+
+[1mPlan:[0m [0m2 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  [32m+[0m[0m cluster_id          = (known after apply)
+  [32m+[0m[0m cluster_name        = "aks-portfolio-dev"
+  [32m+[0m[0m kubelet_identity    = (known after apply)
+  [32m+[0m[0m kubernetes_version  = "1.36"
+  [32m+[0m[0m oidc_issuer_url     = (known after apply)
+  [32m+[0m[0m resource_group_id   = (known after apply)
+  [32m+[0m[0m resource_group_name = "rg-aks-platform-dev"
+[90m
+─────────────────────────────────────────────────────────────────────────────[0m
+
+Saved the plan to: /tmp/aks-foundation-plan.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    terraform apply "/tmp/aks-foundation-plan.tfplan"
