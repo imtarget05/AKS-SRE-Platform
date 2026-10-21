@@ -65,36 +65,36 @@ exchange.
 
 ## Boundaries & Non-Claims
 
-1. **An Azure cluster IS currently running, and it is billable.** The AKS
+1. **An Azure cluster WAS running, and it was billable — it was DELETED on
+   2026-10-21.** The AKS
    foundation was applied once on 2026-09-21 (see `evidence/phase7a/`) and
    then stopped and torn down; a **second** AKS cluster (`aks-portfolio-dev`)
    was applied and destroyed on 2026-10-20/21 — see
    `evidence/live-aks-2026-10-20/` and its audit in
    `evidence/local-platform/2026-10-20-reverify.md` §15.3. A **third** cluster
-   with the same name was applied on 2026-10-21 and is **still running** —
-   see `evidence/live-aks-azure-2026-10-21/` (§15.3d, §15.5b). **This
-   statement was true at ~11:0x on 2026-10-21 and is false from ~11:1x
-   onwards**; it is reproduced here with that timestamp because the
-   "nothing running" state is a point-in-time fact, not a property.
-   **Re-confirmed still running at ~12:2x–12:3x on 2026-10-21** (read-only
-   `az aks list` / `az group list` / `kubectl --context aks-portfolio-dev get
-   nodes`), and **again at ~14:0x on 2026-10-21**: `az account show` →
-   `state: Enabled`; `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev`
-   / `Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`;
-   `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4.
-   The teardown is **prepared but NOT executed** —
-   `docs/runbooks/azure-teardown-runbook.md`, pre-stop inventory under
-   `docs/evidence/azure-teardown/azure/2026-10-21-prestop/`. **Owner: P03.**
+   with the same name was applied on 2026-10-21 and was **still running** at
+   ~14:0x — see `evidence/live-aks-azure-2026-10-21/` (§15.3d, §15.5b).
+   **→ UPDATE 2026-10-21 (later): that cluster was DELETED.** The owner
+   authorised the teardown and it was executed: `az aks delete` (~270 s) →
+   `az aks show` = `ResourceNotFound`; `az group delete` (25 s) →
+   `az group show` = `ResourceGroupNotFound` for both `rg-aks-platform-dev`
+   and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia`; the kubeconfig
+   context was deleted; the Terraform local state was cleaned (2 resource
+   instances removed). **End state: 0 Azure dev resources running → no Azure
+   compute cost.** Real command output:
+   `docs/runbooks/azure-teardown-runbook.md` **§9**; pre-stop snapshot:
+   `docs/evidence/azure/2026-10-21-prestop/aks-show-final.json`.
    Nothing above is Azure evidence except what is explicitly labelled
    `AZURE_VALIDATION` — which, as of this writing, is the 7A foundation only.
    The cluster autoscaler, pod autoscaler, enforced NetworkPolicy, PDB and drain
    proofs have **never** been run on Azure.
    **The Terraform path is labelled `AZURE_CLOUD_PLAN_VERIFIED` /
    `AZURE_CLOUD_APPLY_NOT_VERIFIED`** — the *plan* is committed, the *apply*
-   is not. See
-   `evidence/live-aks-2026-10-20/aks-live-evidence.md` **Addendum 2** and
-   `evidence/live-aks-azure-2026-10-21/aks-azure-evidence.md`
-   **Addendum 2**.
+   is not, and the teardown does **not** upgrade that label (there is still no
+   committed apply artifact). See
+   `evidence/live-aks-2026-10-20/aks-live-evidence.md` **Addendum 2 / §A2.4**
+   and `evidence/live-aks-azure-2026-10-21/aks-azure-evidence.md`
+   **Addendum 2 / Addendum 3**.
 2. **Local success is not Azure success.** Every kind row above is
    `PRE_AZURE_DRY_RUN`. It shows the manifests and the operating model work on
    the same Kubernetes minor line. It does not show that an AKS-managed control

@@ -37,7 +37,7 @@
 ## Evidence files
 - `docs/evidence/live-aks-azure-2026-10-21/kubectl-nodes.txt`
 - `docs/evidence/live-aks-azure-2026-10-21/kubectl-pods.txt`
-- `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt`
+- `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.extract.txt` (trimmed extract — the ~1 MB / 22 691-line raw dump it replaces was removed from HEAD on 2026-10-21; the raw blob is still in the git history)
 
 ## Stop (done 2026-10-21)
 - ~~`terraform destroy -auto-approve` để giải phóng AKS + resource group (theo runbook chi phí)~~

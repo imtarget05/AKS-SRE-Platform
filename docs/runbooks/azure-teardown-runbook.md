@@ -420,12 +420,17 @@ They are not interchangeable here (§4.1). If Terraform, the backend must be
 restored to `azurerm` **first** and the `aks-sre` storage account recreated.
 
 **Q4 — Who signs off on the `AZURE_CLOUD_VERIFIED` wording?**
-`docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still carries the
-unqualified line `Status: AZURE_CLOUD_VERIFIED` and a `3 nodes Ready` claim
-that its own committed `kubectl-nodes.txt` contradicts. The author of
-`d628250` should confirm or correct it. If the cluster is deleted, the
-"verified" claim must also say **"verified, then destroyed"** — as the
-2026-10-20 file already does in one place but not in the other.
+**ANSWERED 2026-10-21 — nobody signs off on it, because it is not claimed.** The
+premise of this question is now out of date: the unqualified line
+`Status: AZURE_CLOUD_VERIFIED` and the contradicted `3 nodes Ready` claim were
+**corrected in the file itself** (commit `cc91f5c`, extended by `f689631`).
+`docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` now carries the labels
+**`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`** and the node
+line reads **1 node Ready, v1.36.4**; the original wording is kept, explicitly
+marked, as the author's record. The label is **not upgraded**, because the
+`terraform apply` step still has **no committed command output**. And because the
+cluster has now been deleted, the surviving wording says **"verified live, then
+destroyed"** (§9) — never "verified".
 
 ---
 

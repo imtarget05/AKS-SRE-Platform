@@ -52,7 +52,7 @@ dumps: 29 files, `+3499 / −206`.**
 | `7801901` (the tip this note was written against) | 7 | 16 | `+1733 / −193` | the numbers originally quoted in §1 |
 | `82b015b` | 8 | 18 | `+2426 / −195` | merge note + label-drift finding added |
 | `d628250` | 9 | 24 | `+25079 / −201` | adds the live-AKS evidence dir **and** switches the terraform backend `azurerm` → `local` |
-| `a87990c` (**current tip**) | **13** | **31** | **`+48648 / −206`** | adds a second live-AKS evidence dir (2026-10-21); the Azure cluster it describes is **still running** |
+| `a87990c` (**current tip**) | **13** | **31** | **`+48648 / −206`** | adds a second live-AKS evidence dir (2026-10-21); the Azure cluster it describes was **DELETED on 2026-10-21** (owner-authorised teardown) |
 
 **The 8-commit / 18-file / `+2426 −195` figure and the 7-commit / 16-file /
 `+1733 −193` figure are both true — of different tips.** A bare count without
@@ -60,8 +60,8 @@ its tip SHA is not a reproducible claim; that is why the table exists.
 
 **Both foreign commits are audited** — what they claim, whether they have
 command output behind it, what the backend switch does to this branch's other
-evidence, and the fact that a **billable Azure cluster is currently left
-running** — in
+evidence, and the fact that a **billable Azure cluster was left running** at
+the time (it was **deleted on 2026-10-21**) — in
 [`2026-10-20-reverify.md`](2026-10-20-reverify.md) **§15.3** and **§15.5**.
 
 ---
@@ -316,14 +316,17 @@ not overstate what was verified:
   the node file committed next to it. The second is **materially better**:
   its live-cluster claims (1 node `Ready` v1.36.4, control plane + CoreDNS +
   metrics-server reachable, `azure-validate` `Pending`) were **independently
-  re-verified read-only** on 2026-10-21 at ~11:3x. **It also leaves a billable
-  cluster running.** See the evidence document §15.3(d) and §15.5(b).)*
+  re-verified read-only** on 2026-10-21 at ~11:3x. **It also left a billable
+  cluster running — which was DELETED on 2026-10-21** (owner-authorised teardown,
+  runbook §9). See the evidence document §15.3(d) and §15.5(b).)*
   *(Updated again 2026-10-21 ~12:3x: the first document's status line was
   **over-claimed** and has been **corrected** — the correct label is
   **`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`**, the
   node count is **1** (not 3) at **v1.36.4** (not v1.36.1), and "no Azure
-  resources remain running" is **false** — `aks-portfolio-dev` is **live and
-  billable**. See
+  resources remain running" was **false** — `aks-portfolio-dev` was **live and
+  billable**. *(Updated 2026-10-21 later: that cluster was **DELETED** —
+  owner-authorised teardown, runbook §9 — so "no Azure resources remain
+  running" is **true again**: 0 dev resources, no cost.)* See
   [`live-aks-2026-10-20/aks-live-evidence.md`](live-aks-2026-10-20/aks-live-evidence.md)
   **Addendum 2**.)*
 - **No `legacyapp` deployment.** `scripts/bootstrap.sh` still refuses
@@ -366,7 +369,8 @@ belongs to another actor and must be preserved), **+6** since, all by other
 actors (`82b015b` the merge note + label-drift finding, `8d0d2f5` the
 `npm start` fix, `43120f2` the evidence correction, `d628250` the first
 live-AKS evidence + the terraform backend switch, `a87990c` a second live-AKS
-evidence run whose cluster is **still running** — all audited in §15.3/§15.5
+evidence run whose cluster was **still running at the time** (and was
+**DELETED on 2026-10-21**) — all audited in §15.3/§15.5
 of the evidence document); it merges **cleanly** (verified in a throwaway
 clone: `git merge` → "Automatic merge went well", and a cherry-pick of the 6
 own commits → all clean), so the integration is a **`--ff-only` fast-forward**

@@ -1,9 +1,12 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-- **Updated:** 2026-10-21 ~14:0x (Azure end state corrected: the AKS cluster is
-  **still running and billable**; the local kind platform was **restored** and
-  its **self-heal re-measured**). Previous update: 2026-10-20 (after the
-  LegacyApp subtree import and A0.1 honesty pass)
+- **Updated:** 2026-10-21 (later) — **Azure teardown EXECUTED**: the AKS cluster
+  `aks-portfolio-dev`, RG `rg-aks-platform-dev` and the `MC_…` resource group are
+  **DELETED**; **0 Azure dev resources remain → no Azure cost**. The local kind
+  platform was **restored** and its **self-heal re-measured**. Previous update:
+  2026-10-21 ~14:0x (Azure end state corrected: the AKS cluster was then **still
+  running and billable**). Previous update: 2026-10-20 (after the LegacyApp
+  subtree import and A0.1 honesty pass)
 - **Wave:** Execution Wave 1 = Phase A + B + C
 - **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
@@ -138,7 +141,7 @@ by design; everything else is green.
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
 | **`terraform test`** | **`IMPLEMENTED_TESTED`** | 5 passing run blocks across 3 roots (`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2). CI executes **all three** roots as of 2026-10-20 (it previously ran only `aks-foundation` = 2) |
-| Azure mutation | **by another actor, and NOT reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev`. ⚠️ **Corrected 2026-10-21 ~14:0x: the earlier "then destroyed both / end state (nothing running)" line in this table was WRONG.** The cluster **is running and billable**: `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev` / `ProvisioningState: Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`; `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4. The teardown runbook `docs/runbooks/azure-teardown-runbook.md` is **prepared and NOT executed**. The apply/destroy steps carry **no committed command output** — audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 / §15.5b / §17.5. |
+| Azure mutation | **by another actor, and NOT reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev`. ⚠️ **Corrected 2026-10-21 ~14:0x: the earlier "then destroyed both / end state (nothing running)" line in this table was WRONG** — at that moment the cluster **was running and billable**: `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev` / `ProvisioningState: Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`; `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4. ✅ **Update 2026-10-21 (later): the teardown WAS EXECUTED with owner authorisation** — the cluster, `rg-aks-platform-dev` and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` are **deleted** (`az aks show` → `ResourceNotFound`; `az group show` → `ResourceGroupNotFound` for both), the kubeconfig context was removed and the Terraform local state was cleaned. Real output: `docs/runbooks/azure-teardown-runbook.md` §9. **0 Azure dev resources remain → no Azure cost.** The **apply** step still carries **no committed command output** — audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 / §15.5b / §17.5; the label stays **`AZURE_CLOUD_APPLY_NOT_VERIFIED`**. |
 
 Five consecutive Actions runs were needed to reach this state, and every one found
 something no local check could: three distinct `trivy-action` failures before it
@@ -204,12 +207,16 @@ Do not start Phase D's module split before Phase C, and do not run any
 
 ### Still open
 
-- ⚠️ **NEW 2026-10-21 ~14:0x — URGENT (cost):** the AKS cluster
-  `aks-portfolio-dev` (RG `rg-aks-platform-dev`) is **still running and
-  billable** (2 of the 10 regional vCPUs are consumed by its system node).
-  The teardown runbook `docs/runbooks/azure-teardown-runbook.md` is **prepared
-  and NOT executed** — destroying it is a cloud mutation and needs an explicit
-  go-ahead. Evidence §15.5b / §17.5.
+- ✅ **RESOLVED 2026-10-21 (later) — the cost item is closed:** the AKS cluster
+  `aks-portfolio-dev` (RG `rg-aks-platform-dev`) and the `MC_…` resource group
+  were **DELETED** with owner authorisation via the teardown runbook
+  `docs/runbooks/azure-teardown-runbook.md` (§9 — real command output). The
+  kubeconfig context was removed and the Terraform local state was cleaned
+  (2 resource instances removed → `terraform plan` now proposes **2 to add**).
+  **0 Azure dev resources remain → no Azure compute cost.**
+  *(Was: at 2026-10-21 ~14:0x the cluster was still running and billable — 2 of
+  the 10 regional vCPUs consumed by its system node — and the runbook was
+  prepared but NOT executed. Evidence §15.5b / §17.5.)*
 - **NEW 2026-10-21 ~14:0x — the remote state is orphaned:** the repository's
   terraform backend was switched `azurerm` → `local` by commit `d628250` and
   never switched back, so a future `apply`/`destroy` would not read

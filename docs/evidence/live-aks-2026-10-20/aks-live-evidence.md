@@ -56,7 +56,7 @@
 - `docs/evidence/live-aks-2026-10-20/terraform-plan.tfplan`
 - `docs/evidence/live-aks-2026-10-20/kubectl-nodes.txt`
 - `docs/evidence/live-aks-2026-10-20/kubectl-pods.txt`
-- `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt`
+- `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.extract.txt` (trimmed extract — the ~1 MB / 22 458-line raw dump it replaces was removed from HEAD on 2026-10-21; the raw blob is still in the git history)
 
 ## Stop (done)
 - `terraform destroy -auto-approve`: **complete**. `az aks show` → `ResourceNotFound` for `aks-portfolio-dev`; `az group show` → `ResourceGroupNotFound` for `rg-aks-platform-dev`. All Azure resources released.
@@ -181,11 +181,16 @@ line above is true and is now independently evidenced.
    remote backend, or documenting it as deliberately abandoned, is an **open
    decision** (owner P03). See the evidence document §15.3(b).
 2. **The `kubectl-cluster-info.txt` file is not `kubectl cluster-info`
-   output.** It is a 1 MB / 22 458-line raw API dump of 8 object lists
+   output.** It was a 1 MB / 22 458-line raw API dump of 8 object lists
    (NodeList, EventList, ServiceList, DaemonSetList, DeploymentList,
    ReplicaSetList, PodList, …). No secret *values* are present in it — only
    secret *names*/references and cluster identity ids — but it is raw
    evidence, not the sanitized form this repository's `.gitignore` describes.
+   > **updated 2026-10-21:** the raw dump was **removed from HEAD** and replaced by
+   > `kubectl-cluster-info.extract.txt` — the first 30 lines verbatim, the node facts
+   > (name, node-image-version, kubelet, container runtime, Ready / MemoryPressure) and
+   > an inventory of the documents it contains. The raw blob is still in the **git
+   > history**; this change did **not** rewrite history.
 
 **Nothing in this addendum changes what happened.** It changes how much
 weight the status line above can carry.

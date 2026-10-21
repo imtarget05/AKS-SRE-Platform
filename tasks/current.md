@@ -126,16 +126,22 @@ cluster).
   > a cluster and **left it running** — its live-cluster claims were
   > **independently re-verified read-only** at ~11:3x
   > (`az aks list` → `Succeeded`; 1 node `Ready` v1.36.4; `azure-validate`
-  > `Pending`). ⚠️ **A billable cluster is running right now — see the open
+  > `Pending`). ⚠️ **At that moment a billable cluster was running — see the open
   > items.**
   > **Re-confirmed 2026-10-21 ~14:0x** (read-only, this slice):
   > `az account show` → `state: Enabled`, subscription
   > `a3deec78-…`; `az aks list` → **`aks-portfolio-dev` / `rg-aks-platform-dev`
   > / `Succeeded`** / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`;
   > `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4.
-  > **The teardown runbook `../docs/runbooks/azure-teardown-runbook.md` is
+  > **The teardown runbook `../docs/runbooks/azure-teardown-runbook.md` was
   > prepared and was NOT executed** — destroying it is a cloud mutation and was
-  > not in scope for this slice.
+  > not in scope for that slice.
+  > ✅ **UPDATE 2026-10-21 (later): the teardown WAS EXECUTED** with owner
+  > authorisation (runbook §9 — real command output committed): `az aks delete`
+  > → `ResourceNotFound`; `az group delete` → `ResourceGroupNotFound` for
+  > `rg-aks-platform-dev` and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia`;
+  > kubeconfig context deleted; Terraform local state cleaned.
+  > **0 Azure dev resources remain → no Azure cost.**
 - **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
   not set; ADR-015 source switch unapproved).
 - **Business E2E / concurrency flow** — not re-run; only the deployment plane
