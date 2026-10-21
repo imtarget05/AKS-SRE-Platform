@@ -1,31 +1,40 @@
 # AKS-SRE-Platform — Current Tasks
 
-> **Updated: 2026-10-21** (re-verification of the `recovery/g2-20261020`
-> branch, tip `d628250`; previous update: 2026-10-20, tip `7801901`).
+> **Updated: 2026-10-21** (local platform **restored** + **self-heal
+> re-measured** at 13:52–13:54 local, on `main` @ `30ab2dd`; earlier update the
+> same day: re-verification of the `recovery/g2-20261020` branch, tip `d628250`;
+> previous update: 2026-10-20, tip `7801901`).
 > Previous update: 2026-10-02.
 > This file holds **one live section** only. Everything
 > that used to be appended here as a new `ACTIVE GOAL` heading has been moved to
 > [`../plans/history/`](../plans/history/) and is kept for the record, not for
 > execution. Superseded sections are never deleted; they are moved and marked.
 
-## LIVE — 2026-10-21: re-verification at tip `a87990c` (stale claims corrected)
+## LIVE — 2026-10-21: local platform **restored** + self-heal **re-measured** (tip `30ab2dd` on `main`)
 
-**Status: 🟡 LOCAL platform green (cluster left degraded by host crashes) ·
-☁️ AZURE cluster **still running** + backend decision pending · ⏳ awaiting
-merge.**
-**Branch:** `recovery/g2-20261020` (HEAD `a87990c`) · **base:** `main` @
-`0a92f58` (unchanged — the integration is a `--ff-only` fast-forward, verified).
-**Branch size at this tip:** 13 commits / 31 files / `+48648 −206` on top of
-`main` — **including** the two ~1 MB raw API dumps
-`docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` and
-`docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt`; excluding
-both, 29 files / `+3499 −206`.
+**Status: 🟢 LOCAL platform **restored** and **self-heal re-measured** (2026-10-21
+13:52–13:54 local) · ☁️ AZURE cluster **still running and billable** + backend
+decision pending · ⏳ `main` pushed at `30ab2dd`.**
+**Branch:** `main` @ `30ab2dd` (the `recovery/g2-20261020` work is merged
+into `main`; the branch itself sits at `d7a9319` locally / `a87990c` on
+origin and is **behind** `main` — `main` is the line that carries the current
+evidence).
 **Full evidence:**
 [`../docs/evidence/local-platform/2026-10-20-reverify.md`](../docs/evidence/local-platform/2026-10-20-reverify.md)
-(§15 = the 2026-10-21 re-verification) ·
+(§15 = the 2026-10-21 re-verification · **§16** = the platform re-created from
+scratch · **§17** = the self-heal re-measurement) ·
+[`../docs/evidence/local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md`](../docs/evidence/local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md) ·
+[`../docs/evidence/local-platform/2026-10-21-recreate/selfheal-reverification-2026-10-21.md`](../docs/evidence/local-platform/2026-10-21-recreate/selfheal-reverification-2026-10-21.md) ·
 **Merge note:**
 [`../docs/evidence/local-platform/2026-10-20-merge-note.md`](../docs/evidence/local-platform/2026-10-20-merge-note.md)
 (§1.0 = the tip move).
+**Size of the `recovery/g2-20261020` branch at its tip `a87990c`:** 13 commits /
+31 files / `+48648 −206` on top of `main` — **including** the two ~1 MB raw API
+dumps `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` and
+`docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt`; excluding
+both, 29 files / `+3499 −206`. **Both dumps are still committed** — the
+proposal to drop or `.gitattributes`-them is recorded in the evidence document
+(open item §15.7 #5) and was **not** executed by this slice.
 
 ### What was fixed today (each with a failing-before / passing-after test)
 
@@ -50,26 +59,35 @@ session" statement, and the "56 objects, 0 failures" dry-run count. See
 
 ### Cluster state today (local kind `local-platform`, **point-in-time**)
 
-**Re-checked 2026-10-21** on the same cluster instance (13 h old), with the
-context pinned — see §15.4 of the evidence document for the ambient-context
-hazard:
+**Re-checked 2026-10-21 at 13:52–13:54 local** — the cluster was **destroyed**
+during the 2026-10-21 re-verification and **re-created from scratch at
+12:16:45**; the platform was then re-bootstrapped and **re-measured from
+scratch** (evidence §16). Every `kubectl` call pinned the context
+(`--context kind-local-platform`) — see §15.4 of the evidence document for the
+ambient-context hazard (this laptop's `current-context` points at the **Azure**
+cluster).
 
-- 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**
-  (3 restarts each, from the Docker daemon crashes below).
-- Application **`flashsale` → `Synced` / `Healthy`** — unchanged from
-  2026-10-20, **at the time of the ~10:5x check**. ⚠️ **End state after this
-  run: DEGRADED** — the Docker daemon crashed 6× during the 2026-10-21
-  re-verification; after the last restart the nodes are Ready but
-  `flashsale` is `Synced / Progressing`, `order-api` is crash-looping and
-  `rabbitmq-0` never finishes booting. Cause: the daemon crash re-creates
-  every pod sandbox and the data tier does not recover. **Not a repository
-  regression** — no manifest/image/cluster object was changed. Recovery is a
-  cluster mutation and was **not** performed (evidence §15.5).
-- **Self-heal verified for spec drift (~1 s) and for a deleted resource
-  (~1 s).**
+- 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**.
+- Application **`flashsale` → `Synced` / `Healthy`** at revision
+  `fa081855609caf8889a4fdab12ab78ec6f390f17`; PreSync hook `order-migrate`
+  **`Complete 1/1`** (exit 0); AppProject allowlist **1/1** negative control
+  refused. ⚠️ **The earlier "DEGRADED" end state (Docker daemon crashed 6×,
+  `order-api` crash-looping, `rabbitmq-0` not booting) is SUPERSEDED** — that
+  was the state of the *destroyed* cluster (evidence §15.5). The cluster that
+  exists now is **green**.
+- **Self-heal RE-MEASURED on the restored cluster, 2026-10-21 13:52–13:54
+  local** (evidence §17): spec drift (`scale deploy/order-api --replicas=1`)
+  reverted in **21 s** (06:52:26Z → 06:52:47Z, `spec.replicas` back to the
+  manifest's 2); a deleted `deploy/payment-service` was **re-created by Argo CD
+  and reached `readyReplicas=1` in 17 s** (06:53:37Z → 06:53:54Z). **No
+  manifest, Application or upstream commit was changed** to achieve either.
+  → The old "~1 s" figures (2026-10-20) were measured on the **destroyed**
+  cluster and are **superseded**; the numbers claimed from now on are **21 s /
+  17 s**.
 - **FINDING — not a pass:** Argo CD v3.5.5 does **not** diff extra
   `metadata.labels`, so a hand-added label is **not** reverted (see §10 of the
   evidence document). **Self-heal is NOT verified for extra metadata labels.**
+  This finding was **not** re-tested on 2026-10-21 and is **unchanged, open**.
 - **NEW (2026-10-21) — the manifest dry-run count is cluster-dependent:** the
   §2.3 scope (56 objects) server-dry-runs **56 pass / 0 fail** on 2026-10-20
   and **53 pass / 3 fail** on 2026-10-21. Cause (measured): the synced
@@ -98,6 +116,14 @@ hazard:
   > (`az aks list` → `Succeeded`; 1 node `Ready` v1.36.4; `azure-validate`
   > `Pending`). ⚠️ **A billable cluster is running right now — see the open
   > items.**
+  > **Re-confirmed 2026-10-21 ~14:0x** (read-only, this slice):
+  > `az account show` → `state: Enabled`, subscription
+  > `a3deec78-…`; `az aks list` → **`aks-portfolio-dev` / `rg-aks-platform-dev`
+  > / `Succeeded`** / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`;
+  > `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4.
+  > **The teardown runbook `../docs/runbooks/azure-teardown-runbook.md` is
+  > prepared and was NOT executed** — destroying it is a cloud mutation and was
+  > not in scope for this slice.
 - **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
   not set; ADR-015 source switch unapproved).
 - **Business E2E / concurrency flow** — not re-run; only the deployment plane
@@ -124,15 +150,27 @@ hazard:
 | 11 | **NEW 2026-10-21:** the repo's legacy `kubernetes/` root does not server-dry-run cleanly next to the synced upstream app (3 of 56 objects rejected by the KEDA webhook) — coexistence decision | P03 |
 | 12 | **NEW 2026-10-21:** the **kubeconfig `current-context` on this machine is the destroyed `aks-portfolio-dev`**, not `kind-local-platform` — always pin `--context` (the machine's kubeconfig was **not** modified) | machine owner |
 | 13 | **NEW 2026-10-21:** `docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still says "AZURE_CLOUD_VERIFIED" unqualified, and its "3 nodes Ready" claim is contradicted by its own `kubectl-nodes.txt` (1 node, v1.36.4) — audit addendum appended | P03 / author of `d628250` |
-| 14 | ⚠️ **NEW 2026-10-21, URGENT (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` from the `a87990c` run is **still running** (`ProvisioningState: Succeeded`, FQDN `aksportfoliodev-99hyn1lm`). The runbook's cost profile is create → validate → **destroy**. Not destroyed by this run (out of scope: cloud mutation) | **P03** |
-| 15 | **NEW 2026-10-21:** the local kind cluster is left **degraded** after 6 Docker-daemon crashes (`flashsale` `Synced / Progressing`, `order-api` crash-looping, `rabbitmq-0` not booting) — recovery needs a cluster mutation, not performed | P03 / runbook |
+| 14 | ⚠️ **NEW 2026-10-21, URGENT (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` from the `a87990c` run is **still running** (`ProvisioningState: Succeeded`, FQDN `aksportfoliodev-99hyn1lm`). The runbook's cost profile is create → validate → **destroy**. Not destroyed by this run (out of scope: cloud mutation) — **re-confirmed still running at ~14:0x on 2026-10-21**; the teardown runbook is prepared, **not executed** | **P03** |
+| 15 | ~~**NEW 2026-10-21:** the local kind cluster is left **degraded** after 6 Docker-daemon crashes~~ → **RESOLVED 2026-10-21 12:16.** The cluster was **re-created from scratch** and the platform re-bootstrapped and re-measured: `flashsale` `Synced`/`Healthy`, Argo CD 7/7, hook green — and the **self-heal** re-measured at 13:52–13:54 local (**21 s / 17 s**, evidence §17). The **host-level** cause (memory pressure on the shared 7.75 GiB Docker VM) is unchanged and still needs the isolation recommendation | P03 / runbook |
 
-### Next step (owned by whoever integrates — **nothing was merged or pushed**)
+| 16 | **NEW 2026-10-21 14:0x:** the two committed raw dumps `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` (1 093 875 B) and `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt` (1 104 134 B) are **~1 MB each** of API dump under a `cluster-info` name — **proposal only** (`.gitattributes`, or untrack + keep a trimmed extract). **Not deleted or modified** by this slice — removal needs an explicit go-ahead | P03 |
+| 17 | **NEW 2026-10-21 14:0x:** `terraform/aks-foundation/terraform.tfstate.backup` is **181 B** (empty — the `local`-backend run overwrote the old 32 KB pre-destroy state). Gitignored; **not deleted** by this slice (owner's file) | machine owner |
 
-Follow §3 of the merge note: re-check that `main` is still `0a92f58`, run the
-three gates, then `git merge --ff-only recovery/g2-20261020`, re-run the gates,
-and re-bootstrap the cluster (a cluster mutation — needs an explicit
-go-ahead).
+### Next step (owned by whoever integrates — `main` was pushed at `30ab2dd`)
+
+The `recovery/g2-20261020` work **is on `main`** (pushed at `30ab2dd`); the
+branch itself now sits **behind** `main`. The remaining next steps, in order:
+
+1. **Destroy the billable Azure cluster** `aks-portfolio-dev` — the runbook is
+   prepared (`docs/runbooks/azure-teardown-runbook.md`) but **not executed**; it
+   needs an explicit go-ahead, because it is a cloud mutation.
+2. **Decide the backend**: restore `backend "azurerm"` (the remote state
+   `aks-sre/validation.terraform.tfstate` is **orphaned**) or document it as
+   deliberately abandoned (owner P03).
+3. **Close the label-drift finding** (§10) — accept-and-document, or add a
+   reconciliation mechanism.
+4. Re-run the three gates after any of the above, and re-bootstrap the cluster
+   (a cluster mutation — needs an explicit go-ahead).
 
 ---
 

@@ -12,6 +12,9 @@ now the **OSS / dry-run profile**, not the proof surface
 |---|---|
 | `PRE_AZURE_DRY_RUN` | Measured on local kind. Valid for the OSS profile. **Not** Azure evidence. |
 | `AZURE_VALIDATION` | Measured on a real AKS cluster. Not yet populated — Phases E–N. |
+| `AZURE_CLOUD_PLAN_VERIFIED` | A `terraform plan` against the real Azure provider was run and its output is committed. **A plan is not an apply.** |
+| `AZURE_CLOUD_APPLY_NOT_VERIFIED` | A cluster exists on Azure, but **no committed output exists for the `terraform apply` that created it**. The live state is real; the *apply step* is unevidenced. |
+| `AZURE_CLOUD_LIVE_CONFIRMED` | The **live** Azure resource was re-confirmed read-only (e.g. `az aks list` → `Succeeded`). Says nothing about who applied it, or how. |
 
 A row is never relabelled between these. The Azure rows will be added when they
 exist, with their own timestamps, commits and teardown records.
@@ -41,7 +44,8 @@ exchange.
 | **L10** | Live alert fire-and-resolve cycle (`LocalPlatformMetricSourceDown`) | Simulated scraper outage -> firing (`15:33:25Z`) -> resolved (`15:35:17Z`) | `docs/evidence/local-platform/l10-observability-PASS.md` | `Current` |
 | **L11** | Full interview demo script & automated test harness | `./scripts/demo-local-platform.sh` (100% green execution in <= 5 mins) | `docs/interview-demo/local-platform.md` | `Current` |
 | **L4/L9/L10** | 2026-10-20 re-verification and F1–F5 fixes: Argo CD CRDs installed server-side, no dashboard lost to a duplicate object name, duplicate AppProject names fail the gate, Argo CD version pinned in one file | `python3 tests/test_gates.py` (47 assertions — G14 added 2026-10-21 for the `npm start` entrypoint), `bash scripts/bootstrap.sh` on a clean kind cluster (CRD `applicationsets.argoproj.io` present, 7/7 Running) | `docs/evidence/local-platform/2026-10-20-reverify.md` | `recovery/g2-20261020` |
-| **L4/L9** | **2026-10-21 — the local platform was re-created and re-measured from scratch** (the cluster it was originally measured on had been destroyed, which made those rows historical): `flashsale` `Synced`/`Healthy`, PreSync hook `order-migrate` `Complete 1/1` (exit 0), Argo CD 7/7 Running (pinned v3.5.5), AppProject allowlist refuses a bad destination (1/1 negative control) | `kubectl -n argocd get applications` → `flashsale Synced Healthy`; `kubectl -n flashsale get job order-migrate` → `Complete 1/1`; `bash local/kind/load-image.sh` → 21/21 OK on 3/3 nodes | `docs/evidence/local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md` | `recovery/g2-20261020` |
+| **L4/L9** | **2026-10-21 — the local platform was re-created and re-measured from scratch** (the cluster it was originally measured on had been destroyed, which made those rows historical): `flashsale` `Synced`/`Healthy`, PreSync hook `order-migrate` `Complete 1/1` (exit 0), Argo CD 7/7 Running (pinned v3.5.5), AppProject allowlist refuses a bad destination (1/1 negative control) | `kubectl -n argocd get applications` → `flashsale Synced Healthy`; `kubectl -n flashsale get job order-migrate` → `Complete 1/1`; `bash local/kind/load-image.sh` → 21/21 OK on 3/3 nodes | `docs/evidence/local-platform/2026-10-21-recreate/local-platform-recreate-evidence.md` | `main` (`30ab2dd`) |
+| **L4/L9** | **2026-10-21 13:52–13:54 local — self-heal re-measured on the restored cluster** (the last remaining historical claim): spec drift and deleted-resource self-heal were **re-injected** on `kind-local-platform` with the context pinned | `kubectl --context kind-local-platform -n flashsale scale deploy/order-api --replicas=1` → Argo CD `OutOfSync` 06:52:41Z → **`Synced`, `spec.replicas=2` at 06:52:47Z (21 s)**; `kubectl --context kind-local-platform -n flashsale delete deploy/payment-service` 06:53:37Z → Argo CD *"payment-service created"* 06:53:39Z → **`readyReplicas=1` at 06:53:54Z (17 s)**. **No manifest / Application / upstream commit was changed** to obtain either | `docs/evidence/local-platform/2026-10-21-recreate/selfheal-reverification-2026-10-21.md` | `main` |
 
 ---
 
@@ -74,7 +78,11 @@ exchange.
    "nothing running" state is a point-in-time fact, not a property.
    **Re-confirmed still running at ~12:2x–12:3x on 2026-10-21** (read-only
    `az aks list` / `az group list` / `kubectl --context aks-portfolio-dev get
-   nodes`). The teardown is **prepared but NOT executed** —
+   nodes`), and **again at ~14:0x on 2026-10-21**: `az account show` →
+   `state: Enabled`; `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev`
+   / `Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`;
+   `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4.
+   The teardown is **prepared but NOT executed** —
    `docs/runbooks/azure-teardown-runbook.md`, pre-stop inventory under
    `docs/evidence/azure-teardown/azure/2026-10-21-prestop/`. **Owner: P03.**
    Nothing above is Azure evidence except what is explicitly labelled

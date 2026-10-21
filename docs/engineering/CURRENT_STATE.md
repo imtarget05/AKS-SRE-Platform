@@ -1,6 +1,9 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-- **Updated:** 2026-10-20 (after the LegacyApp subtree import and A0.1 honesty pass)
+- **Updated:** 2026-10-21 ~14:0x (Azure end state corrected: the AKS cluster is
+  **still running and billable**; the local kind platform was **restored** and
+  its **self-heal re-measured**). Previous update: 2026-10-20 (after the
+  LegacyApp subtree import and A0.1 honesty pass)
 - **Wave:** Execution Wave 1 = Phase A + B + C
 - **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
@@ -22,7 +25,7 @@
 | User-pool placement isolation | `AZURE_VALIDATION` | **PASS** 2026-09-21, pool since deleted |
 | Private ACR pull by digest, no `imagePullSecret` | `AZURE_VALIDATION` | **PASS** 2026-09-21 |
 | Workload Identity federated token exchange + scoped read | `AZURE_VALIDATION` | **PASS** 2026-09-21, identities since deleted |
-| Argo CD sync + `git revert` rollback + drift detect/reconcile | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
+| Argo CD sync + `git revert` rollback + drift detect/reconcile | `PRE_AZURE_DRY_RUN` | **PASS** on kind — **re-measured 2026-10-21 13:52–13:54 local** on the restored cluster: spec drift reverted in **21 s**, a deleted Deployment re-created and ready in **17 s** (evidence §17) |
 | Gateway API + Envoy Gateway shared north-south | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | Prometheus + Grafana + one real alert fire/resolve cycle | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | HPA / AKS Cluster Autoscaler | — | **NOT RUN** (HPA manifest validated by kubeconform; no scale event observed) |
@@ -34,19 +37,35 @@
 
 ## Measured constraints (2026-10-02 — do not re-litigate without re-measuring)
 
-- **Regional vCPU ceiling: 10**, currently **0/10 used**. The 7A cluster was
-  destroyed, so the quota ADR-013 treated as a wall is free. Verify:
+- **Regional vCPU ceiling: 10**, **2/10 used** (re-measured 2026-10-21 ~14:0x:
+  `az vm list-usage --location eastasia` → `Total Regional vCPUs  2  10`). The 2
+  in use are the **still-running** AKS cluster's system node
+  (`Standard_D2s_v6` = 2 vCPU). The 7A cluster was destroyed, so the quota
+  ADR-013 treated as a wall is otherwise free. Verify:
   `az vm list-usage --location eastasia -o tsv | head -3`
 - **Validation capacity envelope: 8 vCPU** — system pool `1 × D2s_v6` (2) +
   user pool `max 3 × D2s_v6` (6). Leaves **2 vCPU** for observability and for
   the cluster-autoscaler proof. `D4s_v6` is out: 2 × D4s_v6 consumes 8 vCPU for
   the system pool alone.
 - **The old tfstate backend does not exist.** `stflashs3ctfbk01` /
-  `flashsale-prod-rg` are absent from this subscription. `az group list` shows
-  only `NetworkWatcherRG`, `rg-portfolio-evidence`, `rg-maia-tfstate`,
-  `rg-maia-verify`. The only storage account, `sttfmaia`, belongs to **MAIA** —
-  do not inherit it. This repo needs its own Entra-authenticated state identity
-  with `validation` and `prod` keys kept separate.
+  `flashsale-prod-rg` are absent from this subscription. **Point-in-time
+  (measured 2026-10-02):** `az group list` showed only `NetworkWatcherRG`,
+  `rg-portfolio-evidence`, `rg-maia-tfstate`, `rg-maia-verify`. The only
+  storage account, `sttfmaia`, belongs to **MAIA** — do not inherit it. This
+  repo needs its own Entra-authenticated state identity with `validation` and
+  `prod` keys separate.
+  > **Updated 2026-10-21 ~14:0x.** The group list has changed —
+  > `az group list` now returns `rg-flashsale`, `NetworkWatcherRG`,
+  > `rg-aks-platform-dev` and
+  > `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` (the latter two belong
+  > to the **still-running** AKS cluster). This repo's **own** state backend
+  > `rg-aks-tfstate` / `stakssre` was provisioned on 2026-10-02 but the
+  > repository's backend was **switched to `local`** by commit `d628250` and
+  > never switched back → the remote state is **orphaned** and a later
+  > `apply`/`destroy` will not read it (**open decision, owner P03**; evidence
+  > §15.3b). The `local` backend switch also explains why the on-disk
+  > `terraform/aks-foundation/terraform.tfstate.backup` is now **181 B** rather
+  > than the 32 KB pre-destroy state.
 - **Azure-first is a shared quota.** Other portfolio repos draw on the same
   10 vCPU. A second AKS environment here needs a quota increase first.
 - **The 2 vCPU remainder is not "free observability capacity."** It must also
@@ -119,7 +138,7 @@ by design; everything else is green.
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
 | **`terraform test`** | **`IMPLEMENTED_TESTED`** | 5 passing run blocks across 3 roots (`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2). CI executes **all three** roots as of 2026-10-20 (it previously ran only `aks-foundation` = 2) |
-| Azure mutation | **by another actor, and reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev` and then destroyed both; the end state (nothing running) is confirmed by read-only `az` on 2026-10-21. Audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 — the apply/destroy steps carry **no committed command output**. |
+| Azure mutation | **by another actor, and NOT reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev`. ⚠️ **Corrected 2026-10-21 ~14:0x: the earlier "then destroyed both / end state (nothing running)" line in this table was WRONG.** The cluster **is running and billable**: `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev` / `ProvisioningState: Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`; `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4. The teardown runbook `docs/runbooks/azure-teardown-runbook.md` is **prepared and NOT executed**. The apply/destroy steps carry **no committed command output** — audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 / §15.5b / §17.5. |
 
 Five consecutive Actions runs were needed to reach this state, and every one found
 something no local check could: three distinct `trivy-action` failures before it
@@ -184,6 +203,26 @@ Do not start Phase D's module split before Phase C, and do not run any
 - ~~No orphan manifests~~ — `MANIFEST-INVENTORY.md`, enforced by the validator.
 
 ### Still open
+
+- ⚠️ **NEW 2026-10-21 ~14:0x — URGENT (cost):** the AKS cluster
+  `aks-portfolio-dev` (RG `rg-aks-platform-dev`) is **still running and
+  billable** (2 of the 10 regional vCPUs are consumed by its system node).
+  The teardown runbook `docs/runbooks/azure-teardown-runbook.md` is **prepared
+  and NOT executed** — destroying it is a cloud mutation and needs an explicit
+  go-ahead. Evidence §15.5b / §17.5.
+- **NEW 2026-10-21 ~14:0x — the remote state is orphaned:** the repository's
+  terraform backend was switched `azurerm` → `local` by commit `d628250` and
+  never switched back, so a future `apply`/`destroy` would not read
+  `aks-sre/validation.terraform.tfstate`. Restore it or document it as
+  deliberately abandoned (owner P03).
+- **NEW 2026-10-21 ~14:0x — two ~1 MB raw API dumps** are committed under
+  `docs/evidence/**/kubectl-cluster-info.txt`. Proposal only (`.gitattributes`,
+  or untrack + keep a trimmed extract); **not** deleted by this slice.
+- **NEW 2026-10-21 ~14:0x — the local kind cluster is a disposable
+  measurement surface:** it was destroyed once and re-created the same day,
+  which is exactly why the self-heal claims had to be re-measured (§17).
+  Isolate it into its own Docker context / VM before treating any runtime
+  claim as durable.
 
 - ~~`terraform test` collects zero assertions (`TERRAFORM_NATIVE_TESTS`).~~
   **Resolved (Phase D)** and re-verified 2026-10-20: `terraform test` runs 5 run
