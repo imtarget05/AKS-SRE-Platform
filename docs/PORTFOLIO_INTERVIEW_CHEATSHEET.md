@@ -13,9 +13,9 @@ and use the stated path inside it.
 | Product | Enterprise problem | Owning evidence | Honest limit |
 |---|---|---|---|
 | [AKS-SRE-Platform](https://github.com/imtarget05/AKS-SRE-Platform) | Review, deploy, observe and recover shared workloads at controlled Azure cost | [AKS audit](evidence/portfolio-audit-2026-10-21.md) · [local interview kit](INTERVIEW_KIT.md) | AKS cluster deleted; GitOps/Gateway/alert runtime proof is on kind |
-| [OpsBridge](https://github.com/imtarget05/OpsBridge) | Prevent oversell and reconcile asynchronous operational events | Local checkout: `../OpsBridge/docs/evidence/portfolio-audit-2026-10-21.md` and `docs/interview-notes/portfolio-defense-2026-10-21.md` | Local Testcontainers **39/39**, harness regressions **6/6**, disposable 50/10 **10 accepted / 40 rejected / stock 0 / 10 orders**; remote CI and durable reservation repair remain open |
-| [QuanLyKho](https://github.com/imtarget05/QuanLyKho) | Control lot/expiry inventory and require a different human checker before posting | Local checkout: `../QuanLyKho/docs/PORTFOLIO_AUDIT_2026-10-21.md` and `scripts/demo_ai_checker.sh` | Cash is a simulation; AI may advise but cannot approve or post |
-| [SmartDocumentChatbot](https://github.com/imtarget05/Smart-Document-Chatbot) | Answer over owned documents with citations and abstain without evidence | Local checkout: `../SmartDocumentChatbot/docs/PORTFOLIO_ENTERPRISE_AUDIT.md` and `eval/portfolio_demo/` | Local direct-route guard, principal binding, batch-delete/cache isolation fixes and **395/395** backend retest; agent demo and live Azure RAG are separate claims; serving HITL crash window remains open |
+| [OpsBridge](https://github.com/imtarget05/OpsBridge) | Prevent oversell and reconcile asynchronous operational events | Local checkout: `../OpsBridge/docs/evidence/portfolio-audit-2026-10-21.md` and `docs/interview-notes/portfolio-defense-2026-10-21.md` | Local Testcontainers **39/39**, harness regressions **6/6**, disposable 50/10 **10 accepted / 40 rejected / stock 0 / 10 orders**; FlashSale unit tests **179/179** + OpsBridge unit tests **45/45**, bounded compensation retry and reconciler alert added; remote CI remains open |
+| [QuanLyKho](https://github.com/imtarget05/QuanLyKho) | Control lot/expiry inventory and require a different human checker before posting | Local checkout: `../QuanLyKho/docs/PORTFOLIO_AUDIT_2026-10-21.md` and `scripts/demo_ai_checker.sh` | Cash is a simulation; AI may advise but cannot approve or post; full suite **677 passed / 0 failed / 7 skipped / 1 xfailed**, canonical DB binding and keyset pagination on audit-events verified |
+| [SmartDocumentChatbot](https://github.com/imtarget05/Smart-Document-Chatbot) | Answer over owned documents with citations and abstain without evidence | Local checkout: `../SmartDocumentChatbot/docs/PORTFOLIO_ENTERPRISE_AUDIT.md` and `eval/portfolio_demo/` | Local direct-route guard, principal binding, batch-delete/cache isolation fixes, **395/395** backend and **205/205** frontend pass; durable HITL serving lifecycle (`complete`/`fail`, pause snapshot preserved, idempotent retry) verified; offline agent demo and live Azure RAG remain separate claims |
 
 The previously featured **MAIA** project is external to these four audited
 checkouts. Its Azure, MCP, RL and HITL claims require an independent audit in
@@ -58,9 +58,10 @@ failure mode → simplest sufficient mechanism → trade-off → measured eviden
    visible but has no write authority.
 4. **SmartDocumentChatbot (3 min):** Show a cited answer and honest abstention,
    then a local multi-agent/HITL demo that pauses before a side effect. Show
-   reject, approve and replay protection. Point to the new local guard on
-   direct mutation routes and owner-scoping fixes, but state that serving HITL
-   still has a crash window. Explain which route the Azure backend actually
+   reject, approve and replay protection. Point to the local guard on
+   direct mutation routes and owner-scoping fixes, and the durable HITL serving
+   state (snapshot retained until completion, fail-closed handling on exception,
+   and idempotent repeat approvals). Explain which route the Azure backend actually
    served at its last verified run.
 5. **Feedback learning (1 min):** Show offline contextual-bandit comparison
    and tiny-model RLHF before/after artifacts. Both are demos; no learned
@@ -124,8 +125,9 @@ No such blanket claim is justified. The Spring backend can route to agent
 and fall back to CRAG; the last verified Azure chat response used direct RAG.
 Its local interrupt demo and production approval implementation must be
 described separately. Direct mutation routes now fail closed locally even
-with an internal token, but the serving approval may be consumed before its
-side effect succeeds; a crash can leave an approved action unexecuted.
+with an internal token. The serving approval lifecycle uses durable state:
+the pause snapshot is preserved until execution succeeds (`complete`) or fails (`fail`),
+and repeat approvals return idempotent `already_executed` without re-invoking the workflow.
 
 **Did the latest SmartDocumentChatbot security changes pass the backend suite?**
 The working-tree retest completed **75 suites / 395 tests / 0 failures**. One
