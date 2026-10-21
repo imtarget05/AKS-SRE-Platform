@@ -1,0 +1,36 @@
+[
+  {
+    "changedTime": "2026-10-21T04:20:53.663260+00:00",
+    "createdTime": "2026-10-21T04:06:23.804281+00:00",
+    "extendedLocation": null,
+    "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-aks-platform-dev/providers/Microsoft.ContainerService/managedClusters/aks-portfolio-dev",
+    "identity": {
+      "principalId": "971fe1b4-9a8d-4b82-aeb0-3dc3ac2086d2",
+      "tenantId": "aa79a92c-ec09-4de1-baa9-151b8f9df886",
+      "type": "SystemAssigned",
+      "userAssignedIdentities": null
+    },
+    "kind": null,
+    "location": "eastasia",
+    "managedBy": null,
+    "name": "aks-portfolio-dev",
+    "plan": null,
+    "properties": null,
+    "provisioningState": "Succeeded",
+    "resourceGroup": "rg-aks-platform-dev",
+    "sku": {
+      "capacity": null,
+      "family": null,
+      "model": null,
+      "name": "Base",
+      "size": null,
+      "tier": "Free"
+    },
+    "tags": {
+      "environment": "validation",
+      "owner": "student",
+      "purpose": "platform-foundation"
+    },
+    "type": "Microsoft.ContainerService/managedClusters"
+  }
+]

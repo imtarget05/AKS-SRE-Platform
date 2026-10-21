@@ -1,0 +1,356 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Node
+  metadata:
+    annotations:
+      alpha.kubernetes.io/provided-node-ip: 10.224.0.4
+      csi.volume.kubernetes.io/nodeid: '{"disk.csi.azure.com":"aks-sys-13411604-vmss000000","file.csi.azure.com":"aks-sys-13411604-vmss000000"}'
+      kubernetes.azure.com/live-patching-config-goal-hash: f5f962eef209103cce4ae12e80eddf4c491e0ec58bdcc651a7cc157688d32eb0
+      kubernetes.azure.com/live-patching-golden-timestamp: ""
+      kubernetes.azure.com/live-patching-status: '{"currentHash":"f5f962eef209103cce4ae12e80eddf4c491e0ec58bdcc651a7cc157688d32eb0","components":{"securityPatch":{"code":"Succeeded"}}}'
+      node.alpha.kubernetes.io/ttl: "0"
+      volumes.kubernetes.io/controller-managed-attach-detach: "true"
+    creationTimestamp: "2026-10-21T04:09:48Z"
+    labels:
+      agentpool: sys
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/instance-type: Standard_D2s_v6
+      beta.kubernetes.io/os: linux
+      failure-domain.beta.kubernetes.io/region: eastasia
+      failure-domain.beta.kubernetes.io/zone: "0"
+      kubernetes.azure.com/agentpool: sys
+      kubernetes.azure.com/ca-hash: ""
+      kubernetes.azure.com/cluster: MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia
+      kubernetes.azure.com/consolidated-additional-properties: ccd19a6c-cd04-11f1-90f2-8efb6bcc4f1b
+      kubernetes.azure.com/kubelet-identity-client-id: 151c7082-b84b-4174-826b-b0f6e10c0ddd
+      kubernetes.azure.com/kubelet-serving-ca: cluster
+      kubernetes.azure.com/localdns-state: disabled
+      kubernetes.azure.com/mode: system
+      kubernetes.azure.com/network-policy: azure
+      kubernetes.azure.com/node-image-version: AKSUbuntu-2404gen2containerd-202610.16.1
+      kubernetes.azure.com/nodepool-type: VirtualMachineScaleSets
+      kubernetes.azure.com/os-sku: Ubuntu
+      kubernetes.azure.com/os-sku-effective: Ubuntu2404
+      kubernetes.azure.com/os-sku-requested: Ubuntu
+      kubernetes.azure.com/priority: regular
+      kubernetes.azure.com/role: agent
+      kubernetes.azure.com/sku-cpu: "2"
+      kubernetes.azure.com/sku-memory: "8192"
+      kubernetes.azure.com/storageprofile: managed
+      kubernetes.azure.com/storagetier: Premium_LRS
+      kubernetes.io/arch: amd64
+      kubernetes.io/hostname: aks-sys-13411604-vmss000000
+      kubernetes.io/os: linux
+      node.kubernetes.io/instance-type: Standard_D2s_v6
+      storageprofile: managed
+      storagetier: Premium_LRS
+      topology.disk.csi.azure.com/zone: ""
+      topology.kubernetes.io/region: eastasia
+      topology.kubernetes.io/zone: "0"
+    name: aks-sys-13411604-vmss000000
+    resourceVersion: "13288"
+    uid: c0457497-7979-4c14-827a-af328cb65af8
+  spec:
+    providerID: azure:///subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia/providers/Microsoft.Compute/virtualMachineScaleSets/aks-sys-13411604-vmss/virtualMachines/0
+    taints:
+    - effect: NoSchedule
+      key: CriticalAddonsOnly
+      value: "true"
+  status:
+    addresses:
+    - address: 10.224.0.4
+      type: InternalIP
+    - address: aks-sys-13411604-vmss000000
+      type: Hostname
+    allocatable:
+      cpu: 1900m
+      ephemeral-storage: "118810356745"
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 7358892Ki
+      pods: "30"
+    capacity:
+      cpu: "2"
+      ephemeral-storage: 128917488Ki
+      hugepages-1Gi: "0"
+      hugepages-2Mi: "0"
+      memory: 8126892Ki
+      pods: "30"
+    conditions:
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: node is functioning properly
+      reason: NoFrequentUnregisterNetDevice
+      status: "False"
+      type: FrequentUnregisterNetDevice
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: kubelet is functioning properly
+      reason: NoFrequentKubeletRestart
+      status: "False"
+      type: FrequentKubeletRestart
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: docker is functioning properly
+      reason: NoFrequentDockerRestart
+      status: "False"
+      type: FrequentDockerRestart
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: Filesystem is healthy
+      reason: FilesystemIsOK
+      status: "False"
+      type: FilesystemCorruptionProblem
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: kernel has no deadlock
+      reason: KernelHasNoDeadlock
+      status: "False"
+      type: KernelDeadlock
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: Filesystem is not read-only
+      reason: FilesystemIsNotReadOnly
+      status: "False"
+      type: ReadonlyFilesystem
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: kubelet service is up
+      reason: KubeletIsUp
+      status: "False"
+      type: KubeletProblem
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:20:56Z"
+      message: VM has no scheduled event
+      reason: NoVMEventScheduled
+      status: "False"
+      type: VMEventScheduled
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: container runtime service is up
+      reason: ContainerRuntimeIsUp
+      status: "False"
+      type: ContainerRuntimeProblem
+    - lastHeartbeatTime: "2026-10-21T04:51:01Z"
+      lastTransitionTime: "2026-10-21T04:18:53Z"
+      message: containerd is functioning properly
+      reason: NoFrequentContainerdRestart
+      status: "False"
+      type: FrequentContainerdRestart
+    - lastHeartbeatTime: "2026-10-21T04:55:26Z"
+      lastTransitionTime: "2026-10-21T04:09:48Z"
+      message: kubelet has sufficient memory available
+      reason: KubeletHasSufficientMemory
+      status: "False"
+      type: MemoryPressure
+    - lastHeartbeatTime: "2026-10-21T04:55:26Z"
+      lastTransitionTime: "2026-10-21T04:09:48Z"
+      message: kubelet has no disk pressure
+      reason: KubeletHasNoDiskPressure
+      status: "False"
+      type: DiskPressure
+    - lastHeartbeatTime: "2026-10-21T04:55:26Z"
+      lastTransitionTime: "2026-10-21T04:09:48Z"
+      message: kubelet has sufficient PID available
+      reason: KubeletHasSufficientPID
+      status: "False"
+      type: PIDPressure
+    - lastHeartbeatTime: "2026-10-21T04:55:26Z"
+      lastTransitionTime: "2026-10-21T04:09:58Z"
+      message: kubelet is posting ready status
+      reason: KubeletReady
+      status: "True"
+      type: Ready
+    daemonEndpoints:
+      kubeletEndpoint:
+        Port: 10250
+    declaredFeatures:
+    - ExtendWebSocketsToKubelet
+    - InPlacePodLevelResourcesVerticalScaling
+    - InPlacePodVerticalScalingInitContainers
+    - RestartAllContainersOnContainerExits
+    features:
+      supplementalGroupsPolicy: true
+    images:
+    - names:
+      - mcr.microsoft.com/aks/aks-gpu-cuda-lts:580.159.04-20260918140533
+      sizeBytes: 734090310
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless:v1.19.8-260923
+      sizeBytes: 326505278
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless:v1.19.6-260811
+      sizeBytes: 320753469
+    - names:
+      - mcr.microsoft.com/azuremonitor/containerinsights/ciprod/prometheus-collector/images:7.4.0-main-09-11-2026-e2bfa13b
+      sizeBytes: 302417628
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless:v1.18.14-260923
+      sizeBytes: 300525215
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless:v1.18.12-260811
+      sizeBytes: 295509149
+    - names:
+      - mcr.microsoft.com/azuremonitor/containerinsights/ciprod:3.8.0-ci-prod-09-03-2026-fd42f68c
+      sizeBytes: 251114119
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/blob-csi:v1.27.9
+      sizeBytes: 159198445
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/blob-csi:v1.27.8
+      sizeBytes: 159189069
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/blob-csi:v1.26.16
+      sizeBytes: 158799724
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/blob-csi:v1.26.15
+      sizeBytes: 158798959
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.34.7
+      sizeBytes: 142776552
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.34.8
+      sizeBytes: 142379559
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi@sha256:ca968e756856ef3fd63b95f5f4ab984022a6f47f8042f502433972c8eb733a01
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.11-2
+      sizeBytes: 141420866
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.7
+      sizeBytes: 141399330
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.6
+      sizeBytes: 140997804
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.33.9
+      sizeBytes: 136250302
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.33.10
+      sizeBytes: 136250155
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless-init:v1.19.8-260923
+      sizeBytes: 136002771
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-cni:v1.6.44-0
+      sizeBytes: 134965177
+    - names:
+      - mcr.microsoft.com/azuremonitor/containerinsights/ciprod/prometheus-collector/images:7.4.0-main-09-11-2026-e2bfa13b-cfg
+      sizeBytes: 134705210
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless-init:v1.19.6-260811
+      sizeBytes: 132723072
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless-init:v1.18.14-260923
+      sizeBytes: 129186952
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium/cilium-distroless-init:v1.18.12-260811
+      sizeBytes: 125816362
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-npm:v1.6.42
+      sizeBytes: 116747622
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-npm@sha256:8bd094fe23afed68071f362ff70857f09b2a0481ea92f71d748b2bd08836c3f8
+      - mcr.microsoft.com/containernetworking/azure-npm:v1.9.2-0
+      sizeBytes: 107656561
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi:v1.33.11
+      sizeBytes: 81814510
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi:v1.34.5
+      sizeBytes: 81335553
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi@sha256:569d91a56c2d3bf0898511dac603644647d5e8b498dc18a73515d942ec33404d
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi:v1.34.7-1
+      sizeBytes: 81219860
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.33.13-11
+      sizeBytes: 72965703
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.34.11-5
+      sizeBytes: 72802475
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-cns:v1.6.44-0
+      sizeBytes: 72689674
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.36.4-4
+      sizeBytes: 72625397
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy@sha256:61056bb3f84be34c7537fc30ee1296efda961602d4c9521d41e85125e6fc9ecd
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.36.4-2
+      sizeBytes: 72566490
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.35.8-4
+      sizeBytes: 72517484
+    - names:
+      - mcr.microsoft.com/azuremonitor/containerinsights/ciprod/prometheus-collector/images:7.4.0-main-09-11-2026-e2bfa13b-targetallocator
+      sizeBytes: 60422033
+    - names:
+      - mcr.microsoft.com/containernetworking/v2/azure-cni:v1.8.13
+      sizeBytes: 59925520
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-cni:v1.7.17-0
+      sizeBytes: 52074006
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes-csi/secrets-store/driver:v1.6.1-1
+      sizeBytes: 45296823
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-cns:v1.7.17-0
+      sizeBytes: 39735085
+    - names:
+      - mcr.microsoft.com/containernetworking/cilium-log-collector:v0.0.2-0
+      sizeBytes: 38568303
+    - names:
+      - mcr.microsoft.com/containernetworking/azure-iptables-monitor:v0.0.5-0
+      sizeBytes: 37950425
+    - names:
+      - mcr.microsoft.com/containernetworking/v2/azure-cns:v1.8.13
+      sizeBytes: 37625513
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.37.0-1
+      sizeBytes: 35457508
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.36.7-1
+      sizeBytes: 34727720
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.13.1-20
+      sizeBytes: 34664089
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.14.3-18
+      sizeBytes: 34606183
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.14.7-2
+      sizeBytes: 34284976
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.35.10-1
+      sizeBytes: 34203824
+    - names:
+      - mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.33.19-1
+      sizeBytes: 34202755
+    nodeInfo:
+      architecture: amd64
+      bootID: cc88dcfd-5ed9-4ca9-8ee1-b6b7cbd2c9d2
+      containerRuntimeVersion: containerd://2.3.3-3
+      kernelVersion: 6.8.0-1071-azure
+      kubeProxyVersion: ""
+      kubeletVersion: v1.36.4
+      machineID: bf118e23f5a34295a842db027f93705f
+      operatingSystem: linux
+      osImage: Ubuntu 24.04.5 LTS
+      systemUUID: fa56980a-3eec-42c4-b708-f30cfed8e0af
+    runtimeHandlers:
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: ""
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: runc
+    - features:
+        recursiveReadOnlyMounts: true
+        userNamespaces: true
+      name: untrusted
+kind: List
+metadata:
+  resourceVersion: ""

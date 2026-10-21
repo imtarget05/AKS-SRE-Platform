@@ -1,0 +1,56 @@
+[
+  {
+    "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-flashsale",
+    "location": "southeastasia",
+    "managedBy": null,
+    "name": "rg-flashsale",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/NetworkWatcherRG",
+    "location": "eastasia",
+    "managedBy": null,
+    "name": "NetworkWatcherRG",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": null,
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-aks-platform-dev",
+    "location": "eastasia",
+    "managedBy": null,
+    "name": "rg-aks-platform-dev",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": {
+      "environment": "validation",
+      "owner": "student",
+      "purpose": "platform-foundation"
+    },
+    "type": "Microsoft.Resources/resourceGroups"
+  },
+  {
+    "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+    "location": "eastasia",
+    "managedBy": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourcegroups/rg-aks-platform-dev/providers/Microsoft.ContainerService/managedClusters/aks-portfolio-dev",
+    "name": "MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+    "properties": {
+      "provisioningState": "Succeeded"
+    },
+    "tags": {
+      "aks-managed-cluster-name": "aks-portfolio-dev",
+      "aks-managed-cluster-rg": "rg-aks-platform-dev",
+      "environment": "validation",
+      "owner": "student",
+      "purpose": "platform-foundation"
+    },
+    "type": "Microsoft.Resources/resourceGroups"
+  }
+]

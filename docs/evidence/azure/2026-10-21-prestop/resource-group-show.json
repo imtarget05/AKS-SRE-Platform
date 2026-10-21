@@ -1,0 +1,15 @@
+{
+  "id": "/subscriptions/a3deec78-7edb-41cd-9e94-ec1d4d9379f5/resourceGroups/rg-aks-platform-dev",
+  "location": "eastasia",
+  "managedBy": null,
+  "name": "rg-aks-platform-dev",
+  "properties": {
+    "provisioningState": "Succeeded"
+  },
+  "tags": {
+    "environment": "validation",
+    "owner": "student",
+    "purpose": "platform-foundation"
+  },
+  "type": "Microsoft.Resources/resourceGroups"
+}

@@ -1,0 +1,231 @@
+NAMESPACE     LAST SEEN   TYPE      REASON                    OBJECT                                                      MESSAGE
+default       45m         Normal    Starting                  node/aks-sys-13411604-vmss000000                            Starting kubelet.
+default       45m         Warning   InvalidDiskCapacity       node/aks-sys-13411604-vmss000000                            invalid capacity 0 on image filesystem
+default       45m         Normal    NodeHasSufficientMemory   node/aks-sys-13411604-vmss000000                            Node aks-sys-13411604-vmss000000 status is now: NodeHasSufficientMemory
+default       45m         Normal    NodeHasNoDiskPressure     node/aks-sys-13411604-vmss000000                            Node aks-sys-13411604-vmss000000 status is now: NodeHasNoDiskPressure
+default       45m         Normal    NodeHasSufficientPID      node/aks-sys-13411604-vmss000000                            Node aks-sys-13411604-vmss000000 status is now: NodeHasSufficientPID
+default       45m         Normal    NodeAllocatableEnforced   node/aks-sys-13411604-vmss000000                            Updated Node Allocatable limit across pods
+default       45m         Normal    RegisteredNode            node/aks-sys-13411604-vmss000000                            Node aks-sys-13411604-vmss000000 event: Registered Node aks-sys-13411604-vmss000000 in Controller
+default       45m         Normal    NodeReady                 node/aks-sys-13411604-vmss000000                            Node aks-sys-13411604-vmss000000 status is now: NodeReady
+default       45m         Normal    Starting                  node/aks-sys-13411604-vmss000000                            
+default       35m         Normal    NoVMEventScheduled        node/aks-sys-13411604-vmss000000                            Node condition VMEventScheduled is now: Unknown, reason: NoVMEventScheduled, message: "Unable to verify scheduled events (IMDS unavailable)"
+default       34m         Normal    NoVMEventScheduled        node/aks-sys-13411604-vmss000000                            Node condition VMEventScheduled is now: False, reason: NoVMEventScheduled, message: "VM has no scheduled event"
+default       3m35s       Warning   FailedScheduling          pod/azure-validate                                          0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/azure-cns-8svsg                                         Successfully assigned kube-system/azure-cns-8svsg to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulled                    pod/azure-cns-8svsg                                         Container image "mcr.microsoft.com/containernetworking/v2/azure-cni:v1.8.13" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/azure-cns-8svsg                                         Container created
+kube-system   45m         Normal    Started                   pod/azure-cns-8svsg                                         Container started
+kube-system   45m         Normal    Pulled                    pod/azure-cns-8svsg                                         Container image "mcr.microsoft.com/oss/v2/kubernetes/pause:3.10.2" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/azure-cns-8svsg                                         Container created
+kube-system   45m         Normal    Started                   pod/azure-cns-8svsg                                         Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/azure-cns                                         Created pod: azure-cns-8svsg
+kube-system   45m         Normal    Scheduled                 pod/azure-ip-masq-agent-f2l5q                               Successfully assigned kube-system/azure-ip-masq-agent-f2l5q to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulled                    pod/azure-ip-masq-agent-f2l5q                               Container image "mcr.microsoft.com/oss/v2/azure/ip-masq-agent-v2:v0.1.16-17" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/azure-ip-masq-agent-f2l5q                               Container created
+kube-system   45m         Normal    Started                   pod/azure-ip-masq-agent-f2l5q                               Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/azure-ip-masq-agent                               Created pod: azure-ip-masq-agent-f2l5q
+kube-system   45m         Normal    Scheduled                 pod/azure-npm-4c5kv                                         Successfully assigned kube-system/azure-npm-4c5kv to aks-sys-13411604-vmss000000
+kube-system   45m         Warning   FailedMount               pod/azure-npm-4c5kv                                         MountVolume.SetUp failed for volume "xtables-lock" : hostPath type check failed: /run/xtables.lock is not a file
+kube-system   45m         Normal    Pulling                   pod/azure-npm-4c5kv                                         Pulling image "mcr.microsoft.com/containernetworking/azure-npm:v1.9.2-0"
+kube-system   45m         Normal    Pulled                    pod/azure-npm-4c5kv                                         Successfully pulled image "mcr.microsoft.com/containernetworking/azure-npm:v1.9.2-0" in 14.81s (14.81s including waiting). Image size: 107656561 bytes.
+kube-system   45m         Normal    Created                   pod/azure-npm-4c5kv                                         Container created
+kube-system   45m         Normal    Started                   pod/azure-npm-4c5kv                                         Container started
+kube-system   45m         Normal    Pulled                    pod/azure-npm-4c5kv                                         Container image "mcr.microsoft.com/containernetworking/azure-npm:v1.9.2-0" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/azure-npm-4c5kv                                         Container created
+kube-system   45m         Normal    Started                   pod/azure-npm-4c5kv                                         Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/azure-npm                                         Created pod: azure-npm-4c5kv
+kube-system   45m         Warning   FailedScheduling          pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    Successfully assigned kube-system/azure-wi-webhook-controller-manager-6998679c65-r86tb to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    Pulling image "mcr.microsoft.com/oss/v2/azure/workload-identity/webhook:v1.5.1-23"
+kube-system   45m         Normal    Pulled                    pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    Successfully pulled image "mcr.microsoft.com/oss/v2/azure/workload-identity/webhook:v1.5.1-23" in 13.52s (13.52s including waiting). Image size: 26294156 bytes.
+kube-system   45m         Normal    Created                   pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    Container created
+kube-system   45m         Normal    Started                   pod/azure-wi-webhook-controller-manager-6998679c65-r86tb    Container started
+kube-system   45m         Warning   FailedScheduling          pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    Successfully assigned kube-system/azure-wi-webhook-controller-manager-6998679c65-rt5fv to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    Pulling image "mcr.microsoft.com/oss/v2/azure/workload-identity/webhook:v1.5.1-23"
+kube-system   45m         Normal    Pulled                    pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    Successfully pulled image "mcr.microsoft.com/oss/v2/azure/workload-identity/webhook:v1.5.1-23" in 13.61s (13.61s including waiting). Image size: 26294156 bytes.
+kube-system   45m         Normal    Created                   pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    Container created
+kube-system   45m         Normal    Started                   pod/azure-wi-webhook-controller-manager-6998679c65-rt5fv    Container started
+kube-system   45m         Normal    SuccessfulCreate          replicaset/azure-wi-webhook-controller-manager-6998679c65   Created pod: azure-wi-webhook-controller-manager-6998679c65-r86tb
+kube-system   45m         Normal    SuccessfulCreate          replicaset/azure-wi-webhook-controller-manager-6998679c65   Created pod: azure-wi-webhook-controller-manager-6998679c65-rt5fv
+kube-system   46m         Normal    NoPods                    poddisruptionbudget/azure-wi-webhook-controller-manager     No matching pods found
+kube-system   46m         Normal    ScalingReplicaSet         deployment/azure-wi-webhook-controller-manager              Scaled up replica set azure-wi-webhook-controller-manager-6998679c65 from 0 to 2
+kube-system   46m         Normal    LeaderElection            lease/cloud-controller-manager                              cloud-controller-manager-764f797976-6bgv5_476441ca-4b49-4eff-af5e-73e4779be847 became leader
+kube-system   45m         Normal    Scheduled                 pod/cloud-node-manager-t8nfp                                Successfully assigned kube-system/cloud-node-manager-t8nfp to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/cloud-node-manager-t8nfp                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.36.5-2"
+kube-system   45m         Normal    Pulled                    pod/cloud-node-manager-t8nfp                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/azure-cloud-node-manager:v1.36.5-2" in 9.945s (9.945s including waiting). Image size: 33734229 bytes.
+kube-system   45m         Normal    Created                   pod/cloud-node-manager-t8nfp                                Container created
+kube-system   45m         Normal    Started                   pod/cloud-node-manager-t8nfp                                Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/cloud-node-manager                                Created pod: cloud-node-manager-t8nfp
+kube-system   45m         Normal    Scheduled                 pod/coredns-76df789c68-887cm                                Successfully assigned kube-system/coredns-76df789c68-887cm to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulled                    pod/coredns-76df789c68-887cm                                Container image "mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.14.3-21" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/coredns-76df789c68-887cm                                Container created
+kube-system   45m         Normal    Started                   pod/coredns-76df789c68-887cm                                Container started
+kube-system   45m         Warning   Unhealthy                 pod/coredns-76df789c68-887cm                                Readiness probe failed: Get "http://10.224.0.11:8181/ready": dial tcp 10.224.0.11:8181: connect: connection refused
+kube-system   45m         Warning   FailedScheduling          pod/coredns-76df789c68-9h878                                0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/coredns-76df789c68-9h878                                Successfully assigned kube-system/coredns-76df789c68-9h878 to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/coredns-76df789c68-9h878                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.14.3-21"
+kube-system   45m         Normal    Pulled                    pod/coredns-76df789c68-9h878                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/coredns:v1.14.3-21" in 14.024s (14.024s including waiting). Image size: 33754203 bytes.
+kube-system   45m         Normal    Created                   pod/coredns-76df789c68-9h878                                Container created
+kube-system   45m         Normal    Started                   pod/coredns-76df789c68-9h878                                Container started
+kube-system   45m         Warning   Unhealthy                 pod/coredns-76df789c68-9h878                                Readiness probe failed: Get "http://10.224.0.14:8181/ready": dial tcp 10.224.0.14:8181: connect: connection refused
+kube-system   45m         Normal    SuccessfulCreate          replicaset/coredns-76df789c68                               Created pod: coredns-76df789c68-9h878
+kube-system   45m         Normal    SuccessfulCreate          replicaset/coredns-76df789c68                               Created pod: coredns-76df789c68-887cm
+kube-system   45m         Warning   FailedScheduling          pod/coredns-autoscaler-548c6d85c6-bwqqh                     0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/coredns-autoscaler-548c6d85c6-bwqqh                     Successfully assigned kube-system/coredns-autoscaler-548c6d85c6-bwqqh to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/coredns-autoscaler-548c6d85c6-bwqqh                     Pulling image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/cluster-proportional-autoscaler:v1.9.0-24"
+kube-system   45m         Normal    Pulled                    pod/coredns-autoscaler-548c6d85c6-bwqqh                     Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/cluster-proportional-autoscaler:v1.9.0-24" in 13.647s (13.647s including waiting). Image size: 24648924 bytes.
+kube-system   45m         Normal    Created                   pod/coredns-autoscaler-548c6d85c6-bwqqh                     Container created
+kube-system   45m         Normal    Started                   pod/coredns-autoscaler-548c6d85c6-bwqqh                     Container started
+kube-system   45m         Normal    SuccessfulCreate          replicaset/coredns-autoscaler-548c6d85c6                    Created pod: coredns-autoscaler-548c6d85c6-bwqqh
+kube-system   46m         Normal    ScalingReplicaSet         deployment/coredns-autoscaler                               Scaled up replica set coredns-autoscaler-548c6d85c6 from 0 to 1
+kube-system   46m         Normal    NoPods                    poddisruptionbudget/coredns-pdb                             No matching pods found
+kube-system   46m         Normal    ScalingReplicaSet         deployment/coredns                                          Scaled up replica set coredns-76df789c68 from 0 to 1
+kube-system   45m         Normal    ScalingReplicaSet         deployment/coredns                                          Scaled up replica set coredns-76df789c68 from 1 to 2
+kube-system   45m         Normal    Scheduled                 pod/csi-azuredisk-node-68srs                                Successfully assigned kube-system/csi-azuredisk-node-68srs to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/csi-azuredisk-node-68srs                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes-csi/livenessprobe:v2.19.0-8"
+kube-system   45m         Normal    Pulled                    pod/csi-azuredisk-node-68srs                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes-csi/livenessprobe:v2.19.0-8" in 8.988s (8.988s including waiting). Image size: 18759657 bytes.
+kube-system   45m         Normal    Created                   pod/csi-azuredisk-node-68srs                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azuredisk-node-68srs                                Container started
+kube-system   45m         Normal    Pulling                   pod/csi-azuredisk-node-68srs                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes-csi/csi-node-driver-registrar:v2.17.0-8"
+kube-system   45m         Normal    Pulled                    pod/csi-azuredisk-node-68srs                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes-csi/csi-node-driver-registrar:v2.17.0-8" in 6.686s (6.687s including waiting). Image size: 18684713 bytes.
+kube-system   45m         Normal    Created                   pod/csi-azuredisk-node-68srs                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azuredisk-node-68srs                                Container started
+kube-system   45m         Normal    Pulling                   pod/csi-azuredisk-node-68srs                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi:v1.34.7-1"
+kube-system   45m         Normal    Pulled                    pod/csi-azuredisk-node-68srs                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes-csi/azuredisk-csi:v1.34.7-1" in 16.622s (16.622s including waiting). Image size: 81219860 bytes.
+kube-system   45m         Normal    Created                   pod/csi-azuredisk-node-68srs                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azuredisk-node-68srs                                Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/csi-azuredisk-node                                Created pod: csi-azuredisk-node-68srs
+kube-system   45m         Normal    Scheduled                 pod/csi-azurefile-node-qp5mj                                Successfully assigned kube-system/csi-azurefile-node-qp5mj to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/csi-azurefile-node-qp5mj                                Pulling image "mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.11-2"
+kube-system   45m         Normal    Pulled                    pod/csi-azurefile-node-qp5mj                                Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.11-2" in 15.739s (15.74s including waiting). Image size: 141420866 bytes.
+kube-system   45m         Normal    Created                   pod/csi-azurefile-node-qp5mj                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azurefile-node-qp5mj                                Container started
+kube-system   45m         Normal    Pulled                    pod/csi-azurefile-node-qp5mj                                Container image "mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.11-2" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/csi-azurefile-node-qp5mj                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azurefile-node-qp5mj                                Container started
+kube-system   45m         Normal    Pulled                    pod/csi-azurefile-node-qp5mj                                Container image "mcr.microsoft.com/oss/v2/kubernetes-csi/livenessprobe:v2.19.0-8" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/csi-azurefile-node-qp5mj                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azurefile-node-qp5mj                                Container started
+kube-system   45m         Normal    Pulled                    pod/csi-azurefile-node-qp5mj                                Container image "mcr.microsoft.com/oss/v2/kubernetes-csi/csi-node-driver-registrar:v2.17.0-8" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/csi-azurefile-node-qp5mj                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azurefile-node-qp5mj                                Container started
+kube-system   45m         Normal    Pulled                    pod/csi-azurefile-node-qp5mj                                Container image "mcr.microsoft.com/oss/v2/kubernetes-csi/azurefile-csi:v1.35.11-2" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/csi-azurefile-node-qp5mj                                Container created
+kube-system   45m         Normal    Started                   pod/csi-azurefile-node-qp5mj                                Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/csi-azurefile-node                                Created pod: csi-azurefile-node-qp5mj
+kube-system   46m         Normal    LeaderElection            lease/disk-csi-azure-com                                    1792555737940-6372-disk-csi-azure-com became leader
+kube-system   46m         Normal    LeaderElection            lease/external-attacher-leader-disk-csi-azure-com           csi-azuredisk-controller-78c77bdd77-8jr2x became leader
+kube-system   46m         Normal    LeaderElection            lease/external-resizer-disk-csi-azure-com                   csi-azuredisk-controller-78c77bdd77-8jr2x became leader
+kube-system   46m         Normal    LeaderElection            lease/external-resizer-file-csi-azure-com                   csi-azurefile-controller-78df4b9d96-65xl7 became leader
+kube-system   46m         Normal    LeaderElection            lease/external-snapshotter-leader-disk-csi-azure-com        csi-azuredisk-controller-78c77bdd77-8jr2x became leader
+kube-system   46m         Normal    LeaderElection            lease/external-snapshotter-leader-file-csi-azure-com        csi-azurefile-controller-78df4b9d96-65xl7 became leader
+kube-system   46m         Normal    LeaderElection            lease/file-csi-azure-com                                    1792555736904-4818-file-csi-azure-com became leader
+kube-system   45m         Normal    Scheduled                 pod/konnectivity-agent-576d47b988-9ms8w                     Successfully assigned kube-system/konnectivity-agent-576d47b988-9ms8w to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulled                    pod/konnectivity-agent-576d47b988-9ms8w                     Container image "mcr.microsoft.com/oss/v2/kubernetes/apiserver-network-proxy/agent:v0.32.1-16" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/konnectivity-agent-576d47b988-9ms8w                     Container created
+kube-system   45m         Normal    Started                   pod/konnectivity-agent-576d47b988-9ms8w                     Container started
+kube-system   37m         Warning   Unhealthy                 pod/konnectivity-agent-576d47b988-9ms8w                     Readiness probe failed: Get "http://10.224.0.17:8082/ready": dial tcp 10.224.0.17:8082: connect: connection refused
+kube-system   38m         Normal    Killing                   pod/konnectivity-agent-576d47b988-9ms8w                     Stopping container konnectivity-agent
+kube-system   45m         Warning   FailedScheduling          pod/konnectivity-agent-576d47b988-v64fg                     0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/konnectivity-agent-576d47b988-v64fg                     Successfully assigned kube-system/konnectivity-agent-576d47b988-v64fg to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/konnectivity-agent-576d47b988-v64fg                     Pulling image "mcr.microsoft.com/oss/v2/kubernetes/apiserver-network-proxy/agent:v0.32.1-16"
+kube-system   45m         Normal    Pulled                    pod/konnectivity-agent-576d47b988-v64fg                     Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/apiserver-network-proxy/agent:v0.32.1-16" in 13.638s (13.638s including waiting). Image size: 26498003 bytes.
+kube-system   45m         Normal    Created                   pod/konnectivity-agent-576d47b988-v64fg                     Container created
+kube-system   45m         Normal    Started                   pod/konnectivity-agent-576d47b988-v64fg                     Container started
+kube-system   45m         Warning   Unhealthy                 pod/konnectivity-agent-576d47b988-v64fg                     Readiness probe failed: Get "http://10.224.0.24:8082/ready": dial tcp 10.224.0.24:8082: connect: connection refused
+kube-system   38m         Normal    Killing                   pod/konnectivity-agent-576d47b988-v64fg                     Stopping container konnectivity-agent
+kube-system   45m         Normal    SuccessfulCreate          replicaset/konnectivity-agent-576d47b988                    Created pod: konnectivity-agent-576d47b988-v64fg
+kube-system   45m         Normal    SuccessfulCreate          replicaset/konnectivity-agent-576d47b988                    Created pod: konnectivity-agent-576d47b988-9ms8w
+kube-system   38m         Normal    SuccessfulDelete          replicaset/konnectivity-agent-576d47b988                    Deleted pod: konnectivity-agent-576d47b988-v64fg
+kube-system   38m         Normal    SuccessfulDelete          replicaset/konnectivity-agent-576d47b988                    Deleted pod: konnectivity-agent-576d47b988-9ms8w
+kube-system   38m         Normal    Scheduled                 pod/konnectivity-agent-5cdc94997-fjlds                      Successfully assigned kube-system/konnectivity-agent-5cdc94997-fjlds to aks-sys-13411604-vmss000000
+kube-system   38m         Normal    Pulled                    pod/konnectivity-agent-5cdc94997-fjlds                      Container image "mcr.microsoft.com/oss/v2/kubernetes/apiserver-network-proxy/agent:v0.32.1-16" already present on machine and can be accessed by the pod
+kube-system   38m         Normal    Created                   pod/konnectivity-agent-5cdc94997-fjlds                      Container created
+kube-system   38m         Normal    Started                   pod/konnectivity-agent-5cdc94997-fjlds                      Container started
+kube-system   38m         Warning   Unhealthy                 pod/konnectivity-agent-5cdc94997-fjlds                      Readiness probe failed: Get "http://10.224.0.23:8082/ready": dial tcp 10.224.0.23:8082: connect: connection refused
+kube-system   38m         Normal    Scheduled                 pod/konnectivity-agent-5cdc94997-tbdn2                      Successfully assigned kube-system/konnectivity-agent-5cdc94997-tbdn2 to aks-sys-13411604-vmss000000
+kube-system   38m         Normal    Pulled                    pod/konnectivity-agent-5cdc94997-tbdn2                      Container image "mcr.microsoft.com/oss/v2/kubernetes/apiserver-network-proxy/agent:v0.32.1-16" already present on machine and can be accessed by the pod
+kube-system   38m         Normal    Created                   pod/konnectivity-agent-5cdc94997-tbdn2                      Container created
+kube-system   38m         Normal    Started                   pod/konnectivity-agent-5cdc94997-tbdn2                      Container started
+kube-system   38m         Warning   Unhealthy                 pod/konnectivity-agent-5cdc94997-tbdn2                      Readiness probe failed: Get "http://10.224.0.7:8082/ready": dial tcp 10.224.0.7:8082: connect: connection refused
+kube-system   38m         Normal    SuccessfulCreate          replicaset/konnectivity-agent-5cdc94997                     Created pod: konnectivity-agent-5cdc94997-tbdn2
+kube-system   38m         Normal    SuccessfulCreate          replicaset/konnectivity-agent-5cdc94997                     Created pod: konnectivity-agent-5cdc94997-fjlds
+kube-system   45m         Warning   FailedScheduling          pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          Successfully assigned kube-system/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          Pulling image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/cluster-proportional-autoscaler:v1.9.0-28"
+kube-system   45m         Normal    Pulled                    pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/cluster-proportional-autoscaler:v1.9.0-28" in 14.781s (14.781s including waiting). Image size: 24593500 bytes.
+kube-system   45m         Normal    Created                   pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          Container created
+kube-system   45m         Normal    Started                   pod/konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          Container started
+kube-system   45m         Normal    SuccessfulCreate          replicaset/konnectivity-agent-autoscaler-67f8b6cdd6         Created pod: konnectivity-agent-autoscaler-67f8b6cdd6-vddbd
+kube-system   45m         Normal    ScalingReplicaSet         deployment/konnectivity-agent-autoscaler                    Scaled up replica set konnectivity-agent-autoscaler-67f8b6cdd6 from 0 to 1
+kube-system   45m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled up replica set konnectivity-agent-576d47b988 from 0 to 1
+kube-system   45m         Normal    NoPods                    poddisruptionbudget/konnectivity-agent                      No matching pods found
+kube-system   45m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled up replica set konnectivity-agent-576d47b988 from 1 to 2
+kube-system   38m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled down replica set konnectivity-agent-576d47b988 from 2 to 1
+kube-system   38m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled up replica set konnectivity-agent-5cdc94997 from 0 to 1
+kube-system   38m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled down replica set konnectivity-agent-576d47b988 from 1 to 0
+kube-system   38m         Normal    ScalingReplicaSet         deployment/konnectivity-agent                               Scaled up replica set konnectivity-agent-5cdc94997 from 1 to 2
+kube-system   46m         Normal    LeaderElection            lease/kube-controller-manager                               kube-controller-manager-v2-694bf95969-mpzx4_5f95e329-d2e4-4076-a988-efa15c3b24e5 became leader
+kube-system   45m         Normal    Scheduled                 pod/kube-proxy-2p9hs                                        Successfully assigned kube-system/kube-proxy-2p9hs to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/kube-proxy-2p9hs                                        Pulling image "mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.36.4-2"
+kube-system   45m         Normal    Pulled                    pod/kube-proxy-2p9hs                                        Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.36.4-2" in 15.721s (15.721s including waiting). Image size: 72566490 bytes.
+kube-system   45m         Normal    Created                   pod/kube-proxy-2p9hs                                        Container created
+kube-system   45m         Normal    Started                   pod/kube-proxy-2p9hs                                        Container started
+kube-system   45m         Normal    Pulled                    pod/kube-proxy-2p9hs                                        Container image "mcr.microsoft.com/oss/v2/kubernetes/kube-proxy:v1.36.4-2" already present on machine and can be accessed by the pod
+kube-system   45m         Normal    Created                   pod/kube-proxy-2p9hs                                        Container created
+kube-system   45m         Normal    Started                   pod/kube-proxy-2p9hs                                        Container started
+kube-system   45m         Normal    SuccessfulCreate          daemonset/kube-proxy                                        Created pod: kube-proxy-2p9hs
+kube-system   45m         Normal    LeaderElection            lease/kube-scheduler                                        kube-scheduler-v2-68b76cf777-h4rtw_d747c154-f0f7-4d0c-bcce-ef6d0cecf5b6 became leader
+kube-system   47m         Normal    LeaderElection            lease/kubelet-serving-csr-approver                          kubelet-serving-csr-approver-7c69ccd7c8-vnbrm_68080802-49d3-4cee-8215-df595969cd68 became leader
+kube-system   45m         Warning   FailedScheduling          pod/metrics-server-6dbd86464b-bvb5l                         0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/metrics-server-6dbd86464b-bvb5l                         Successfully assigned kube-system/metrics-server-6dbd86464b-bvb5l to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/metrics-server-6dbd86464b-bvb5l                         Pulling image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35"
+kube-system   45m         Normal    Pulled                    pod/metrics-server-6dbd86464b-bvb5l                         Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35" in 13.91s (13.91s including waiting). Image size: 25990958 bytes.
+kube-system   45m         Normal    Created                   pod/metrics-server-6dbd86464b-bvb5l                         Container created
+kube-system   45m         Normal    Started                   pod/metrics-server-6dbd86464b-bvb5l                         Container started
+kube-system   45m         Normal    Pulling                   pod/metrics-server-6dbd86464b-bvb5l                         Pulling image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29"
+kube-system   45m         Normal    Pulled                    pod/metrics-server-6dbd86464b-bvb5l                         Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29" in 4.066s (4.066s including waiting). Image size: 33903730 bytes.
+kube-system   45m         Normal    Created                   pod/metrics-server-6dbd86464b-bvb5l                         Container created
+kube-system   45m         Normal    Started                   pod/metrics-server-6dbd86464b-bvb5l                         Container started
+kube-system   44m         Normal    Killing                   pod/metrics-server-6dbd86464b-bvb5l                         Stopping container metrics-server-vpa
+kube-system   44m         Normal    Killing                   pod/metrics-server-6dbd86464b-bvb5l                         Stopping container metrics-server
+kube-system   45m         Warning   FailedScheduling          pod/metrics-server-6dbd86464b-rk59w                         0/1 nodes are available: 1 node(s) had untolerated taint(s). no new claims to deallocate, preemption: 0/1 nodes are available: 1 Preemption is not helpful for scheduling.
+kube-system   45m         Normal    Scheduled                 pod/metrics-server-6dbd86464b-rk59w                         Successfully assigned kube-system/metrics-server-6dbd86464b-rk59w to aks-sys-13411604-vmss000000
+kube-system   45m         Normal    Pulling                   pod/metrics-server-6dbd86464b-rk59w                         Pulling image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35"
+kube-system   45m         Normal    Pulled                    pod/metrics-server-6dbd86464b-rk59w                         Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35" in 13.928s (13.928s including waiting). Image size: 25990958 bytes.
+kube-system   45m         Normal    Created                   pod/metrics-server-6dbd86464b-rk59w                         Container created
+kube-system   45m         Normal    Started                   pod/metrics-server-6dbd86464b-rk59w                         Container started
+kube-system   45m         Normal    Pulling                   pod/metrics-server-6dbd86464b-rk59w                         Pulling image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29"
+kube-system   45m         Normal    Pulled                    pod/metrics-server-6dbd86464b-rk59w                         Successfully pulled image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29" in 4.067s (4.067s including waiting). Image size: 33903730 bytes.
+kube-system   45m         Normal    Created                   pod/metrics-server-6dbd86464b-rk59w                         Container created
+kube-system   45m         Normal    Started                   pod/metrics-server-6dbd86464b-rk59w                         Container started
+kube-system   43m         Normal    Killing                   pod/metrics-server-6dbd86464b-rk59w                         Stopping container metrics-server-vpa
+kube-system   43m         Normal    Killing                   pod/metrics-server-6dbd86464b-rk59w                         Stopping container metrics-server
+kube-system   45m         Normal    SuccessfulCreate          replicaset/metrics-server-6dbd86464b                        Created pod: metrics-server-6dbd86464b-bvb5l
+kube-system   45m         Normal    SuccessfulCreate          replicaset/metrics-server-6dbd86464b                        Created pod: metrics-server-6dbd86464b-rk59w
+kube-system   44m         Normal    SuccessfulDelete          replicaset/metrics-server-6dbd86464b                        Deleted pod: metrics-server-6dbd86464b-bvb5l
+kube-system   43m         Normal    SuccessfulDelete          replicaset/metrics-server-6dbd86464b                        Deleted pod: metrics-server-6dbd86464b-rk59w
+kube-system   44m         Normal    Scheduled                 pod/metrics-server-749b4dd978-9lnnk                         Successfully assigned kube-system/metrics-server-749b4dd978-9lnnk to aks-sys-13411604-vmss000000
+kube-system   44m         Normal    Pulled                    pod/metrics-server-749b4dd978-9lnnk                         Container image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35" already present on machine and can be accessed by the pod
+kube-system   44m         Normal    Created                   pod/metrics-server-749b4dd978-9lnnk                         Container created
+kube-system   44m         Normal    Started                   pod/metrics-server-749b4dd978-9lnnk                         Container started
+kube-system   44m         Normal    Pulled                    pod/metrics-server-749b4dd978-9lnnk                         Container image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29" already present on machine and can be accessed by the pod
+kube-system   44m         Normal    Created                   pod/metrics-server-749b4dd978-9lnnk                         Container created
+kube-system   44m         Normal    Started                   pod/metrics-server-749b4dd978-9lnnk                         Container started
+kube-system   44m         Normal    Scheduled                 pod/metrics-server-749b4dd978-c58xz                         Successfully assigned kube-system/metrics-server-749b4dd978-c58xz to aks-sys-13411604-vmss000000
+kube-system   44m         Normal    Pulled                    pod/metrics-server-749b4dd978-c58xz                         Container image "mcr.microsoft.com/oss/v2/kubernetes/autoscaler/addon-resizer:v1.8.23-35" already present on machine and can be accessed by the pod
+kube-system   44m         Normal    Created                   pod/metrics-server-749b4dd978-c58xz                         Container created
+kube-system   44m         Normal    Started                   pod/metrics-server-749b4dd978-c58xz                         Container started
+kube-system   44m         Normal    Pulled                    pod/metrics-server-749b4dd978-c58xz                         Container image "mcr.microsoft.com/oss/v2/kubernetes/metrics-server:v0.8.0-29" already present on machine and can be accessed by the pod
+kube-system   44m         Normal    Created                   pod/metrics-server-749b4dd978-c58xz                         Container created
+kube-system   44m         Normal    Started                   pod/metrics-server-749b4dd978-c58xz                         Container started
+kube-system   44m         Normal    SuccessfulCreate          replicaset/metrics-server-749b4dd978                        Created pod: metrics-server-749b4dd978-9lnnk
+kube-system   44m         Normal    SuccessfulCreate          replicaset/metrics-server-749b4dd978                        Created pod: metrics-server-749b4dd978-c58xz
+kube-system   45m         Normal    NoPods                    poddisruptionbudget/metrics-server-pdb                      No matching pods found
+kube-system   45m         Normal    ScalingReplicaSet         deployment/metrics-server                                   Scaled up replica set metrics-server-6dbd86464b from 0 to 2
+kube-system   44m         Normal    ScalingReplicaSet         deployment/metrics-server                                   Scaled up replica set metrics-server-749b4dd978 from 0 to 1
+kube-system   44m         Normal    ScalingReplicaSet         deployment/metrics-server                                   Scaled down replica set metrics-server-6dbd86464b from 2 to 1
+kube-system   44m         Normal    ScalingReplicaSet         deployment/metrics-server                                   Scaled up replica set metrics-server-749b4dd978 from 1 to 2
+kube-system   43m         Normal    ScalingReplicaSet         deployment/metrics-server                                   Scaled down replica set metrics-server-6dbd86464b from 1 to 0
+kube-system   46m         Normal    LeaderElection            lease/snapshot-controller-leader                            csi-snapshot-controller-55d49955dd-fxmvx became leader
