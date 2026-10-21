@@ -30,7 +30,15 @@
 
 ## Validate (done)
 - `kubectl cluster-info`: control plane reachable, CoreDNS running
-- `kubectl get nodes`: 3 nodes Ready (control-plane + 2 workers), v1.36.1
+- `kubectl get nodes`: **1 node Ready** (`aks-sys-78835839-vmss000000`, ROLES `<none>`), **v1.36.4**
+
+  > **corrected 2026-10-21:** the original line read "3 nodes Ready (control-plane + 2 workers),
+  > v1.36.1" — which is **contradicted by the artifact committed beside this line**
+  > (`kubectl-nodes.txt` = **1** node, `aks-sys-78835839-vmss000000`, ROLES `<none>`,
+  > **v1.36.4**; the plan's `default_node_pool` has `node_count = 1`,
+  > `auto_scaling_enabled = false`). The **"3 nodes"** figure is **HISTORICAL**: it describes the
+  > **earlier** cluster, which has since been deleted. The original wording is kept in
+  > **Addendum 2 §A2.1** below.
 
 > ⚠️ **Corrected 2026-10-21 — this line was wrong.** The cluster had **1**
 > node, not 3, and the version was **v1.36.4**, not v1.36.1. The committed
@@ -55,7 +63,31 @@
 - Destroy timestamp: 2026-10-20 (same session as apply)
 - Final resource inventory: empty (RG + AKS destroyed)
 
-Status: **AZURE_CLOUD_VERIFIED** — cluster created, validated, and fully destroyed per runbook cost profile. No Azure resources remain running.
+  > **corrected 2026-10-21:** the lines above describe the **first** cluster's teardown of
+  > 2026-10-20 and are true of *that* session (the destroy was confirmed read-only the same day);
+  > they are **not** a statement about the current end state. As of 2026-10-21 a **second**
+  > `aks-portfolio-dev` / `rg-aks-platform-dev` is **running and billable** and the teardown is
+  > **prepared, not executed** (owner P03). See the status line below and **Addendum 2 §A2.2**.
+
+Status: **AZURE_CLOUD_PLAN_VERIFIED / AZURE_CLOUD_APPLY_NOT_VERIFIED** — the `terraform plan` is
+committed (`terraform-plan.txt`), but the `terraform apply` and the `terraform destroy` carry **no
+committed command output**, so the Terraform path is **not** cloud-verified. A **second** cluster
+(`aks-portfolio-dev` in `rg-aks-platform-dev`, `eastasia`) is **running and billable** right now; the
+teardown is **prepared but not executed** (`docs/runbooks/azure-teardown-runbook.md`, owner P03).
+
+> **corrected 2026-10-21:** the original status line read "Status: **AZURE_CLOUD_VERIFIED** —
+> cluster created, validated, and fully destroyed per runbook cost profile. No Azure resources remain
+> running." (quoted verbatim in **Addendum 2 §A2.1**). **Both** parts were over-claims:
+>
+> 1. **The label.** Only the *plan* is backed by a committed artifact, so the correct label is
+>    **`AZURE_CLOUD_PLAN_VERIFIED`** / **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** — **not**
+>    `AZURE_CLOUD_VERIFIED`.
+> 2. **"No Azure resources remain running" is FALSE as of 2026-10-21.** `az aks list` shows
+>    `aks-portfolio-dev` (`rg-aks-platform-dev`, `eastasia`) **running and billable**; the teardown
+>    is **prepared, not executed**. Read-only evidence: **Addendum 1** and **Addendum 2 §A2.2**.
+>
+> The original wording is kept above/through **Addendum 1** and **Addendum 2 §A2.1** as the
+> author's record of 2026-10-20/21.
 
 > ⚠️ **Corrected 2026-10-21 — this status line was overstated on two counts.**
 >
@@ -85,6 +117,11 @@ Status: **AZURE_CLOUD_VERIFIED** — cluster created, validated, and fully destr
 author's, from the session of 2026-10-20/21. What follows is what a
 **read-only re-check on 2026-10-21** found, so that a reader of this file
 does not take the status line above at face value.
+
+> *(Later the same day, the three over-claiming sentences above were
+> **corrected in place**, each with a `corrected 2026-10-21` note quoting the
+> superseded wording — the original claims are still readable here. See
+> **Addendum 2**.)*
 
 **Audit:** [`../local-platform/2026-10-20-reverify.md`](../local-platform/2026-10-20-reverify.md)
 **§15.3** (same branch, `recovery/g2-20261020`).
@@ -143,10 +180,14 @@ weight the status line above can carry.
 ## Addendum 2 — correction of the over-claim (added 2026-10-21, ~12:3x local)
 
 **Added by the G2 push/re-verification slice, 2026-10-21, after the push of
-`main` was prepared.** This addendum **does not rewrite** the text above: the
-original narrative, the original status line and Addendum 1 are all kept
-exactly as they were. What follows is the **corrected statement** and the
-read-only evidence for it.
+`main` was prepared.** This addendum **did not rewrite** the text above at the
+time it was written: the original narrative, the original status line and
+Addendum 1 were all kept exactly as they were. A later pass on the same day
+then **corrected the three over-claiming sentences in place** — the status
+label, "No Azure resources remain running", and the "3 nodes Ready" line —
+each with a `corrected 2026-10-21` note quoting the superseded wording, so
+both the original claim and its correction remain readable in this document.
+What follows is the **corrected statement** and the read-only evidence for it.
 
 ### A2.1 The corrected statement, in one place
 
@@ -216,5 +257,11 @@ and `kubectl` call above is read-only.
   The live-cluster claims of the **second** run are separately evidenced in
   [`../live-aks-azure-2026-10-21/aks-azure-evidence.md`](../live-aks-azure-2026-10-21/aks-azure-evidence.md).
 - It does not delete any file, any artifact, or any previous claim. The
-  original status line is still in this document, **above**, unedited.
+  original status line is still in this document, **above** — quoted in
+  §A2.1 and in the `corrected 2026-10-21` note beside it.
+- It does not delete history. On 2026-10-21 the three over-claiming sentences
+  were **corrected in place** (status label, "No Azure resources remain
+  running", and the "3 nodes Ready" line), each with a
+  `corrected 2026-10-21` note quoting the superseded wording, so a reader
+  sees both the original claim and its correction at the point of use.
 

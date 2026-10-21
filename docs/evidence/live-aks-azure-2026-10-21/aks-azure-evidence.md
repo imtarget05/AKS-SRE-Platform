@@ -12,6 +12,12 @@
 - `terraform init`: OK (local backend)
 - `terraform apply -auto-approve`: **Apply complete! Resources: 2 added, 0 changed, 0 destroyed.** (~4m30s)
 
+  > **corrected 2026-10-21:** this apply step has **no committed command output** (this directory
+  > holds no plan file and no apply log), so it is **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** — the line
+  > above is the author's narrative of 2026-10-21, not an evidenced output. The Terraform path for
+  > this run is `AZURE_CLOUD_PLAN_VERIFIED` only via the *first* run's committed plan
+  > (`../live-aks-2026-10-20/terraform-plan.txt`). Detail: **Addendum 2 §A2.1**.
+
 ## Cluster outputs (live trên Azure)
 - cluster_name: `aks-portfolio-dev`
 - resource_group: `rg-aks-platform-dev`
@@ -38,6 +44,13 @@
 - Chưa destroy vì cluster đang phục vụ validate
 
 Status: **AZURE_K8S_LIVE_VERIFIED** — Kubernetes cluster đang chạy trên Azure AKS, không phải local.
+
+> **corrected 2026-10-21:** this label is **narrow** — it attests only that a Kubernetes control
+> plane is live on AKS (independently re-verified read-only, see the Addendum below). It must **not**
+> be read as the Terraform path being verified: the `terraform apply` that created the cluster has
+> **no committed command output** → `AZURE_CLOUD_APPLY_NOT_VERIFIED`. The cluster is also **still
+> running and billable** — the teardown is prepared, **not executed** (owner P03). Label map:
+> **Addendum 2 §A2.3**.
 
 ---
 
