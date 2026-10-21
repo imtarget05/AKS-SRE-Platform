@@ -54,7 +54,15 @@ hazard:
 
 - 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**
   (3 restarts each, from the Docker daemon crashes below).
-- Application **`flashsale` → `Synced` / `Healthy`** — unchanged from 2026-10-20.
+- Application **`flashsale` → `Synced` / `Healthy`** — unchanged from
+  2026-10-20, **at the time of the ~10:5x check**. ⚠️ **End state after this
+  run: DEGRADED** — the Docker daemon crashed 6× during the 2026-10-21
+  re-verification; after the last restart the nodes are Ready but
+  `flashsale` is `Synced / Progressing`, `order-api` is crash-looping and
+  `rabbitmq-0` never finishes booting. Cause: the daemon crash re-creates
+  every pod sandbox and the data tier does not recover. **Not a repository
+  regression** — no manifest/image/cluster object was changed. Recovery is a
+  cluster mutation and was **not** performed (evidence §15.5).
 - **Self-heal verified for spec drift (~1 s) and for a deleted resource
   (~1 s).**
 - **FINDING — not a pass:** Argo CD v3.5.5 does **not** diff extra
