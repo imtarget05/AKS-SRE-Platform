@@ -110,7 +110,7 @@ by design; everything else is green.
 |---|---|---|
 | GitOps validator, repo-owned semantics | `IMPLEMENTED_TESTED` | `GITOPS: 16 passed, 0 failed, 2 not-present, 18 total` |
 | GitOps negative control (M-B1) | `IMPLEMENTED_TESTED` | `M-B1 confirmed: validator rejected the mutation (rc=1)`, then `git diff --exit-code` clean |
-| Gate test matrix G1–G10 | `IMPLEMENTED_TESTED` | 24 assertions, run as a subprocess so the exit code under test is the real one |
+| Gate test matrix G1–G14 | `IMPLEMENTED_TESTED` | 47 assertions (G14 added 2026-10-21: the `npm start` script must run the real entrypoint), run as a subprocess so the exit code under test is the real one |
 | Kubernetes render + kubeconform | `IMPLEMENTED_TESTED` | `Valid: 13, Invalid: 0` per root; 26 objects across 2 roots |
 | Manifest inventory | `IMPLEMENTED_TESTED` | M-B6 orphan detected and rejected |
 | Static policy + image gate | `IMPLEMENTED_TESTED` | `POLICY GATE PASS: 2 kustomize root(s), 26 object(s)` |
@@ -119,7 +119,7 @@ by design; everything else is green.
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
 | **`terraform test`** | **`IMPLEMENTED_TESTED`** | 5 passing run blocks across 3 roots (`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2). CI executes **all three** roots as of 2026-10-20 (it previously ran only `aks-foundation` = 2) |
-| Azure mutation | none | no Azure resource created by this branch |
+| Azure mutation | **by another actor, and reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev` and then destroyed both; the end state (nothing running) is confirmed by read-only `az` on 2026-10-21. Audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 — the apply/destroy steps carry **no committed command output**. |
 
 Five consecutive Actions runs were needed to reach this state, and every one found
 something no local check could: three distinct `trivy-action` failures before it

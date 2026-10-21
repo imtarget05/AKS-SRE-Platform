@@ -40,7 +40,7 @@ exchange.
 | **L10** | Grafana dashboards for Platform, Argo CD GitOps, and Workloads | `curl http://admin:...@127.0.0.1:3000/api/search` (27 dashboards loaded) | `docs/evidence/local-platform/l10-observability-PASS.md` | `Current` |
 | **L10** | Live alert fire-and-resolve cycle (`LocalPlatformMetricSourceDown`) | Simulated scraper outage -> firing (`15:33:25Z`) -> resolved (`15:35:17Z`) | `docs/evidence/local-platform/l10-observability-PASS.md` | `Current` |
 | **L11** | Full interview demo script & automated test harness | `./scripts/demo-local-platform.sh` (100% green execution in <= 5 mins) | `docs/interview-demo/local-platform.md` | `Current` |
-| **L4/L9/L10** | 2026-10-20 re-verification and F1–F5 fixes: Argo CD CRDs installed server-side, no dashboard lost to a duplicate object name, duplicate AppProject names fail the gate, Argo CD version pinned in one file | `python3 tests/test_gates.py` (42 assertions), `bash scripts/bootstrap.sh` on a clean kind cluster (CRD `applicationsets.argoproj.io` present, 7/7 Running) | `docs/evidence/local-platform/2026-10-20-reverify.md` | `recovery/g2-20261020` |
+| **L4/L9/L10** | 2026-10-20 re-verification and F1–F5 fixes: Argo CD CRDs installed server-side, no dashboard lost to a duplicate object name, duplicate AppProject names fail the gate, Argo CD version pinned in one file | `python3 tests/test_gates.py` (47 assertions — G14 added 2026-10-21 for the `npm start` entrypoint), `bash scripts/bootstrap.sh` on a clean kind cluster (CRD `applicationsets.argoproj.io` present, 7/7 Running) | `docs/evidence/local-platform/2026-10-20-reverify.md` | `recovery/g2-20261020` |
 
 ---
 
@@ -61,7 +61,11 @@ exchange.
 ## Boundaries & Non-Claims
 
 1. **No Azure cluster is currently running.** The AKS foundation was applied
-   once on 2026-09-21 (see `evidence/phase7a/`) and then stopped and torn down.
+   once on 2026-09-21 (see `evidence/phase7a/`) and then stopped and torn down;
+   a **second** AKS cluster (`aks-portfolio-dev`) was applied and destroyed on
+   2026-10-20/21 — see `evidence/live-aks-2026-10-20/` and its audit in
+   `evidence/local-platform/2026-10-20-reverify.md` §15.3. The end state —
+   nothing running — was re-confirmed read-only on 2026-10-21.
    Nothing above is Azure evidence except what is explicitly labelled
    `AZURE_VALIDATION` — which, as of this writing, is the 7A foundation only.
    The cluster autoscaler, pod autoscaler, enforced NetworkPolicy, PDB and drain

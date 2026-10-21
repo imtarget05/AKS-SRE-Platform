@@ -4,16 +4,66 @@
 **HEAD at the time of writing:** `7801901c213deddd46fd09e7cb1f617f49d3a79f`
 **Base (`main`):** `0a92f58cf453ca121993bfe1b111c5308886754f` — **unchanged, and
 it is exactly the merge-base.**
+**Re-counted 2026-10-21** (the tip moved after this note was written — see
+§1.0): tip `d628250a254345539a2062d8eedc306ec69a476e`, **9 commits / 24
+files / +25079 −201** on top of `main`.
 
 > **Nothing was merged, rebased or pushed.** This document is the *proposal*
 > for integration. The branch is left exactly as it was found: 7 commits on top
 > of `main`, working tree clean, no stash touched, no remote touched.
+> *(That sentence describes the branch **as it stood at `7801901`**, which is
+> the tip this note was written against. It is **not** the tip today — see
+> §1.0.)*
+
+---
+
+## 1.0 The tip moved after this note was written (re-counted 2026-10-21)
+
+**This note was written against `7801901`. The branch tip has since moved to
+`d628250`, by an actor other than the one that produced this note.** Every
+count in §1 is therefore labelled with the tip it was measured on, and the
+current counts are given here. **Nothing else in this note is invalidated by
+the move**: the merge-base is unchanged, the fast-forward analysis in §2 still
+holds, and the conflict-risk table in §2.3 still holds.
+
+```console
+$ git rev-parse HEAD
+d628250a254345539a2062d8eedc306ec69a476e
+$ git merge-base main HEAD
+0a92f58cf453ca121993bfe1b111c5308886754f        # unchanged — still the merge-base
+$ git rev-list --count main..HEAD
+9
+$ git diff main --shortstat
+ 24 files changed, 25079 insertions(+), 201 deletions(-)
+```
+
+**Scope of the current numbers, so they are checkable:** *commits on top of
+`main`*; and *files changed by `git diff main`*, **including** the 1 MB raw
+API dump `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt`
+(22 458 of the 25 079 added lines) that `d628250` added.
+
+| Tip | Commits on top of `main` | Files changed | Diff size | Note |
+|---|---|---|---|---|
+| `7801901` (the tip this note was written against) | 7 | 16 | `+1733 / −193` | the numbers originally quoted in §1 |
+| `82b015b` | 8 | 18 | `+2426 / −195` | merge note + label-drift finding added |
+| `d628250` (**current tip**) | **9** | **24** | **`+25079 / −201`** | adds the live-AKS evidence dir **and** switches the terraform backend `azurerm` → `local` |
+
+**The 8-commit / 18-file / `+2426 −195` figure and the 7-commit / 16-file /
+`+1733 −193` figure are both true — of different tips.** A bare count without
+its tip SHA is not a reproducible claim; that is why the table exists.
+
+**`d628250` is audited** — what it claims, whether it has command output
+behind it, and what the backend switch does to this branch's other evidence —
+in
+[`2026-10-20-reverify.md`](2026-10-20-reverify.md) **§15.3**.
 
 ---
 
 ## 1. What the branch contains
 
-7 commits, 16 files, `+1733 / −193`.
+**At the tip this note was written against (`7801901`):** 7 commits, 16
+files, `+1733 / −193`. **At the current tip (`d628250`):** 9 commits, 24
+files, `+25079 / −201` — see §1.0.
 
 ```console
 $ git log --oneline main..HEAD
@@ -47,6 +97,9 @@ $ git diff main --stat
 
 ### 1.1 The six commits authored in this work
 
+*(This table covers the tip `7801901`, the tip this note was written against.
+Two further commits by other actors have landed since — §1.0.)*
+
 | Commit | Subject | What it changes | Why it exists |
 |---|---|---|---|
 | `308eba8` | `fix(gitops): server-side apply for Argo CD CRDs` | `scripts/bootstrap.sh` | **F1.** The script applied the Argo CD install manifest **client-side**, which *replaced* the CRDs and destroyed the custom resources already on the cluster. Now `--server-side --force-conflicts`. |
@@ -61,6 +114,10 @@ G11, G12, G13), so a future change that reintroduces any of them fails the
 test suite rather than the next incident.
 
 ### 1.2 The one commit from another actor — `509d31a`
+
+*(At the tip this note was written against, `509d31a` was the only commit from
+another actor. Two more have landed since — `82b015b` and `d628250`, both from
+`imtarget05` — see §1.0 and the audit in the evidence document §15.3.)*
 
 | Field | Value |
 |---|---|
@@ -242,7 +299,13 @@ Being explicit, because the whole point of the branch is that the docs do
 not overstate what was verified:
 
 - **No Azure verification.** Zero `AZURE_CLOUD_VERIFIED` rows exist in the
-  evidence document. Merging does not create any.
+  **local-platform** evidence document (the one this note is about). Merging
+  does not create any.
+  *(Updated 2026-10-21: the tip now also carries a **separate** live-AKS
+  evidence document, `docs/evidence/live-aks-2026-10-20/`, produced by another
+  actor. It is **audited, not adopted** — its apply/destroy steps carry no
+  committed command output and its "3 nodes Ready" claim is contradicted by the
+  node file committed next to it. See the evidence document §15.3.)*
 - **No `legacyapp` deployment.** `scripts/bootstrap.sh` still refuses
   `legacyapp.yaml` unless `APPLY_LEGACYAPP=1` (ADR-015 source switch not
   approved).
@@ -262,13 +325,16 @@ The open items and their owners are listed in §11 of
 
 ## 5. One-line summary
 
-`recovery/g2-20261020` is **7 commits on top of an unmoved `main`
-(`0a92f58`)**, of which **6 are the F1–F5 fixes plus their evidence and
-1 (`509d31a`) belongs to another actor and must be preserved**; it merges
-**cleanly** (verified in a throwaway clone: `git merge` → "Automatic merge
-went well", and a cherry-pick of the 6 own commits → all clean), so the
-integration is a **`--ff-only` fast-forward** — but the Argo CD **pin**
-(`platform/argocd/VERSION` = `v3.5.5`), the **server-side apply** (F1), the
-**single dashboard owner** (F2) and the **duplicate-AppProject deletion**
+`recovery/g2-20261020` is **9 commits on top of an unmoved `main`
+(`0a92f58`)** — **7** at the tip this note was written against (`7801901`, of
+which **6** are the F1–F5 fixes plus their evidence and **1** (`509d31a`)
+belongs to another actor and must be preserved), **+2** since, both by another
+actor (`82b015b` the merge note + label-drift finding, `d628250` the live-AKS
+evidence + the terraform backend switch, audited in §15.3 of the evidence
+document); it merges **cleanly** (verified in a throwaway clone: `git merge` →
+"Automatic merge went well", and a cherry-pick of the 6 own commits → all
+clean), so the integration is a **`--ff-only` fast-forward** — but the Argo CD
+**pin** (`platform/argocd/VERSION` = `v3.5.5`), the **server-side apply** (F1),
+the **single dashboard owner** (F2) and the **duplicate-AppProject deletion**
 (F4) must survive the merge, and the runtime bootstrap must be re-proven
 after it.

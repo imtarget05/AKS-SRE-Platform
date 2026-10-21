@@ -1,21 +1,29 @@
 # AKS-SRE-Platform — Current Tasks
 
-> **Updated: 2026-10-20** (recovery branch `recovery/g2-20261020`, not yet
-> merged). Previous update: 2026-10-02.
+> **Updated: 2026-10-21** (re-verification of the `recovery/g2-20261020`
+> branch, tip `d628250`; previous update: 2026-10-20, tip `7801901`).
+> Previous update: 2026-10-02.
 > This file holds **one live section** only. Everything
 > that used to be appended here as a new `ACTIVE GOAL` heading has been moved to
 > [`../plans/history/`](../plans/history/) and is kept for the record, not for
 > execution. Superseded sections are never deleted; they are moved and marked.
 
-## LIVE — 2026-10-20: local-platform recovery closed (F1–F5), evidence recorded, ready to merge
+## LIVE — 2026-10-21: re-verification at tip `d628250` (stale claims corrected)
 
-**Status: 🟡 LOCAL platform green · ☁️ AZURE path still blocked · ⏳ awaiting merge.**
-**Branch:** `recovery/g2-20261020` (HEAD `7801901c`) · **base:** `main` @ `0a92f58`
-(unchanged — the integration is a `--ff-only` fast-forward, verified).
+**Status: 🟡 LOCAL platform green · ⚠️ AZURE path needs a decision on the
+terraform backend · ⏳ awaiting merge.**
+**Branch:** `recovery/g2-20261020` (HEAD `d628250`) · **base:** `main` @
+`0a92f58` (unchanged — the integration is a `--ff-only` fast-forward, verified).
+**Branch size at this tip:** 9 commits / 24 files / `+25079 −201` on top of
+`main` — **including** the 1 MB raw API dump
+`docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt`; excluding it,
+8 commits / 18 files / `+2426 −195`.
 **Full evidence:**
 [`../docs/evidence/local-platform/2026-10-20-reverify.md`](../docs/evidence/local-platform/2026-10-20-reverify.md)
-· **Merge note:**
+(§15 = the 2026-10-21 re-verification) ·
+**Merge note:**
 [`../docs/evidence/local-platform/2026-10-20-merge-note.md`](../docs/evidence/local-platform/2026-10-20-merge-note.md)
+(§1.0 = the tip move).
 
 ### What was fixed today (each with a failing-before / passing-after test)
 
@@ -27,24 +35,55 @@
 | **F4** | a **second** `AppProject` with a wildcard allowlist existed (`gitops/projects/portfolio.yaml`) | duplicate names are a hard failure; the duplicate file is deleted | G11 |
 | **F5** | Argo CD was installed from the **floating `stable` branch** while the docs claimed a pin | the pin lives in exactly one place — `platform/argocd/VERSION` = **v3.5.5** — and the installer *asserts* the running image matches it | G12 |
 
+### What was fixed on 2026-10-21 (the re-verification)
+
+| ID | Defect | Fix | Gate |
+|---|---|---|---|
+| **F6** | **`npm start` in `app/sre-demo-api` was a no-op** — `package.json` pointed at `src/server.js`, which only *exports* `createServer` and never calls `listen()`, so the process exited immediately and `curl /health` returned `000`. The **Dockerfile** (`CMD ["node","src/index.js"]`) was already correct, so the image worked while the script did not. | `package.json` → `"start": "node src/index.js"`; verified `npm start` → `curl /health` = **200**, `npm test` still **7/7** | **G14** (new) |
+
+**Three stale evidence claims were corrected** (the branch tip had moved to
+`d628250` and the machine state had changed) — the commit counts, the "no Azure
+session" statement, and the "56 objects, 0 failures" dry-run count. See
+§15.2 of the evidence document for the before/after of each.
+
 ### Cluster state today (local kind `local-platform`, **point-in-time**)
 
-- 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**.
-- Application **`flashsale` → `Synced` / `Healthy`** (18/18 rendered resources),
-  revision `8adcbeff…`; PreSync hook `batch/Job/order-migrate` **Complete 1/1**,
-  exit code 0 (`Schema is now at head.`).
+**Re-checked 2026-10-21** on the same cluster instance (13 h old), with the
+context pinned — see §15.4 of the evidence document for the ambient-context
+hazard:
+
+- 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**
+  (3 restarts each, from the Docker daemon crashes below).
+- Application **`flashsale` → `Synced` / `Healthy`** — unchanged from 2026-10-20.
 - **Self-heal verified for spec drift (~1 s) and for a deleted resource
   (~1 s).**
 - **FINDING — not a pass:** Argo CD v3.5.5 does **not** diff extra
   `metadata.labels`, so a hand-added label is **not** reverted (see §10 of the
   evidence document). **Self-heal is NOT verified for extra metadata labels.**
+- **NEW (2026-10-21) — the manifest dry-run count is cluster-dependent:** the
+  §2.3 scope (56 objects) server-dry-runs **56 pass / 0 fail** on 2026-10-20
+  and **53 pass / 3 fail** on 2026-10-21. Cause (measured): the synced
+  upstream `flashsale` application already owns the `order-worker` workload,
+  so KEDA's admission webhook rejects this repo's legacy
+  `ScaledObject/order-worker-scaler`. **The legacy `kubernetes/` root does not
+  server-dry-run cleanly on a cluster where the upstream app is synced** —
+  coexistence decision open, owner P03 (evidence §2.3.1).
 
 ### What is still NOT verified (never claim these)
 
-- **Azure: nothing.** No `az login`, no `terraform apply`; the remote-state
-  backend does not resolve from this machine (NXDOMAIN), so `terraform plan`
-  against the real backend cannot even be attempted. The 5 `terraform test`
-  assertions are **offline `mock_provider`** runs.
+- **Azure: nothing — by the 2026-10-20 recovery session.** No `az login`, no
+  `terraform apply` **in that session**; the remote-state backend does not
+  resolve from this machine (NXDOMAIN), so `terraform plan` against the real
+  backend could not be attempted. The 5 `terraform test` assertions are
+  **offline `mock_provider`** runs.
+  > **Corrected 2026-10-21.** An Azure session **does** exist today
+  > (`az account show` → `state: Enabled`) and **another actor** ran a live-AKS
+  > create/destroy cycle, recorded in
+  > `../docs/evidence/live-aks-2026-10-20/` and **audited** in §15.3 of the
+  > evidence document. It is **not adopted** here: its apply/destroy steps
+  > carry no committed command output and its "3 nodes Ready" claim is
+  > contradicted by the node file committed next to it. The **end state** (the
+  > cluster is gone, nothing left running) is confirmed by read-only `az`.
 - **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
   not set; ADR-015 source switch unapproved).
 - **Business E2E / concurrency flow** — not re-run; only the deployment plane
@@ -58,7 +97,7 @@
 
 | # | Item | Owner |
 |---|---|---|
-| 1 | Azure plan/apply impossible (no `az login` + backend NXDOMAIN) | P03 |
+| 1 | Azure path: session exists today but the **terraform backend was switched `azurerm` → `local`** by `d628250` and the remote state `aks-sre/validation.terraform.tfstate` is now **orphaned** — restore the remote backend or document it as abandoned | P03 |
 | 2 | `legacyapp` Application never deployed | P03 + ADR-015 approver |
 | 3 | business E2E / concurrency not re-run | P01 + P03 |
 | 4 | `sre-demo-api` pod-level RED metrics | P03 |
@@ -68,6 +107,9 @@
 | 8 | finding: extra `metadata.labels` are not self-healed (§10) | P03 |
 | 9 | `tflint` not installable from Homebrew (worked around with the release binary; CI unaffected) | P03 tooling |
 | 10 | 2 × `EXTERNAL_REPO_NOT_PRESENT` in the GitOps validator | P03 |
+| 11 | **NEW 2026-10-21:** the repo's legacy `kubernetes/` root does not server-dry-run cleanly next to the synced upstream app (3 of 56 objects rejected by the KEDA webhook) — coexistence decision | P03 |
+| 12 | **NEW 2026-10-21:** the **kubeconfig `current-context` on this machine is the destroyed `aks-portfolio-dev`**, not `kind-local-platform` — always pin `--context` (the machine's kubeconfig was **not** modified) | machine owner |
+| 13 | **NEW 2026-10-21:** `docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still says "AZURE_CLOUD_VERIFIED" unqualified, and its "3 nodes Ready" claim is contradicted by its own `kubectl-nodes.txt` (1 node, v1.36.4) — audit addendum appended | P03 / author of `d628250` |
 
 ### Next step (owned by whoever integrates — **nothing was merged or pushed**)
 
@@ -174,6 +216,16 @@ made the overlay's ConfigMap unable to arm it.
 ### Phase C — State isolation: DONE (2026-10-02)
 
 Isolated state backend provisioned in `rg-aks-tfstate/stakssre` (container `tfstate`), using Azure AD authentication (`use_azuread_auth = true`) and completely separated from MAIA storage.
+
+> **Stale as of 2026-10-21.** The backend was **switched to `local`** in
+> `terraform/aks-foundation/versions.tf` by commit `d628250` ("reconfig'd for
+> local evidence run") and the switch was **committed and not reverted**. The
+> state backend described above still exists, but the repository no longer
+> points at it, so it is now **orphaned** — a later `terraform apply` will not
+> read it. Restoring the remote backend, or documenting it as deliberately
+> abandoned, is an **open decision** (owner P03; evidence §15.3b). The
+> historical fact above (that the isolated backend was provisioned on
+> 2026-10-02) is unchanged.
 
 ### Phase D — Terraform module decoupling & tests: DONE (2026-10-02)
 
