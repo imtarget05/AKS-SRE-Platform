@@ -64,8 +64,12 @@ exchange.
    once on 2026-09-21 (see `evidence/phase7a/`) and then stopped and torn down;
    a **second** AKS cluster (`aks-portfolio-dev`) was applied and destroyed on
    2026-10-20/21 — see `evidence/live-aks-2026-10-20/` and its audit in
-   `evidence/local-platform/2026-10-20-reverify.md` §15.3. The end state —
-   nothing running — was re-confirmed read-only on 2026-10-21.
+   `evidence/local-platform/2026-10-20-reverify.md` §15.3. A **third** cluster
+   with the same name was applied on 2026-10-21 and is **still running** —
+   see `evidence/live-aks-azure-2026-10-21/` (§15.3d, §15.5b). **This
+   statement was true at ~11:0x on 2026-10-21 and is false from ~11:1x
+   onwards**; it is reproduced here with that timestamp because the
+   "nothing running" state is a point-in-time fact, not a property.
    Nothing above is Azure evidence except what is explicitly labelled
    `AZURE_VALIDATION` — which, as of this writing, is the 7A foundation only.
    The cluster autoscaler, pod autoscaler, enforced NetworkPolicy, PDB and drain

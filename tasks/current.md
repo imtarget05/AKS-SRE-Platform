@@ -8,16 +8,18 @@
 > [`../plans/history/`](../plans/history/) and is kept for the record, not for
 > execution. Superseded sections are never deleted; they are moved and marked.
 
-## LIVE — 2026-10-21: re-verification at tip `d628250` (stale claims corrected)
+## LIVE — 2026-10-21: re-verification at tip `a87990c` (stale claims corrected)
 
-**Status: 🟡 LOCAL platform green · ⚠️ AZURE path needs a decision on the
-terraform backend · ⏳ awaiting merge.**
-**Branch:** `recovery/g2-20261020` (HEAD `d628250`) · **base:** `main` @
+**Status: 🟡 LOCAL platform green (cluster left degraded by host crashes) ·
+☁️ AZURE cluster **still running** + backend decision pending · ⏳ awaiting
+merge.**
+**Branch:** `recovery/g2-20261020` (HEAD `a87990c`) · **base:** `main` @
 `0a92f58` (unchanged — the integration is a `--ff-only` fast-forward, verified).
-**Branch size at this tip:** 9 commits / 24 files / `+25079 −201` on top of
-`main` — **including** the 1 MB raw API dump
-`docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt`; excluding it,
-8 commits / 18 files / `+2426 −195`.
+**Branch size at this tip:** 13 commits / 31 files / `+48648 −206` on top of
+`main` — **including** the two ~1 MB raw API dumps
+`docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` and
+`docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt`; excluding
+both, 29 files / `+3499 −206`.
 **Full evidence:**
 [`../docs/evidence/local-platform/2026-10-20-reverify.md`](../docs/evidence/local-platform/2026-10-20-reverify.md)
 (§15 = the 2026-10-21 re-verification) ·
@@ -85,13 +87,17 @@ hazard:
   backend could not be attempted. The 5 `terraform test` assertions are
   **offline `mock_provider`** runs.
   > **Corrected 2026-10-21.** An Azure session **does** exist today
-  > (`az account show` → `state: Enabled`) and **another actor** ran a live-AKS
-  > create/destroy cycle, recorded in
-  > `../docs/evidence/live-aks-2026-10-20/` and **audited** in §15.3 of the
-  > evidence document. It is **not adopted** here: its apply/destroy steps
-  > carry no committed command output and its "3 nodes Ready" claim is
-  > contradicted by the node file committed next to it. The **end state** (the
-  > cluster is gone, nothing left running) is confirmed by read-only `az`.
+  > (`az account show` → `state: Enabled`) and **another actor** ran **two**
+  > live-AKS sessions, recorded in `../docs/evidence/live-aks-2026-10-20/` and
+  > `../docs/evidence/live-aks-azure-2026-10-21/` and **audited** in §15.3 of
+  > the evidence document. The first created and **destroyed** a cluster (its
+  > "3 nodes Ready" claim is contradicted by its own node file, and its
+  > apply/destroy steps carry no committed command output). The second created
+  > a cluster and **left it running** — its live-cluster claims were
+  > **independently re-verified read-only** at ~11:3x
+  > (`az aks list` → `Succeeded`; 1 node `Ready` v1.36.4; `azure-validate`
+  > `Pending`). ⚠️ **A billable cluster is running right now — see the open
+  > items.**
 - **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
   not set; ADR-015 source switch unapproved).
 - **Business E2E / concurrency flow** — not re-run; only the deployment plane
@@ -118,6 +124,8 @@ hazard:
 | 11 | **NEW 2026-10-21:** the repo's legacy `kubernetes/` root does not server-dry-run cleanly next to the synced upstream app (3 of 56 objects rejected by the KEDA webhook) — coexistence decision | P03 |
 | 12 | **NEW 2026-10-21:** the **kubeconfig `current-context` on this machine is the destroyed `aks-portfolio-dev`**, not `kind-local-platform` — always pin `--context` (the machine's kubeconfig was **not** modified) | machine owner |
 | 13 | **NEW 2026-10-21:** `docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still says "AZURE_CLOUD_VERIFIED" unqualified, and its "3 nodes Ready" claim is contradicted by its own `kubectl-nodes.txt` (1 node, v1.36.4) — audit addendum appended | P03 / author of `d628250` |
+| 14 | ⚠️ **NEW 2026-10-21, URGENT (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` from the `a87990c` run is **still running** (`ProvisioningState: Succeeded`, FQDN `aksportfoliodev-99hyn1lm`). The runbook's cost profile is create → validate → **destroy**. Not destroyed by this run (out of scope: cloud mutation) | **P03** |
+| 15 | **NEW 2026-10-21:** the local kind cluster is left **degraded** after 6 Docker-daemon crashes (`flashsale` `Synced / Progressing`, `order-api` crash-looping, `rabbitmq-0` not booting) — recovery needs a cluster mutation, not performed | P03 / runbook |
 
 ### Next step (owned by whoever integrates — **nothing was merged or pushed**)
 
