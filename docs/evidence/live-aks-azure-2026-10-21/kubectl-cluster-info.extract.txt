@@ -1,0 +1,64 @@
+# EXTRACT — not the raw dump.
+# Source file (removed from HEAD on 2026-10-21): kubectl-cluster-info.txt
+# Raw size: 1,104,134 bytes / 22,691 lines — a raw Kubernetes API dump
+#   (a concatenation of list objects), committed under a name that says 'cluster-info'.
+#   It is NOT `kubectl cluster-info` output.
+# Reproduce it with: kubectl --context aks-portfolio-dev get nodes -o json
+# No secret values are present in the raw dump — only secret *names*/references and
+#   managed-identity client IDs (neither is a credential).
+# The full raw blob is still present in the git history (commit a87990c); this extract
+#   replaces it at HEAD.
+
+## 1. First 30 lines, verbatim
+
+```json
+{
+    "kind": "NodeList",
+    "apiVersion": "v1",
+    "metadata": {
+        "resourceVersion": "1727"
+    },
+    "items": [
+        {
+            "metadata": {
+                "name": "aks-sys-13411604-vmss000000",
+                "uid": "c0457497-7979-4c14-827a-af328cb65af8",
+                "resourceVersion": "1487",
+                "creationTimestamp": "2026-10-21T04:09:48Z",
+                "labels": {
+                    "agentpool": "sys",
+                    "beta.kubernetes.io/arch": "amd64",
+                    "beta.kubernetes.io/instance-type": "Standard_D2s_v6",
+                    "beta.kubernetes.io/os": "linux",
+                    "failure-domain.beta.kubernetes.io/region": "eastasia",
+                    "failure-domain.beta.kubernetes.io/zone": "0",
+                    "kubernetes.azure.com/agentpool": "sys",
+                    "kubernetes.azure.com/ca-hash": "",
+                    "kubernetes.azure.com/cluster": "MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+                    "kubernetes.azure.com/consolidated-additional-properties": "ccd19a6c-cd04-11f1-90f2-8efb6bcc4f1b",
+                    "kubernetes.azure.com/kubelet-identity-client-id": "151c7082-b84b-4174-826b-b0f6e10c0ddd",
+                    "kubernetes.azure.com/kubelet-serving-ca": "cluster",
+                    "kubernetes.azure.com/localdns-state": "disabled",
+                    "kubernetes.azure.com/mode": "system",
+                    "kubernetes.azure.com/network-policy": "azure",
+                    "kubernetes.azure.com/node-image-version": "AKSUbuntu-2404gen2containerd-202610.16.1",
+```
+
+## 2. Node facts extracted from the dump
+
+| node | agentpool | node-image-version | kubelet | container-runtime | control-plane role | Ready | MemoryPressure |
+|---|---|---|---|---|---|---|---|
+| aks-sys-13411604-vmss000000 | sys | AKSUbuntu-2404gen2containerd-202610.16.1 | v1.36.4 | containerd://2.3.3-3 | none | True | False |
+
+## 3. What the dump contains (document kind -> item count)
+
+| kind | items |
+|---|---|
+| NodeList | 1 |
+| EventList | 198 |
+| ReplicationControllerList | n/a |
+| ServiceList | 4 |
+| DaemonSetList | 12 |
+| DeploymentList | 6 |
+| ReplicaSetList | 7 |
+| PodList | 18 |

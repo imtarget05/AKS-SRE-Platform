@@ -12,9 +12,7 @@
 
 ## LIVE — 2026-10-21: local platform **restored** + self-heal **re-measured** (tip `30ab2dd` on `main`)
 
-**Status: 🟢 LOCAL platform **restored** and **self-heal re-measured** (2026-10-21
-13:52–13:54 local) · ☁️ AZURE cluster **still running and billable** + backend
-decision pending · ⏳ `main` pushed at `30ab2dd`.**
+**Status: 🟢 LOCAL platform restored and self-heal re-measured · 🟢 AZURE cluster fully destroyed (0 billable dev resources remain, verified per runbook §9) · ⏳ `main` pushed at `30ab2dd`.**
 **Branch:** `main` @ `30ab2dd` (the `recovery/g2-20261020` work is merged
 into `main`; the branch itself sits at `d7a9319` locally / `a87990c` on
 origin and is **behind** `main` — `main` is the line that carries the current
@@ -164,7 +162,7 @@ cluster).
 | 11 | **NEW 2026-10-21:** the repo's legacy `kubernetes/` root does not server-dry-run cleanly next to the synced upstream app (3 of 56 objects rejected by the KEDA webhook) — coexistence decision | P03 |
 | 12 | **NEW 2026-10-21:** the **kubeconfig `current-context` on this machine is the destroyed `aks-portfolio-dev`**, not `kind-local-platform` — always pin `--context` (the machine's kubeconfig was **not** modified) | machine owner |
 | 13 | **NEW 2026-10-21:** `docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still says "AZURE_CLOUD_VERIFIED" unqualified, and its "3 nodes Ready" claim is contradicted by its own `kubectl-nodes.txt` (1 node, v1.36.4) — audit addendum appended | P03 / author of `d628250` |
-| 14 | ⚠️ **NEW 2026-10-21, URGENT (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` from the `a87990c` run is **still running** (`ProvisioningState: Succeeded`, FQDN `aksportfoliodev-99hyn1lm`). The runbook's cost profile is create → validate → **destroy**. Not destroyed by this run (out of scope: cloud mutation) — **re-confirmed still running at ~14:0x on 2026-10-21**; the teardown runbook is prepared, **not executed** | **P03** |
+| 14 | ~~**RESOLVED 2026-10-21 (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` was **DELETED** per `azure-teardown-runbook.md` §9. Re-verified: `az aks list` is empty, `az group show -n rg-aks-platform-dev` returns ResourceGroupNotFound. **0 billable Azure dev resources remain.**~~ | **P03** |
 | 15 | ~~**NEW 2026-10-21:** the local kind cluster is left **degraded** after 6 Docker-daemon crashes~~ → **RESOLVED 2026-10-21 12:16.** The cluster was **re-created from scratch** and the platform re-bootstrapped and re-measured: `flashsale` `Synced`/`Healthy`, Argo CD 7/7, hook green — and the **self-heal** re-measured at 13:52–13:54 local (**21 s / 17 s**, evidence §17). The **host-level** cause (memory pressure on the shared 7.75 GiB Docker VM) is unchanged and still needs the isolation recommendation | P03 / runbook |
 
 | 16 | **NEW 2026-10-21 14:0x:** the two committed raw dumps `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` (1 093 875 B) and `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt` (1 104 134 B) are **~1 MB each** of API dump under a `cluster-info` name — **proposal only** (`.gitattributes`, or untrack + keep a trimmed extract). **Not deleted or modified** by this slice — removal needs an explicit go-ahead | P03 |
@@ -175,9 +173,7 @@ cluster).
 The `recovery/g2-20261020` work **is on `main`** (pushed at `30ab2dd`); the
 branch itself now sits **behind** `main`. The remaining next steps, in order:
 
-1. **Destroy the billable Azure cluster** `aks-portfolio-dev` — the runbook is
-   prepared (`docs/runbooks/azure-teardown-runbook.md`) but **not executed**; it
-   needs an explicit go-ahead, because it is a cloud mutation.
+1. ~~**Destroy the billable Azure cluster** `aks-portfolio-dev`~~ — **COMPLETED** (runbook executed per `docs/runbooks/azure-teardown-runbook.md` §9; 0 Azure dev resources remain).
 2. **Decide the backend**: restore `backend "azurerm"` (the remote state
    `aks-sre/validation.terraform.tfstate` is **orphaned**) or document it as
    deliberately abandoned (owner P03).

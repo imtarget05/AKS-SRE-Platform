@@ -25,9 +25,10 @@ nodes:
     # (30080/30443) instead of a pending LoadBalancer, so the host ports below
     # are ready WITHOUT recreating the cluster. Bound to 127.0.0.1 on purpose —
     # this is a workstation, not a public endpoint.
+    # Note: hostPort 18080 avoids conflict with QuanLyKho frontend (kho-tra-sua-frontend) on 8080.
     extraPortMappings:
       - containerPort: 30080
-        hostPort: 8080
+        hostPort: 18080
         listenAddress: "127.0.0.1"
         protocol: TCP
       - containerPort: 30443

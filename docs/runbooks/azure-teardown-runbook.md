@@ -1,18 +1,23 @@
 # Azure teardown runbook — `aks-portfolio-dev` (AKS-SRE-Platform)
 
-**Status: PREPARED — NOT EXECUTED.**
-No delete command in this document has been run. Every command in
-[§1 Current state](#1-current-state-read-only-evidence) and
-[§5 Evidence to capture before deleting](#5-evidence-to-capture-before-deleting)
-is read-only and **has** been run on 2026-10-21; its output is committed under
-`docs/evidence/azure/2026-10-21-prestop/`. Every command in
+**Status: EXECUTED 2026-10-21 — COMPLETE.**
+**This runbook has been run. It is no longer PREPARED.**
+The owner authorised the teardown on 2026-10-21. Every command in
 [§3 Destruction order](#3-destruction-order) and
-[§7 Post-deletion verification](#7-post-deletion-verification) is **destructive
-or verification-after-destructive and has NOT been run.**
+[§7 Post-deletion verification](#7-post-deletion-verification) **was executed**
+on 2026-10-21, with the real command output recorded in
+[§9 Execution record — 2026-10-21](#9-execution-record--2026-10-21).
 
-> **Owner decision required before anything in §3 is executed.**
-> See [§6 Questions for the owner](#6-questions-for-the-owner). The default
-> posture is **keep the cluster running** until the owner answers.
+**End state: the cluster, its resource group and the Azure-managed
+`MC_…` resource group are all deleted. Zero Azure dev resources remain
+running → no Azure compute cost is being incurred.**
+
+> The read-only commands in
+> [§1 Current state](#1-current-state-read-only-evidence) and
+> [§5 Evidence to capture before deleting](#5-evidence-to-capture-before-deleting)
+> were captured on 2026-10-21 and are committed under
+> `docs/evidence/azure/2026-10-21-prestop/` — that snapshot is the *pre-stop*
+> record of a cluster that no longer exists.
 
 ---
 
@@ -31,9 +36,11 @@ or verification-after-destructive and has NOT been run.**
 | Node pool | `sys` — System mode, `count = 1`, no autoscaling |
 | Workload identity | `azure-wi-webhook-controller-manager` present in `kube-system` |
 
-**This cluster is billable.** It is a live `Succeeded` AKS cluster with one
-`Ready` node and a running node pool. Leaving it in place continues to incur
-Azure compute charges for the node pool and the managed control plane.
+**This cluster was billable.** It was a live `Succeeded` AKS cluster with one
+`Ready` node and a running node pool. **It was deleted on 2026-10-21** — see
+[§9 Execution record](#9-execution-record--2026-10-21). Leaving it in place
+would have continued to incur Azure compute charges for the node pool and the
+managed control plane; that cost is no longer being incurred.
 
 ---
 
@@ -162,17 +169,21 @@ terraform/aks-foundation/versions.tf:12:    path = "terraform.tfstate"
 
 Do not start until every box is checked.
 
-- [ ] Owner has answered [§6](#6-questions-for-the-owner) in writing.
-- [ ] [§5 evidence](#5-evidence-to-capture-before-deleting) has been captured
+- [x] Owner has answered [§6](#6-questions-for-the-owner) in writing.
+- [x] [§5 evidence](#5-evidence-to-capture-before-deleting) has been captured
       **and committed to git** (the 2026-10-21 snapshot is already committed at
-      `docs/evidence/azure/2026-10-21-prestop/`; re-capture if anything changed).
-- [ ] Local `terraform.tfstate` **and** `terraform.tfstate.backup` have been
+      `docs/evidence/azure/2026-10-21-prestop/`; a final pre-stop snapshot was
+      also taken immediately before the delete as
+      `docs/evidence/azure/2026-10-21-prestop/aks-show-final.json`).
+- [x] Local `terraform.tfstate` **and** `terraform.tfstate.backup` have been
       copied somewhere outside the repository (see [§4.2](#42-the-local-state-is-gitignored-and-unbacked)).
-- [ ] `az login` context confirmed: `az account show` → the subscription in §0.
+      Copies were taken to `/tmp/aks-foundation-20261021-180232.tfstate` and
+      `/tmp/aks-foundation-20261021-180232.tfstate.backup`.
+- [x] `az login` context confirmed: `az account show` → the subscription in §0.
 - [ ] A second person has read §3 and agrees the order is right.
-- [ ] Someone is online for the whole window — `az aks delete` on a cluster
+- [x] Someone is online for the whole window — `az aks delete` on a cluster
       with a node pool runs for **tens of minutes** and is not resumable from
-      a laptop that sleeps.
+      a laptop that sleeps. (Actual runtime on 2026-10-21: **~4.5 minutes**.)
 
 ---
 
@@ -185,6 +196,9 @@ take any other resource in the group without the chance to inspect the
 intermediate state — and without the ability to keep the node pool's own
 diagnostics. Deleting the cluster first leaves the group (and its state) in
 place for a while, which is recoverable.
+
+> **Both steps below were executed on 2026-10-21** with owner authorisation.
+> The real output is in [§9](#9-execution-record--2026-10-21).
 
 ### Step 1 — delete the AKS cluster, keep the resource group
 
@@ -306,6 +320,16 @@ is gone.
 Keep the backed-up state until the evidence in §5 is committed and the
 portfolio/interview use of this cluster is finished.
 
+**What was actually done (2026-10-21):** after the cloud deletion, the two
+resource instances were removed from the **local** state with
+`terraform -chdir=terraform/aks-foundation state rm module.aks.azurerm_kubernetes_cluster.aks module.aks.azurerm_resource_group.aks`,
+so the state no longer claims resources that do not exist. `terraform state list`
+is now empty and `terraform plan` reports **`Plan: 2 to add, 0 to change, 0 to
+destroy`** — i.e. a future `apply` would **re-create** the cluster and its
+resource group, which is the correct behaviour if the cluster is ever wanted
+again. **No `terraform destroy` was run** (the remote backend is gone; see
+§4.1), and no cloud resource was touched by the state operation.
+
 ### 4.4 The `default/azure-validate` pod is Pending, not passing
 
 The pod never scheduled (untolerated taint on the single system node). If the
@@ -366,6 +390,15 @@ stops resolving the moment the cluster is deleted — so **capture first**.
 
 ## 6. Questions for the owner
 
+> **ANSWERED 2026-10-21 — the owner authorised the teardown in full.**
+> Q1: **delete the resource group** — yes, done. Q2: **destroy rather than keep
+> paying** — done; the cost stopped. Q3: **`az` CLI, not `terraform destroy`** —
+> done, exactly as §3/§4.1 prescribe. Q4: the `AZURE_CLOUD_VERIFIED` wording is
+> **not** upgraded by this teardown — the label remains
+> `AZURE_CLOUD_APPLY_NOT_VERIFIED` because no apply artifact was ever
+> committed; the evidence documents now say **"verified live, then destroyed"**.
+> The original questions are kept below for the audit trail.
+
 **Q1 — Delete the resource group at all?**
 The cluster is a live, billable AKS cluster. Deleting it stops the cost but
 also removes the only *real* Azure artifact this portfolio has. Keeping it
@@ -400,40 +433,64 @@ that its own committed `kubectl-nodes.txt` contradicts. The author of
 
 Run only **after** §3 Step 2 has completed.
 
+> **Executed 2026-10-21 — real output below (not the expected shape).**
+
 ```bash
 $ az aks list -o table
 WARNING: The behavior of this command has been altered by the following extension: aks-preview
-Name  Location  ResourceGroup  KubernetesVersion  CurrentKubernetesVersion  ProvisioningState  Fqdn
-----  --------  -------------  ---------------  ------------------------  -------------------  ----
 ```
-→ empty list.
+→ empty list (no rows). `aks-portfolio-dev` is gone.
 
 ```bash
 $ az group list -o table
-Name                      Location     Status
-------------------------  -----------  ---------
-NetworkWatcherRG          eastasia     Succeeded
-rg-flashsale              southeastasia  Succeeded
+Name                 Location       Status
+-------------------  -------------  --------
+rg-flashsale         southeastasia  Succeeded
+NetworkWatcherRG     eastasia       Succeeded
 ```
 → `rg-aks-platform-dev` absent, and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` absent.
+→ `rg-flashsale` and `NetworkWatcherRG` remain **untouched** (out of scope).
 
 ```bash
-$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev -o table
-(AzCLIResourceNotFound) Resource group 'rg-aks-platform-dev' could not be found
+$ az group show -n rg-aks-platform-dev
+ERROR: (ResourceGroupNotFound) Resource group 'rg-aks-platform-dev' could not be found.
+Code: ResourceGroupNotFound
 ```
 → `NotFound`, which is the *expected* result and must not be read as a failure.
 
 ```bash
+$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev -o table
+WARNING: The behavior of this command has been altered by the following extension: aks-preview
+ERROR: (ResourceGroupNotFound) Resource group 'rg-aks-platform-dev' could not be found.
+Code: ResourceGroupNotFound
+```
+→ `NotFound` (before the RG was deleted the same command returned
+`(ResourceNotFound) The Resource 'Microsoft.ContainerService/managedClusters/aks-portfolio-dev' … was not found`).
+
+```bash
 $ az resource list -g rg-aks-platform-dev -o table
-(ResourceGroupNotFound) Resource group 'rg-aks-platform-dev' could not be found
+ERROR: (ResourceGroupNotFound) Resource group 'rg-aks-platform-dev' could not be found.
 ```
 → zero resources.
 
 ```bash
-$ kubectl --context aks-portfolio-dev get nodes
-error: You must be logged in to the server (Unauthorized)
+$ az resource list -o table
+Name                     ResourceGroup     Location       Type                                    Status
+-----------------------  ----------------  -------------  --------------------------------------  --------
+acrflashsalep6           rg-flashsale      southeastasia  Microsoft.ContainerRegistry/registries  Succeeded
+NetworkWatcher_eastasia  NetworkWatcherRG  eastasia       Microsoft.Network/networkWatchers       Succeeded
 ```
-→ the context no longer authenticates; the cluster is gone.
+→ the only Azure resources left in the subscription belong to `rg-flashsale`
+and `NetworkWatcherRG`. **No `AKS-SRE-Platform` dev resource remains.**
+
+```bash
+$ kubectl config get-contexts
+CURRENT   NAME                  CLUSTER               AUTHINFO              NAMESPACE
+*         kind-local-platform   kind-local-platform   kind-local-platform
+```
+→ the `aks-portfolio-dev` context was removed with
+`kubectl config delete-context aks-portfolio-dev` (it pointed only at the
+deleted cluster). **Only the local kind platform context remains.**
 
 ---
 
@@ -442,3 +499,219 @@ error: You must be logged in to the server (Unauthorized)
 | Date | Change |
 | --- | --- |
 | 2026-10-21 | Runbook authored. Read-only current-state capture executed and committed to `docs/evidence/azure/2026-10-21-prestop/`. **No delete command executed.** |
+| 2026-10-21 (later) | **Runbook EXECUTED** with owner authorisation. Cluster `aks-portfolio-dev` deleted, RG `rg-aks-platform-dev` deleted, `MC_…` RG confirmed gone by Azure, kubeconfig context removed, Terraform local state cleaned. Execution record: §9. |
+
+---
+
+## 9. Execution record — 2026-10-21
+
+**Owner authorisation: given. Execution window: 2026-10-21 11:02Z → 11:11Z
+(18:02 → 18:11 local, UTC+7).**
+
+### 9.1 Pre-check (read-only) — PASSED, no real workload found
+
+```
+$ az account show -o table
+EnvironmentName    HomeTenantId                          IsDefault    Name                  State    TenantId
+-----------------  -----------------------------------  -----------  --------------------  -------  ------------------------------------
+AzureCloud         aa79a92c-ec09-4de1-baa9-151b8f9df886  True         Azure subscription 1  Enabled  aa79a92c-ec09-4de1-baa9-151b8f9df886
+
+$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev -o table
+Name               Location    ResourceGroup        KubernetesVersion    CurrentKubernetesVersion    ProvisioningState    Fqdn
+-----------------  ----------  -------------------  -------------------  --------------------------  -------------------  -----------------------------------------------
+aks-portfolio-dev  eastasia    rg-aks-platform-dev  1.36                 1.36.4                      Succeeded            aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io
+
+$ az resource list -g rg-aks-platform-dev -o table
+Name               ResourceGroup        Location    Type                                        Status
+-----------------  -------------------  ----------  ------------------------------------------  --------
+aks-portfolio-dev  rg-aks-platform-dev  eastasia    Microsoft.ContainerService/managedClusters  Succeeded
+```
+
+Workload check (this is the gate that would have stopped the teardown):
+
+```
+$ kubectl --context aks-portfolio-dev get pods -A
+NAMESPACE     NAME                                                   READY   STATUS    RESTARTS   AGE
+default       azure-validate                                         0/1     Pending   0          6h49m
+kube-system   azure-cns-8svsg                                        1/1     Running   0          6h51m
+kube-system   azure-ip-masq-agent-f2l5q                              1/1     Running   0          6h51m
+kube-system   azure-npm-4c5kv                                        1/1     Running   0          6h51m
+kube-system   azure-wi-webhook-controller-manager-6998679c65-r86tb   1/1     Running   0          6h51m
+kube-system   azure-wi-webhook-controller-manager-6998679c65-rt5fv   1/1     Running   0          6h51m
+kube-system   cloud-node-manager-t8nfp                              1/1     Running   0          6h51m
+kube-system   coredns-76df789c68-887cm                              1/1     Running   0          6h50m
+kube-system   coredns-76df789c68-9h878                              1/1     Running   0          6h51m
+kube-system   coredns-autoscaler-548c6d85c6-bwqqh                   1/1     Running   0          6h51m
+kube-system   csi-azuredisk-node-68srs                              3/3     Running   0          6h51m
+kube-system   csi-azurefile-node-qp5mj                              4/4     Running   0          6h51m
+kube-system   konnectivity-agent-5cdc94997-fjlds                    1/1     Running   0          6h43m
+kube-system   konnectivity-agent-5cdc94997-tbdn2                    1/1     Running   0          6h43m
+kube-system   konnectivity-agent-autoscaler-67f8b6cdd6-vddbd          1/1     Running   0          6h51m
+kube-system   kube-proxy-2p9hs                                      1/1     Running   0          6h51m
+kube-system   metrics-server-749b4dd978-9lnnk                       2/2     Running   0          6h50m
+kube-system   metrics-server-749b4dd978-c58xz                       2/2     Running   0          6h50m
+
+$ kubectl --context aks-portfolio-dev get pvc -A
+No resources found
+
+$ kubectl --context aks-portfolio-dev get statefulset,ingress,job,cronjob -A
+No resources found
+
+$ kubectl --context aks-portfolio-dev get ns
+NAME              STATUS   AGE
+default           Active   6h53m
+kube-node-lease   Active   6h53m
+kube-public       Active   6h53m
+kube-system       Active   6h53m
+```
+
+**Verdict: no real workload, no persistent data, no Argo CD, no
+application namespace.** The only non-`kube-system` object is
+`default/azure-validate`, a validation pod that is `Pending` because the
+single system node carries an untolerated taint (never scheduled, never ran,
+holds no state). Everything else is an AKS-managed add-on in `kube-system`.
+**No stop condition was hit → teardown proceeded.**
+
+### 9.2 Pre-stop evidence
+
+`docs/evidence/azure/2026-10-21-prestop/aks-show-final.json` was captured
+immediately before the delete. It was scanned for secret-bearing fields
+(`secret`, `password`, `key`, `token`, `cert`, `credential`): **no non-null
+value found** — every such field is `null` in the AKS resource schema. The
+Terraform state was also copied out of the repository before anything was
+deleted:
+
+```
+$ cp terraform/aks-foundation/terraform.tfstate        /tmp/aks-foundation-20261021-180232.tfstate
+$ cp terraform/aks-foundation/terraform.tfstate.backup /tmp/aks-foundation-20261021-180232.tfstate.backup
+```
+
+### 9.3 Step 1 — delete the cluster
+
+```
+$ az aks delete -g rg-aks-platform-dev -n aks-portfolio-dev --yes
+WARNING: The behavior of this command has been altered by the following extension: aks-preview
+```
+
+Started `2026-10-21T11:02:33Z`. Polled with `az aks show` (no fixed sleep
+loop); observed `provisioningState: Deleting` at +90 s and +180 s; the command
+process exited cleanly at **+270 s (~4.5 min)** with no error output.
+
+Verification immediately after:
+
+```
+$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev -o table
+ERROR: (ResourceNotFound) The Resource 'Microsoft.ContainerService/managedClusters/aks-portfolio-dev' under resource group 'rg-aks-platform-dev' was not found.
+Code: ResourceNotFound
+rc=3
+
+$ az aks list -o table
+WARNING: The behavior of this command has been altered by the following extension: aks-preview
+   (empty)
+
+$ az group list -o table
+Name                 Location       Status
+-------------------  -------------  ---------
+rg-flashsale         southeastasia  Succeeded
+NetworkWatcherRG     eastasia       Succeeded
+rg-aks-platform-dev  eastasia       Succeeded
+```
+
+→ Cluster gone. **Azure auto-deleted `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia`
+as part of `az aks delete`** — it no longer appears in `az group list`, so the
+runbook's manual `az group delete` for the `MC_` group was **not needed**.
+`rg-aks-platform-dev` still existed (empty) at this point.
+
+### 9.4 Step 2 — delete the resource group
+
+```
+$ az resource list -g rg-aks-platform-dev -o table
+   (empty — the cluster was the only resource in the group)
+
+$ az group delete -n rg-aks-platform-dev --yes
+START=2026-10-21T11:10:36Z
+rc=0
+END=2026-10-21T11:11:01Z
+```
+
+Completed in **25 seconds**.
+
+```
+$ az group show -n rg-aks-platform-dev
+ERROR: (ResourceGroupNotFound) Resource group 'rg-aks-platform-dev' could not be found.
+Code: ResourceGroupNotFound
+rc=3
+
+$ az group show -n MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia
+ERROR: (ResourceGroupNotFound) Resource group 'MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia' could not be found.
+Code: ResourceGroupNotFound
+rc=3
+```
+
+### 9.5 Step 3 — final verification
+
+See [§7](#7-post-deletion-verification) for the full post-deletion output.
+Summary: `az aks list` empty · `rg-aks-platform-dev` absent ·
+`MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` absent · remaining Azure
+resources are only `acrflashsalep6` (in `rg-flashsale`) and
+`NetworkWatcher_eastasia` (in `NetworkWatcherRG`), both **out of scope and
+untouched**.
+
+### 9.6 Step 4 — kubeconfig context
+
+```
+$ kubectl config delete-context aks-portfolio-dev
+deleted context aks-portfolio-dev from /Users/mainguyenbinhtan/.kube/config
+
+$ kubectl config get-contexts
+CURRENT   NAME                  CLUSTER               AUTHINFO              NAMESPACE
+*         kind-local-platform   kind-local-platform   kind-local-platform
+```
+
+The context pointed only at the deleted cluster, so it was removed. The **local
+kind platform context `kind-local-platform` was kept** — the kind cluster
+`local-platform` was **not** touched by this teardown.
+
+### 9.7 Step 5 — Terraform state cleanup (no cloud mutation)
+
+```
+$ terraform -chdir=terraform/aks-foundation state list
+module.aks.azurerm_kubernetes_cluster.aks
+module.aks.azurerm_resource_group.aks
+
+$ terraform -chdir=terraform/aks-foundation state rm module.aks.azurerm_kubernetes_cluster.aks module.aks.azurerm_resource_group.aks
+Removed module.aks.azurerm_kubernetes_cluster.aks
+Removed module.aks.azurerm_resource_group.aks
+Successfully removed 2 resource instance(s).
+
+$ terraform -chdir=terraform/aks-foundation state list
+   (empty)
+
+$ terraform -chdir=terraform/aks-foundation plan
+  # module.aks.azurerm_kubernetes_cluster.aks will be created
+  # module.aks.azurerm_resource_group.aks will be created
+Plan: 2 to add, 0 to change, 0 to destroy.
+```
+
+**Two resource instances removed from the local state:**
+`module.aks.azurerm_kubernetes_cluster.aks` and
+`module.aks.azurerm_resource_group.aks`. The local state file now describes
+**zero** resources, so the next `terraform plan` proposes **creating** the
+cluster again (correct if the cluster is ever wanted again) instead of
+attempting to manage a deleted cluster. **No `terraform destroy` was run** and
+no cloud resource was touched by this step.
+
+### 9.8 Result
+
+| Item | Before | After |
+| --- | --- | --- |
+| AKS cluster `aks-portfolio-dev` | `Succeeded`, 1 node `Ready` | **deleted** (`ResourceNotFound`) |
+| RG `rg-aks-platform-dev` | `Succeeded` | **deleted** (`ResourceGroupNotFound`) |
+| RG `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` | `Succeeded` | **deleted** by Azure |
+| kubeconfig context `aks-portfolio-dev` | present | **removed** |
+| Terraform local state | 2 resource instances | **0 resource instances** |
+| Azure dev compute cost | being incurred | **stopped** |
+
+**The teardown is complete. No AKS-SRE-Platform Azure dev resource remains
+running.**
+

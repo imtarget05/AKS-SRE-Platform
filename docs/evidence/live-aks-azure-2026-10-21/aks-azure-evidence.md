@@ -39,18 +39,25 @@
 - `docs/evidence/live-aks-azure-2026-10-21/kubectl-pods.txt`
 - `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt`
 
-## Stop (tuỳ chọn)
-- `terraform destroy -auto-approve` để giải phóng AKS + resource group (theo runbook chi phí)
+## Stop (done 2026-10-21)
+- ~~`terraform destroy -auto-approve` để giải phóng AKS + resource group (theo runbook chi phí)~~
 - Chưa destroy vì cluster đang phục vụ validate
+- **2026-10-21 (later): cluster đã bị XOÁ** — bằng `az aks delete` + `az group delete` theo
+  [`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md) §9 (owner đã cho phép).
+  Bằng chứng: [`../azure/2026-10-21-prestop/aks-show-final.json`](../azure/2026-10-21-prestop/aks-show-final.json)
+  (snapshot ngay trước khi xoá) + runbook §9.3–§9.5 (output thật: `ResourceNotFound` /
+  `ResourceGroupNotFound`).
 
-Status: **AZURE_K8S_LIVE_VERIFIED** — Kubernetes cluster đang chạy trên Azure AKS, không phải local.
+Status: **AZURE_K8S_LIVE_VERIFIED** — Kubernetes cluster đã chạy trên Azure AKS, không phải local.
+**Cập nhật 2026-10-21: cluster đã bị xoá** → trạng thái hiện tại là **đã verify live, rồi destroy**.
 
 > **corrected 2026-10-21:** this label is **narrow** — it attests only that a Kubernetes control
-> plane is live on AKS (independently re-verified read-only, see the Addendum below). It must **not**
-> be read as the Terraform path being verified: the `terraform apply` that created the cluster has
-> **no committed command output** → `AZURE_CLOUD_APPLY_NOT_VERIFIED`. The cluster is also **still
-> running and billable** — the teardown is prepared, **not executed** (owner P03). Label map:
-> **Addendum 2 §A2.3**.
+> plane was live on AKS (independently re-verified read-only, see the Addendum below), and that it
+> was subsequently **deleted on 2026-10-21** (teardown executed with owner authorisation; runbook §9).
+> It must **not** be read as the Terraform path being verified: the `terraform apply` that created the
+> cluster has **no committed command output** → `AZURE_CLOUD_APPLY_NOT_VERIFIED`. The cluster is
+> **no longer running** and **no longer billable** — the teardown is **executed** (owner P03, closed).
+> Label map: **Addendum 2 §A2.3**.
 
 ---
 
@@ -89,11 +96,14 @@ test pod really is `Pending`.
 contains no plan file and no apply log, only the narrative above and the
 resulting live state.
 
-**⚠️ The cluster is still running.** This document deliberately stopped one
+**⚠️ At the time of this re-verification the cluster was still running.** This
+document deliberately stopped one
 step short of the runbook's `terraform destroy` ("Chưa destroy vì cluster
-đang phục vụ validate"), so `aks-portfolio-dev` / `rg-aks-platform-dev` are
+đang phục vụ validate"), so `aks-portfolio-dev` / `rg-aks-platform-dev` were
 **live and billable**. Destroying them is a cloud mutation and was **not**
 performed by the re-verification. **Owner: P03.**
+**→ Superseded on 2026-10-21: the teardown was later executed with owner
+authorisation and both are now deleted. See Addendum 3 below and runbook §9.**
 
 ---
 
@@ -173,13 +183,48 @@ should be read as claiming otherwise.
 | `AZURE_CLOUD_APPLY_NOT_VERIFIED` | corrected label for the Terraform path | **No committed `terraform apply` output** exists for either live-AKS run. |
 | `AZURE_CLOUD_VERIFIED` | **not used** for either run | That label requires command output committed for the claim being made. |
 
-### A2.4 The cost item is still open
+### A2.4 The cost item — closed on 2026-10-21
 
-The cluster remains **live and billable** as of the read-only check above
-(~12:2x–12:3x on 2026-10-21). The teardown runbook is **prepared but not
-executed**:
+The cluster was **live and billable** as of the read-only check above
+(~12:2x–12:3x on 2026-10-21). The teardown runbook was **prepared but not
+executed** at that point:
 [`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md),
 with the pre-stop inventory under
-[`../azure-teardown/azure/2026-10-21-prestop/`](../azure-teardown/azure/2026-10-21-prestop/).
+[`../azure/2026-10-21-prestop/`](../azure/2026-10-21-prestop/).
 **Owner: P03.** No cloud mutation was executed by this slice.
+
+> **Update 2026-10-21 (later):** the runbook **was** executed with owner
+> authorisation — cluster + RG + `MC_` RG deleted. The cost item is **closed**.
+> See **Addendum 3** below.
+
+---
+
+## Addendum 3 — teardown executed (2026-10-21)
+
+**The cluster documented above was deleted on 2026-10-21** with explicit owner
+authorisation, following
+[`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md)
+§9 (which records the real command output). Pre-stop snapshot:
+[`../azure/2026-10-21-prestop/aks-show-final.json`](../azure/2026-10-21-prestop/aks-show-final.json).
+
+| Check | Result (real output, 2026-10-21 11:02Z–11:11Z) |
+|---|---|
+| `az aks delete -g rg-aks-platform-dev -n aks-portfolio-dev --yes` | completed in **~270 s**, no error output |
+| `az aks show -g rg-aks-platform-dev -n aks-portfolio-dev` | `ERROR: (ResourceNotFound) The Resource 'Microsoft.ContainerService/managedClusters/aks-portfolio-dev' … was not found` (rc=3) |
+| `az aks list -o table` | **empty** |
+| `az group delete -n rg-aks-platform-dev --yes` | rc=0 in **25 s** (11:10:36Z → 11:11:01Z) |
+| `az group show -n rg-aks-platform-dev` | `ERROR: (ResourceGroupNotFound) … could not be found` (rc=3) |
+| `az group show -n MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` | `ERROR: (ResourceGroupNotFound) … could not be found` — Azure auto-deleted it |
+| `az resource list -o table` | only `acrflashsalep6` (`rg-flashsale`) and `NetworkWatcher_eastasia` (`NetworkWatcherRG`) remain — **both out of scope, untouched** |
+| `kubectl config delete-context aks-portfolio-dev` | `deleted context aks-portfolio-dev from /Users/mainguyenbinhtan/.kube/config` |
+| `terraform state rm module.aks.azurerm_kubernetes_cluster.aks module.aks.azurerm_resource_group.aks` | `Successfully removed 2 resource instance(s).` → `terraform state list` empty → `terraform plan` = **`Plan: 2 to add, 0 to change, 0 to destroy.`** |
+
+**Current state: 0 Azure dev resources running → no Azure compute cost is being
+incurred.**
+
+**Labels are unchanged and are NOT upgraded by this teardown:** the apply still
+has no committed command output, so the Terraform path remains
+**`AZURE_CLOUD_APPLY_NOT_VERIFIED`** (with `AZURE_CLOUD_PLAN_VERIFIED` from the
+first run's committed plan). The only thing this addendum adds is the
+**destroy** half: *verified live, then destroyed*.
 

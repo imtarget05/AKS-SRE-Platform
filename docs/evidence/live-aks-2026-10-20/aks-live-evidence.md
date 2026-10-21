@@ -66,14 +66,21 @@
   > **corrected 2026-10-21:** the lines above describe the **first** cluster's teardown of
   > 2026-10-20 and are true of *that* session (the destroy was confirmed read-only the same day);
   > they are **not** a statement about the current end state. As of 2026-10-21 a **second**
-  > `aks-portfolio-dev` / `rg-aks-platform-dev` is **running and billable** and the teardown is
+  > `aks-portfolio-dev` / `rg-aks-platform-dev` was **running and billable** and the teardown was
   > **prepared, not executed** (owner P03). See the status line below and **Addendum 2 §A2.2**.
+  >
+  > **updated 2026-10-21 (later):** the **second** cluster was **DELETED** (owner authorised the
+  > teardown; `az aks delete` + `az group delete`, real output in
+  > [`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md) §9).
+  > **"No Azure resources remain running" is TRUE again** — and this time it is an executed,
+  > owner-authorised end state. See **Addendum 3**.
 
 Status: **AZURE_CLOUD_PLAN_VERIFIED / AZURE_CLOUD_APPLY_NOT_VERIFIED** — the `terraform plan` is
 committed (`terraform-plan.txt`), but the `terraform apply` and the `terraform destroy` carry **no
-committed command output**, so the Terraform path is **not** cloud-verified. A **second** cluster
-(`aks-portfolio-dev` in `rg-aks-platform-dev`, `eastasia`) is **running and billable** right now; the
-teardown is **prepared but not executed** (`docs/runbooks/azure-teardown-runbook.md`, owner P03).
+committed command output**, so the Terraform path is **not** cloud-verified. The **second** cluster
+(`aks-portfolio-dev` in `rg-aks-platform-dev`, `eastasia`) was **running and billable** earlier on
+2026-10-21; it has since been **DELETED** (2026-10-21, owner-authorised teardown —
+`docs/runbooks/azure-teardown-runbook.md` §9). **0 Azure dev resources now remain → no Azure cost.**
 
 > **corrected 2026-10-21:** the original status line read "Status: **AZURE_CLOUD_VERIFIED** —
 > cluster created, validated, and fully destroyed per runbook cost profile. No Azure resources remain
@@ -82,9 +89,12 @@ teardown is **prepared but not executed** (`docs/runbooks/azure-teardown-runbook
 > 1. **The label.** Only the *plan* is backed by a committed artifact, so the correct label is
 >    **`AZURE_CLOUD_PLAN_VERIFIED`** / **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** — **not**
 >    `AZURE_CLOUD_VERIFIED`.
-> 2. **"No Azure resources remain running" is FALSE as of 2026-10-21.** `az aks list` shows
+> 2. **"No Azure resources remain running" was FALSE at the time of this correction (2026-10-21,
+>    ~12:2x).** `az aks list` showed
 >    `aks-portfolio-dev` (`rg-aks-platform-dev`, `eastasia`) **running and billable**; the teardown
->    is **prepared, not executed**. Read-only evidence: **Addendum 1** and **Addendum 2 §A2.2**.
+>    was **prepared, not executed**. Read-only evidence: **Addendum 1** and **Addendum 2 §A2.2**.
+>    **→ Update 2026-10-21 (later): that cluster has since been DELETED** (owner-authorised
+>    teardown, runbook §9), so the sentence is **TRUE again** — see **Addendum 3**.
 >
 > The original wording is kept above/through **Addendum 1** and **Addendum 2 §A2.1** as the
 > author's record of 2026-10-20/21.
@@ -95,16 +105,21 @@ teardown is **prepared but not executed** (`docs/runbooks/azure-teardown-runbook
 >    apply and the destroy carry **no committed command output**, so the
 >    correct label is **`AZURE_CLOUD_PLAN_VERIFIED`** /
 >    **`AZURE_CLOUD_APPLY_NOT_VERIFIED`** — not `AZURE_CLOUD_VERIFIED`.
-> 2. **"No Azure resources remain running" is FALSE as of 2026-10-21.**
+> 2. **"No Azure resources remain running" was FALSE at the time of this correction
+>    (2026-10-21).**
 >    A **second** cluster with the **same name** (`aks-portfolio-dev` in
 >    `rg-aks-platform-dev`, `eastasia`, FQDN
 >    `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`, node
 >    `aks-sys-13411604-vmss000000`, **v1.36.4**) was created by a later run
->    (`a87990c`) and was **deliberately left running**. It is **live and
+>    (`a87990c`) and was **deliberately left running**. It was **live and
 >    billable** at the time of this correction — confirmed read-only with
 >    `az aks list` / `az group list` / `kubectl --context aks-portfolio-dev
->    get nodes`. Teardown is **prepared but not executed**
+>    get nodes`. Teardown was **prepared but not executed**
 >    (`docs/runbooks/azure-teardown-runbook.md`). **Owner: P03.**
+>    **→ Update 2026-10-21 (later): that second cluster was DELETED** by the
+>    owner-authorised teardown — real output in
+>    [`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md) §9;
+>    see **Addendum 3**.
 >
 > The original status line is kept above as the author's record; the
 > correction, its evidence and the current end state are in **Addendum 2**.
@@ -200,9 +215,13 @@ What follows is the **corrected statement** and the read-only evidence for it.
 | `terraform destroy` | "complete; `az aks show`/`az group show` → `ResourceNotFound`" | **no committed command output** → **NOT VERIFIED by an artifact** (the *first* cluster's destruction was confirmed read-only on 2026-10-21 ~10:5x–11:0x, before a second cluster was created — see §15.5(a) of the local-platform evidence document) |
 | Test pod | "`portfolio-validate` created (Pending)" | **no evidence** — the string does not occur in any committed artifact |
 | **Overall label** | `AZURE_CLOUD_VERIFIED` | **`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`** |
-| "No Azure resources remain running" | "All Azure resources released" | **FALSE at the time of this correction** — a **second** `aks-portfolio-dev` is **live and billable** (§A2.2) |
+| "No Azure resources remain running" | "All Azure resources released" | **FALSE at the time of this correction** — a **second** `aks-portfolio-dev` was **live and billable** (§A2.2). **→ TRUE again since 2026-10-21: that cluster was DELETED** (owner-authorised teardown, §A2.4 / **Addendum 3**) |
 
-### A2.2 The current end state — re-confirmed read-only on 2026-10-21, ~12:2x–12:3x
+### A2.2 The end state at ~12:2x–12:3x on 2026-10-21 — since **destroyed** (2026-10-21)
+
+> **This section records the state at ~12:2x–12:3x on 2026-10-21, when the
+> second cluster was still live. It was deleted later the same day — see
+> §A2.4 / Addendum 3.**
 
 ```console
 $ az aks list -o table
@@ -237,18 +256,24 @@ $ kubectl --context aks-portfolio-dev get pods -A | grep -v kube-system
 default       azure-validate                                         0/1     Pending   0          17m
 ```
 
-**Consequence: `aks-portfolio-dev` / `rg-aks-platform-dev` are BILLABLE right
-now.** The teardown is **prepared but NOT executed** — see
+**Consequence at the time (2026-10-21 ~12:3x): `aks-portfolio-dev` /
+`rg-aks-platform-dev` were BILLABLE right then.** The teardown was
+**prepared but NOT executed** — see
 [`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md)
 (commit `984c4bc`) and the pre-stop inventory under
-[`../azure-teardown/azure/2026-10-21-prestop/`](../azure-teardown/azure/2026-10-21-prestop/).
-**Owner: P03.** This slice did **not** execute any cloud mutation — every `az`
+[`../azure/2026-10-21-prestop/`](../azure/2026-10-21-prestop/).
+**Owner: P03.** That slice did **not** execute any cloud mutation — every `az`
 and `kubectl` call above is read-only.
+
+**→ Update 2026-10-21 (later): the owner authorised the teardown and it was
+executed. The cluster, the resource group and the `MC_…` resource group are
+now deleted, and the kubeconfig context was removed. See §A2.4 below.**
 
 ### A2.3 What this correction does **not** change
 
 - It does not change what happened on 2026-10-20/21. A cluster was created,
-  validated and destroyed; a second one was created and left running.
+  validated and destroyed; a second one was created and left running
+  (**and later destroyed on 2026-10-21 — see §A2.4**).
 - It does not touch Addendum 1's audit — that audit is still correct about
   the *artifacts*; it simply does not cover the fact that the "nothing left
   running" state ended again at ~11:0x.
@@ -264,4 +289,30 @@ and `kubectl` call above is read-only.
   running", and the "3 nodes Ready" line), each with a
   `corrected 2026-10-21` note quoting the superseded wording, so a reader
   sees both the original claim and its correction at the point of use.
+
+### A2.4 The teardown was EXECUTED on 2026-10-21 — current end state
+
+**The second cluster was deleted on 2026-10-21** with explicit owner
+authorisation, following
+[`../../runbooks/azure-teardown-runbook.md`](../../runbooks/azure-teardown-runbook.md)
+§9, which records the real command output. Pre-stop snapshot:
+[`../azure/2026-10-21-prestop/aks-show-final.json`](../azure/2026-10-21-prestop/aks-show-final.json).
+
+| Check | Result (real output) |
+|---|---|
+| `az aks delete -g rg-aks-platform-dev -n aks-portfolio-dev --yes` | completed in ~270 s, no error output |
+| `az aks show -g rg-aks-platform-dev -n aks-portfolio-dev` | `ERROR: (ResourceNotFound) The Resource 'Microsoft.ContainerService/managedClusters/aks-portfolio-dev' … was not found` (rc=3) |
+| `az aks list -o table` | **empty** |
+| `az group delete -n rg-aks-platform-dev --yes` | rc=0 in 25 s |
+| `az group show -n rg-aks-platform-dev` / `-n MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` | `ERROR: (ResourceGroupNotFound) … could not be found` (rc=3) for **both** |
+| `az resource list -o table` | only `acrflashsalep6` (`rg-flashsale`) and `NetworkWatcher_eastasia` (`NetworkWatcherRG`) remain — **out of scope, untouched** |
+| `kubectl config delete-context aks-portfolio-dev` | `deleted context aks-portfolio-dev from /Users/mainguyenbinhtan/.kube/config` |
+| Terraform local state | 2 instances removed (`module.aks.azurerm_kubernetes_cluster.aks`, `module.aks.azurerm_resource_group.aks`) → `state list` empty → `terraform plan` = **`Plan: 2 to add, 0 to change, 0 to destroy.`** |
+
+**End state: 0 Azure dev resources running → no Azure compute cost.**
+
+**Labels are NOT upgraded by this teardown.** The `terraform apply` still has no
+committed command output, so the label remains
+**`AZURE_CLOUD_PLAN_VERIFIED` / `AZURE_CLOUD_APPLY_NOT_VERIFIED`**. What the
+teardown adds is the **destroy** half: *verified live, then destroyed*.
 
