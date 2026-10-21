@@ -1,11 +1,84 @@
 # AKS-SRE-Platform — Current Tasks
 
-> **Updated: 2026-10-02.** This file holds **one live section** only. Everything
+> **Updated: 2026-10-20** (recovery branch `recovery/g2-20261020`, not yet
+> merged). Previous update: 2026-10-02.
+> This file holds **one live section** only. Everything
 > that used to be appended here as a new `ACTIVE GOAL` heading has been moved to
 > [`../plans/history/`](../plans/history/) and is kept for the record, not for
 > execution. Superseded sections are never deleted; they are moved and marked.
 
-## LIVE — Wave 1 in progress: A0 subtree import complete, source switch pending approval
+## LIVE — 2026-10-20: local-platform recovery closed (F1–F5), evidence recorded, ready to merge
+
+**Status: 🟡 LOCAL platform green · ☁️ AZURE path still blocked · ⏳ awaiting merge.**
+**Branch:** `recovery/g2-20261020` (HEAD `7801901c`) · **base:** `main` @ `0a92f58`
+(unchanged — the integration is a `--ff-only` fast-forward, verified).
+**Full evidence:**
+[`../docs/evidence/local-platform/2026-10-20-reverify.md`](../docs/evidence/local-platform/2026-10-20-reverify.md)
+· **Merge note:**
+[`../docs/evidence/local-platform/2026-10-20-merge-note.md`](../docs/evidence/local-platform/2026-10-20-merge-note.md)
+
+### What was fixed today (each with a failing-before / passing-after test)
+
+| ID | Defect | Fix | Gate |
+|---|---|---|---|
+| **F1** | the Argo CD install was applied **client-side** → it replaced the CRDs and destroyed existing custom resources | `scripts/bootstrap.sh` applies `--server-side --force-conflicts` | G13 |
+| **F2** | two files owned the `grafana-dashboard-local-platform` ConfigMap → the second **overwrote and lost** a dashboard | one file is now the single owner, the other documents that it no longer owns it — **no dashboard dropped** | G13 |
+| **F3** | the GitOps validator iterated over **one** project file and silently skipped the rest | every project file is validated | G11 |
+| **F4** | a **second** `AppProject` with a wildcard allowlist existed (`gitops/projects/portfolio.yaml`) | duplicate names are a hard failure; the duplicate file is deleted | G11 |
+| **F5** | Argo CD was installed from the **floating `stable` branch** while the docs claimed a pin | the pin lives in exactly one place — `platform/argocd/VERSION` = **v3.5.5** — and the installer *asserts* the running image matches it | G12 |
+
+### Cluster state today (local kind `local-platform`, **point-in-time**)
+
+- 3/3 nodes Ready (v1.36.1); Argo CD **7/7 Running** at the pinned **v3.5.5**.
+- Application **`flashsale` → `Synced` / `Healthy`** (18/18 rendered resources),
+  revision `8adcbeff…`; PreSync hook `batch/Job/order-migrate` **Complete 1/1**,
+  exit code 0 (`Schema is now at head.`).
+- **Self-heal verified for spec drift (~1 s) and for a deleted resource
+  (~1 s).**
+- **FINDING — not a pass:** Argo CD v3.5.5 does **not** diff extra
+  `metadata.labels`, so a hand-added label is **not** reverted (see §10 of the
+  evidence document). **Self-heal is NOT verified for extra metadata labels.**
+
+### What is still NOT verified (never claim these)
+
+- **Azure: nothing.** No `az login`, no `terraform apply`; the remote-state
+  backend does not resolve from this machine (NXDOMAIN), so `terraform plan`
+  against the real backend cannot even be attempted. The 5 `terraform test`
+  assertions are **offline `mock_provider`** runs.
+- **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
+  not set; ADR-015 source switch unapproved).
+- **Business E2E / concurrency flow** — not re-run; only the deployment plane
+  was proven.
+- **`sre-demo-api` RED metrics on a pod** — the image reference points at a
+  destroyed ACR registry.
+- **A second Argo CD control plane in the `default` namespace** — pre-existing,
+  not fixed, needs an explicit decision.
+
+### Open items and owners (full table: §11 of the evidence document)
+
+| # | Item | Owner |
+|---|---|---|
+| 1 | Azure plan/apply impossible (no `az login` + backend NXDOMAIN) | P03 |
+| 2 | `legacyapp` Application never deployed | P03 + ADR-015 approver |
+| 3 | business E2E / concurrency not re-run | P01 + P03 |
+| 4 | `sre-demo-api` pod-level RED metrics | P03 |
+| 5 | second Argo CD install in `default` | P03 |
+| 6 | Docker Desktop crashed 3× → host is not a stable measurement surface | host / DevOps |
+| 7 | the kind cluster is a **disposable artifact** → runtime claims are point-in-time; isolate it into its own Docker context / VM | platform / process |
+| 8 | finding: extra `metadata.labels` are not self-healed (§10) | P03 |
+| 9 | `tflint` not installable from Homebrew (worked around with the release binary; CI unaffected) | P03 tooling |
+| 10 | 2 × `EXTERNAL_REPO_NOT_PRESENT` in the GitOps validator | P03 |
+
+### Next step (owned by whoever integrates — **nothing was merged or pushed**)
+
+Follow §3 of the merge note: re-check that `main` is still `0a92f58`, run the
+three gates, then `git merge --ff-only recovery/g2-20261020`, re-run the gates,
+and re-bootstrap the cluster (a cluster mutation — needs an explicit
+go-ahead).
+
+---
+
+## (no longer live) Wave 1 in progress: A0 subtree import complete, source switch pending approval
 
 **Status: 🟡 IN PROGRESS.** Strategy changed on 2026-10-02: **AKS is the proof
 surface, local kind is the OSS / dry-run profile.** The decision and its measured
@@ -13,6 +86,12 @@ capacity arithmetic are in
 [`../docs/adr/014-azure-first-verification.md`](../docs/adr/014-azure-first-verification.md),
 which supersedes ADR-013 in part. Live engineering checkpoint:
 [`../docs/engineering/CURRENT_STATE.md`](../docs/engineering/CURRENT_STATE.md).
+
+> **Kept for the record — this is no longer the live section.** The live
+> section for 2026-10-20 is above. Everything under this heading is the
+> 2026-10-02 state, kept unchanged so the reasoning that produced it stays
+> auditable. Where it is now stale, it is marked **stale as of 2026-10-20**
+> at the point of staleness — nothing below was rewritten.
 
 ### Phase A — honesty layer: DONE (merged, `main` @ `7ca873e`)
 
@@ -102,6 +181,15 @@ Decoupled cluster creation (`terraform/modules/aks_cluster`) from the ACR role a
 
 ### Phase E — Transient AKS Validation: IN PROGRESS (2026-10-02)
 
+> **Stale as of 2026-10-20.** No AKS cluster was applied, measured or re-run
+> during the 2026-10-20 recovery work. The Azure path was not touched at all:
+> no `az login`, no `terraform apply`, and the remote-state backend does not
+> resolve from this machine (NXDOMAIN), so `terraform plan` against the real
+> backend cannot be attempted here. Treat Phase E as **not currently running**
+> and its runtime claims as **historical, not re-verified**. See the live
+> section above and §11 of
+> [`../docs/evidence/local-platform/2026-10-20-reverify.md`](../docs/evidence/local-platform/2026-10-20-reverify.md).
+
 Transient AKS apply running against subscription `a3deec78` in `eastasia` within the measured 10 vCPU quota constraint (1 system node `Standard_D2s_v6` + 1 user node `Standard_D2s_v6` = 4 vCPU). Capturing live workload identity, workload readiness, and failure recovery evidence before immediate teardown.
 
 ### A0 — LegacyApp subtree import: PASS locally (2026-10-20)
@@ -130,6 +218,9 @@ Argo mutation was performed.
    `platform/`, so pr-gate never rendered it. Relabelled `REFERENCE_NOT_RENDERED`;
    recorded that `dashboards.yaml` and `dashboards/local-platform-dashboard.yaml`
    both define `grafana-dashboard-local-platform`.
+   → **Resolved later the same day by F2** (`910cf52`): the duplicate owner
+   was removed, **no dashboard was lost**, and gate **G13** now fails if two
+   files ever declare the same object again.
 3. **`platform/envoy-gateway` gained real kustomize roots** (`gateway/`,
    `proof-backend/`), so its `RENDERED` claim is now produced by pr-gate rather
    than asserted by a document.
@@ -138,6 +229,10 @@ Verification (local, 2026-10-20): `bash -n` OK; `validate-gitops.py` 16 passed /
 0 failed / 2 not-present; `tests/test_gates.py` 17/17; `policy-gate.py` PASS;
 `kubectl kustomize` on all 8 roots rc=0 (new roots: 5 and 2 objects);
 kubeconform `-strict` on both new roots → Valid 3, Invalid 0, Errors 0, Skipped 4.
+→ **The gate count has grown since:** `tests/test_gates.py` is now **42/42**,
+because the F1–F5 regression groups **G11**, **G12** and **G13** were added
+after this pass. `validate-gitops.py` is now **16 passed / 0 failed / 2
+not-present**, and `policy-gate.py` reports `2 kustomize root(s), 26 object(s)`.
 
 Open item for the next phase: the two `EXTERNAL_REPO_NOT_PRESENT` rows mean
 external source trees are still unvalidated in CI. `validate-gitops.py` refuses
