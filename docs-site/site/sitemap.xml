@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/cv-portfolio/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/architecture/overview/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/evidence/aks-live/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/evidence/test-results/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/evidence/workload-identity/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/runbooks/finops/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+    <url>
+         <loc>https://aks-sre-platform.pages.dev/runbooks/incident-response/</loc>
+         <lastmod>2026-10-21</lastmod>
+    </url>
+</urlset>

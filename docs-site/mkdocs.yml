@@ -1,0 +1,59 @@
+site_name: AKS SRE Platform — Portfolio Evidence
+site_url: https://aks-sre-platform.pages.dev
+site_description: >-
+  Production-grade Azure Kubernetes platform with GitOps, SRE, and Zero-Trust infrastructure.
+  Evidence portfolio for senior cloud/platform engineering interviews.
+site_author: Tan Nguyen Binh
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.code.annotate
+    - toc.integrate
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - admonition
+  - pymdownx.details
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - tables
+
+nav:
+  - Home: index.md
+  - Architecture:
+    - Overview: architecture/overview.md
+  - Evidence:
+    - Test Results: evidence/test-results.md
+    - AKS Live Run: evidence/aks-live.md
+    - Workload Identity: evidence/workload-identity.md
+  - Runbooks:
+    - Incident Response: runbooks/incident-response.md
+    - Cost & FinOps: runbooks/finops.md
+  - CV Portfolio: cv-portfolio.md
