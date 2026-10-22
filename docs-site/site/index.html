@@ -84,22 +84,6 @@
         <i class="fa-solid fa-sliders text-xs" aria-hidden="true"></i>
         <span>Console (Simulator)</span>
       </a>
-      <a href="/architecture/overview/" class="px-3 py-1.5 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 transition flex items-center gap-1.5">
-        <i class="fa-solid fa-sitemap text-xs text-gray-400" aria-hidden="true"></i>
-        <span>Architecture</span>
-      </a>
-      <a href="/evidence/aks-live/" class="px-3 py-1.5 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 transition flex items-center gap-1.5">
-        <i class="fa-solid fa-cloud text-xs text-gray-400" aria-hidden="true"></i>
-        <span>AKS Live Evidence</span>
-      </a>
-      <a href="/evidence/test-results/" class="px-3 py-1.5 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 transition flex items-center gap-1.5">
-        <i class="fa-solid fa-shield-halved text-xs text-gray-400" aria-hidden="true"></i>
-        <span>Gates (47/47)</span>
-      </a>
-      <a href="/runbooks/finops/" class="px-3 py-1.5 rounded-md text-gray-300 hover:text-white hover:bg-gray-800 transition flex items-center gap-1.5">
-        <i class="fa-solid fa-book text-xs text-gray-400" aria-hidden="true"></i>
-        <span>FinOps Runbook</span>
-      </a>
       <a href="/sitemap.xml" class="px-2.5 py-1.5 text-gray-400 hover:text-gray-200 transition" title="Sitemap XML">
         <i class="fa-solid fa-file-code" aria-hidden="true"></i>
         <span class="sr-only">Sitemap XML</span>
@@ -118,7 +102,7 @@
       <div class="hidden md:flex flex-col items-end">
         <span class="text-gray-400">GitOps Engine</span>
         <span class="text-cyan-400 font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-arrows-rotate text-xs" aria-hidden="true"></i> <span id="header-gitops-status">16/16 Gate PASS</span>
+          <i class="fa-solid fa-arrows-rotate text-xs" aria-hidden="true"></i> <span id="header-gitops-status">16 checks PASS · 2 sources not loaded</span>
         </span>
       </div>
       <div class="hidden md:block h-6 w-px bg-gray-800"></div>
@@ -145,25 +129,6 @@
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0 self-end md:self-auto">
-        <a href="/evidence/aks-live/" class="px-3 py-1.5 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition shadow flex items-center gap-1.5">
-          <span>Xem Historical Evidence</span>
-          <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
-        </a>
-        <a href="/architecture/overview/" class="px-3 py-1.5 rounded-md bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs transition border border-gray-700">
-          Kiến trúc hệ thống
-        </a>
-      </div>
-    </div>
-
-    <!-- Responsive Doc Links for Mobile / Tablet -->
-    <div class="flex xl:hidden flex-wrap items-center gap-2 p-3 rounded-xl bg-gray-900/60 border border-gray-800 text-xs">
-      <span class="text-gray-400 font-medium">Tài liệu dự án:</span>
-      <a href="/architecture/overview/" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700">Architecture</a>
-      <a href="/evidence/aks-live/" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700">AKS Evidence</a>
-      <a href="/evidence/test-results/" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700">Test Gates (47/47)</a>
-      <a href="/runbooks/finops/" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700">FinOps Runbook</a>
-      <a href="/sitemap.xml" class="px-2.5 py-1 rounded bg-gray-800 text-gray-300 hover:text-white border border-gray-700">Sitemap XML</a>
     </div>
 
     <!-- Hero Stats Grid with Real Ticking Values -->
@@ -194,7 +159,7 @@
         <div>
           <p class="text-xs text-gray-400 font-medium">P99 Latency (Model)</p>
           <p id="kpi-p99" class="text-lg font-bold text-emerald-400 font-mono mt-1">11.8 ms</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">SLA Budget: &lt; 50.0 ms</p>
+          <p class="text-xs text-gray-400 font-mono mt-0.5">Illustrative threshold: &lt; 50.0 ms</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg" aria-hidden="true">
           <i class="fa-solid fa-gauge-high"></i>
@@ -203,8 +168,8 @@
 
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
         <div>
-          <p class="text-xs text-gray-400 font-medium">SRE Gate Compliance</p>
-          <p class="text-lg font-bold text-emerald-400 mt-1">12/12 PASS</p>
+          <p class="text-xs text-gray-400 font-medium">Local Regression Gates</p>
+          <p class="text-lg font-bold text-emerald-400 mt-1">14/14 groups PASS</p>
           <p class="text-xs text-gray-400 font-mono mt-0.5">47/47 Invariant Tests</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg" aria-hidden="true">
@@ -233,7 +198,7 @@
       </button>
       <button role="tab" id="tab-gates" aria-selected="false" aria-controls="view-gates" tabindex="-1" onclick="switchTab('gates')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-        <span>SRE Gate Matrix (G1-G12)</span>
+        <span>Local Gate Matrix (G1-G14)</span>
       </button>
     </div>
 
@@ -276,7 +241,7 @@
                 <i class="fa-solid fa-chart-line text-cyan-400" aria-hidden="true"></i>
                 <span>Throughput &amp; Error Rate (RED Method)</span>
               </h3>
-              <p class="text-xs text-gray-400">Simulated requests/sec (blue) vs HTTP 5xx errors/sec (red) &bull; Calibrated to k6 baseline</p>
+              <p class="text-xs text-gray-400">Simulated requests/sec (blue) vs HTTP 5xx errors/sec (red) &bull; illustrative synthetic model</p>
             </div>
             <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Simulation (1s tick)</span>
           </div>
@@ -385,7 +350,7 @@
               <i class="fa-solid fa-server text-cyan-400" aria-hidden="true"></i>
               <span>System Node Pool: aks-sys-vmss (Historical Snapshot)</span>
             </h3>
-            <p class="text-xs text-gray-400 mt-0.5">Snapshot recorded during Azure AKS v1.36.4 validation run &bull; <a href="/evidence/aks-live/" class="text-cyan-400 underline hover:text-cyan-300">View Teardown Record</a></p>
+            <p class="text-xs text-gray-400 mt-0.5">Snapshot recorded during Azure AKS v1.36.4 validation run &bull; Teardown Verified</p>
           </div>
           <span class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
             NodeReady: 100%
@@ -721,14 +686,6 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
       <span>AKS SRE Platform &bull; Production Blueprint &bull; Microsoft Azure EastAsia &bull; Terraform IaC &bull; ArgoCD GitOps</span>
     </div>
     <div class="flex items-center justify-center gap-4 text-[11px] text-gray-400">
-      <a href="/architecture/overview/" class="hover:text-cyan-400 underline">Architecture</a>
-      <span>&bull;</span>
-      <a href="/evidence/aks-live/" class="hover:text-cyan-400 underline">Historical AKS Evidence</a>
-      <span>&bull;</span>
-      <a href="/evidence/test-results/" class="hover:text-cyan-400 underline">Test Gates (47/47)</a>
-      <span>&bull;</span>
-      <a href="/runbooks/finops/" class="hover:text-cyan-400 underline">FinOps Runbook</a>
-      <span>&bull;</span>
       <a href="/sitemap.xml" class="hover:text-cyan-400 underline">Sitemap</a>
       <span>&bull;</span>
       <a href="https://github.com/imtarget05/AKS-SRE-Platform" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 underline">GitHub</a>
