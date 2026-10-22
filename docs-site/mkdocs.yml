@@ -50,6 +50,7 @@ nav:
   - Home: index.md
   - Architecture:
     - Overview: architecture/overview.md
+    - Unified 5-Repo Architecture: architecture/unified-architecture.md
   - Evidence:
     - Test Results: evidence/test-results.md
     - Historical AKS Validation: evidence/aks-live.md
