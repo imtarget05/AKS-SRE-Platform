@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AKS SRE Platform — Interactive Architectural Simulation &amp; Telemetry Console</title>
+  <link rel="icon" type="image/png" href="/assets/images/favicon.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
@@ -68,13 +69,13 @@
           <h1 class="font-bold text-base tracking-tight text-white m-0 p-0 leading-tight">
             AKS SRE Platform
           </h1>
-          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5" title="Simulation model calibrated on historical AKS benchmark measurements">
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5" title="Illustrative client-side simulation; not a live benchmark">
             <span class="h-1.5 w-1.5 rounded-full bg-cyan-400 pulse-live" aria-hidden="true"></span>
             INTERACTIVE SIMULATION
           </span>
           <span class="px-2 py-0.5 text-xs font-mono rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">v1.36.4 model</span>
         </div>
-        <p class="text-xs text-gray-400 font-mono">Calibrated to historical AKS EastAsia validation run (teardown per FinOps)</p>
+        <p class="text-xs text-gray-400 font-mono">Illustrative client-side model · historical AKS validation evidence is documented separately</p>
       </div>
     </div>
 
@@ -260,7 +261,7 @@
                 <i class="fa-solid fa-stopwatch text-emerald-400" aria-hidden="true"></i>
                 <span>Duration &amp; Latency Percentiles (P50, P90, P99)</span>
               </h3>
-              <p class="text-xs text-gray-400">Service response time model &bull; Target P99 &lt; 50ms &bull; Calibrated histogram</p>
+              <p class="text-xs text-gray-400">Service response time model &bull; Illustrative target P99 &lt; 50ms &bull; synthetic histogram</p>
             </div>
             <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Histogram Model</span>
           </div>
@@ -1159,12 +1160,8 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
     }
 
     // =========================================================================
-    // SRE AI Copilot (Cloudflare Workers AI Llama 3.1)
+    // Static runbook helper. The public console has no cluster telemetry or AI backend.
     // =========================================================================
-    const CF_ACCOUNT_ID = "8788242370433563100da7c3623e1b3c";
-    const CF_API_TOKEN = window.ENV?.CF_API_TOKEN || "";
-    const CF_MODEL = "@cf/meta/llama-3.1-8b-instruct";
-
     function toggleSreCopilot() {
       const modal = document.getElementById('sre-copilot-modal');
       const btn = document.getElementById('sre-copilot-btn');
@@ -1177,38 +1174,49 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
       }
     }
 
-    function formatMarkdown(text) {
-      // Clean and safe lightweight markdown renderer for SRE chat
-      const lines = text.split('\n');
-      return lines.map(line => {
-        let l = line.trim();
-        if (!l) return '<div class="h-1.5"></div>';
-        
-        // Headers
-        if (l.startsWith('📌') || l.startsWith('🔍') || l.startsWith('⚙️') || l.startsWith('###')) {
-          return `<div class="font-bold text-cyan-300 text-xs pt-1 pb-0.5 border-b border-gray-800">${renderInline(l)}</div>`;
-        }
-        // Ordered list
-        const numMatch = l.match(/^(\d+)\.\s+(.*)/);
-        if (numMatch) {
-          return `<div class="flex items-start gap-1.5 pl-1 my-0.5 text-xs"><span class="font-bold text-cyan-400 shrink-0">${numMatch[1]}.</span><div class="leading-relaxed">${renderInline(numMatch[2])}</div></div>`;
-        }
-        // Bullets
-        if (l.startsWith('- ') || l.startsWith('* ')) {
-          return `<div class="flex items-start gap-2 pl-3 my-0.5 text-gray-300 text-xs"><span class="text-cyan-400 font-bold">•</span><div class="leading-relaxed">${renderInline(l.slice(2))}</div></div>`;
-        }
-        return `<div class="text-xs leading-relaxed text-gray-200">${renderInline(l)}</div>`;
-      }).join('');
-
-      function renderInline(str) {
-        return str
-          .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em class="italic text-cyan-200">$1</em>')
-          .replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 bg-gray-800 text-cyan-300 rounded font-mono text-[11px]">$1</code>');
+    function runbookAnswer(question) {
+      const normalized = question.toLocaleLowerCase('vi-VN');
+      if (/pdb|drain|gián đoạn|zero downtime/.test(normalized)) {
+        return {
+          title: 'PDB & node drain',
+          text: 'PDB giới hạn số pod bị gián đoạn tự nguyện qua Eviction API; riêng PDB không bảo đảm zero downtime. Kiểm tra số replica, readiness probe, tài nguyên dự phòng và graceful termination. Sau đó chạy diễn tập drain và đo request thành công trong suốt quá trình.',
+          source: '/runbooks/incident-response/',
+          sourceLabel: 'Runbook ứng phó sự cố'
+        };
       }
+      if (/networkpolicy|network policy|cni|chặn gói|drop gói/.test(normalized)) {
+        return {
+          title: 'Xác minh NetworkPolicy',
+          text: 'Manifest NetworkPolicy chỉ có hiệu lực khi CNI hỗ trợ thực thi. Hãy xác nhận plugin mạng đang dùng, thử kết nối từ pod được phép và pod bị chặn, rồi lưu kết quả probe. Không thể kết luận gói tin đã bị chặn chỉ từ manifest.',
+          source: '/evidence/test-results/',
+          sourceLabel: 'Bằng chứng kiểm thử'
+        };
+      }
+      if (/burn|slo|sli|error budget|ngân sách lỗi/.test(normalized)) {
+        return {
+          title: 'Error budget burn rate',
+          text: 'Burn rate = tỷ lệ lỗi quan sát được / tỷ lệ lỗi cho phép theo SLO. Với SLO 99,9% trong 30 ngày, mức tiêu thụ 2% ngân sách lỗi trong 1 giờ tương ứng 0,02 × 720 / 1 = 14,4 lần. Đây là ngưỡng tham khảo; chỉ kết luận có cảnh báo khi có số liệu SLI thực.',
+          source: 'https://sre.google/workbook/alerting-on-slos/',
+          sourceLabel: 'Google SRE Workbook'
+        };
+      }
+      if (/readiness|dependency|503|probe/.test(normalized)) {
+        return {
+          title: 'Điều tra readiness và dependency',
+          text: 'Kiểm tra readiness endpoint, pod endpoints, sự phụ thuộc và lưu lượng 5xx trước/sau sự cố. Readiness thất bại sẽ làm pod không còn phù hợp nhận lưu lượng Service sau khi trạng thái được cập nhật; cần đo thực tế để xác nhận tác động.',
+          source: '/runbooks/incident-response/',
+          sourceLabel: 'Runbook ứng phó sự cố'
+        };
+      }
+      return {
+        title: 'Chưa có hướng dẫn cho câu hỏi này',
+        text: 'Trợ lý này tra cứu các hướng dẫn cố định, không đọc trạng thái cụm và không tạo câu trả lời AI. Hãy thử một trong các chủ đề PDB, NetworkPolicy, burn rate hoặc readiness; với sự cố khác, mở runbook ứng phó.',
+        source: '/runbooks/incident-response/',
+        sourceLabel: 'Runbook ứng phó sự cố'
+      };
     }
 
-    async function sendSreCopilotMessage(presetText) {
+    function sendSreCopilotMessage(presetText) {
       const input = document.getElementById('sre-copilot-input');
       const text = (presetText || input.value).trim();
       if (!text) return;
@@ -1217,95 +1225,47 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
       const container = document.getElementById('sre-copilot-messages');
       const time = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
-      // User Message
-      container.innerHTML += `
-        <div class="flex justify-end gap-2 text-xs">
-          <div class="bg-cyan-600 text-white p-2.5 rounded-2xl rounded-br-none max-w-[85%] leading-relaxed shadow">
-            ${text}
-            <div class="text-[9px] text-cyan-200 text-right mt-1">${time}</div>
-          </div>
-        </div>
-      `;
-      container.scrollTop = container.scrollHeight;
+      const userRow = document.createElement('div');
+      userRow.className = 'flex justify-end gap-2 text-xs';
+      const userBubble = document.createElement('div');
+      userBubble.className = 'bg-cyan-600 text-white p-2.5 rounded-2xl rounded-br-none max-w-[85%] leading-relaxed shadow';
+      userBubble.textContent = text;
+      userRow.appendChild(userBubble);
+      container.appendChild(userRow);
 
-      // Loading Indicator
-      const loadingId = 'loading-' + Date.now();
-      container.innerHTML += `
-        <div id="${loadingId}" class="flex items-center gap-2 text-gray-400 text-xs p-2">
-          <i class="fa-solid fa-spinner fa-spin text-orange-400"></i>
-          <span class="italic">Cloudflare Llama 3.1 đang phân tích sự cố...</span>
-        </div>
-      `;
-      container.scrollTop = container.scrollHeight;
-
-      try {
-        const systemPrompt = "Bạn là SRE Incident & Reliability Copilot của nền tảng AKS SRE Platform. Nhiệm vụ của bạn là giải thích kiến trúc Kubernetes/AKS, hướng dẫn khắc phục sự cố (KubeNodeUnreachable, Dependency503, PDB node drain), đối chiếu quy chuẩn Azure Well-Architected Framework và chỉ số SLI/SLO một cách súc tích, chuyên nghiệp bằng tiếng Việt.";
-        const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`;
-        const resp = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${CF_API_TOKEN}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: text }
-            ]
-          })
-        });
-
-        let aiAnswer = "";
-        if (resp.ok) {
-          const data = await resp.json();
-          aiAnswer = data.result?.response || data.result?.choices?.[0]?.message?.content || "";
-        }
-
-        if (!aiAnswer) {
-          // Heuristic fallback
-          aiAnswer = `📌 **Phân tích SRE cho: "${text}"**\n- **Trạng thái cụm:** Cụm kind 3-node Ready, PDB \`minAvailable: 1\` đang bảo vệ workload.\n- **Độ tin cậy:** Cơ chế Zero-Downtime Node Drain đã chứng minh 100% request thành công trong lúc drain node.\n- **Bảo mật:** NetworkPolicy mặc định chặn toàn bộ lưu lượng trái phép qua nftables.\n- **Khuyến nghị:** Đối chiếu RED metrics và kích hoạt diễn tập DR nếu cần kiểm tra RTO/RPO.`;
-        }
-
-        const loadElem = document.getElementById(loadingId);
-        if (loadElem) loadElem.remove();
-
-        container.innerHTML += `
-          <div class="flex justify-start gap-2 text-xs">
-            <div class="h-6 w-6 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-400/30 flex items-center justify-center shrink-0 mt-0.5">
-              <i class="fa-solid fa-cloud text-xs"></i>
-            </div>
-            <div class="bg-gray-900 text-gray-200 border border-gray-800 p-3 rounded-2xl rounded-bl-none max-w-[85%] leading-relaxed shadow-lg">
-              ${formatMarkdown(aiAnswer)}
-              <div class="text-[9px] text-gray-500 text-right mt-1.5">${time}</div>
-            </div>
-          </div>
-        `;
-      } catch (err) {
-        const loadElem = document.getElementById(loadingId);
-        if (loadElem) loadElem.remove();
-        container.innerHTML += `
-          <div class="flex justify-start gap-2 text-xs">
-            <div class="bg-gray-900 text-gray-200 border border-gray-800 p-3 rounded-2xl rounded-bl-none max-w-[85%]">
-              📌 **SRE Diagnostic Fallback:**
-              - Kiểm tra pod: \`kubectl get pods -A\`
-              - Kiểm tra NetworkPolicy: Đang kích hoạt default-deny chặn gói tin trái phép (RC=28).
-              - SRE metrics: Availability SLI đạt 100%, p95 < 15ms.
-            </div>
-          </div>
-        `;
-      }
+      const answer = runbookAnswer(text);
+      const answerRow = document.createElement('div');
+      answerRow.className = 'flex justify-start gap-2 text-xs';
+      const answerBubble = document.createElement('div');
+      answerBubble.className = 'bg-gray-900 text-gray-200 border border-gray-800 p-3 rounded-2xl rounded-bl-none max-w-[85%] leading-relaxed shadow-lg';
+      const title = document.createElement('div');
+      title.className = 'font-bold text-cyan-300 mb-1';
+      title.textContent = answer.title;
+      const body = document.createElement('p');
+      body.className = 'leading-relaxed';
+      body.textContent = answer.text;
+      const source = document.createElement('a');
+      source.className = 'text-cyan-300 underline';
+      source.href = answer.source;
+      source.textContent = `Nguồn: ${answer.sourceLabel}`;
+      const timestamp = document.createElement('div');
+      timestamp.className = 'text-[9px] text-gray-500 text-right mt-1.5';
+      timestamp.textContent = time;
+      answerBubble.append(title, body, source, timestamp);
+      answerRow.appendChild(answerBubble);
+      container.appendChild(answerRow);
       container.scrollTop = container.scrollHeight;
     }
   </script>
 
-  <!-- Floating SRE Copilot Button -->
-  <button id="sre-copilot-btn" onclick="toggleSreCopilot()" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-600 via-amber-600 to-cyan-600 text-white p-3.5 rounded-full shadow-2xl hover:scale-105 transition-all flex items-center gap-2 border border-white/20 cursor-pointer">
+  <!-- Floating runbook helper -->
+  <button id="sre-copilot-btn" aria-label="Mở trợ lý runbook SRE" onclick="toggleSreCopilot()" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-600 via-amber-600 to-cyan-600 text-white p-3.5 rounded-full shadow-2xl hover:scale-105 transition-all flex items-center gap-2 border border-white/20 cursor-pointer">
     <i class="fa-solid fa-robot text-base text-amber-200"></i>
-    <span class="text-xs font-bold pr-1">SRE AI Copilot</span>
+    <span class="text-xs font-bold pr-1">SRE Runbook Assistant</span>
   </button>
 
   <!-- Floating SRE Copilot Chat Modal -->
-  <div id="sre-copilot-modal" class="hidden fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[440px] h-[580px] bg-gray-950 rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden font-sans">
+  <div id="sre-copilot-modal" role="dialog" aria-label="Trợ lý runbook SRE" class="hidden fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[440px] h-[580px] bg-gray-950 rounded-2xl shadow-2xl border border-gray-800 flex flex-col overflow-hidden font-sans">
     <div class="bg-gradient-to-r from-gray-950 via-gray-900 to-orange-950 text-white p-3.5 flex items-center justify-between border-b border-gray-800">
       <div class="flex items-center gap-2.5">
         <div class="h-8 w-8 rounded-xl bg-orange-500/20 border border-orange-400/40 flex items-center justify-center text-orange-400">
@@ -1313,43 +1273,42 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
         </div>
         <div>
           <h3 class="font-bold text-xs flex items-center gap-1.5 m-0 p-0 text-white">
-            <span>AKS SRE Copilot</span>
+            <span>AKS SRE Runbook Assistant</span>
             <span class="text-[10px] bg-orange-500/20 text-orange-300 px-1.5 py-0.2 rounded font-medium border border-orange-400/30">
-              Cloudflare AI
+              Hướng dẫn cố định
             </span>
           </h3>
-          <p class="text-[10px] text-gray-400 m-0">Trợ lý Phân tích Sự cố & Độ tin cậy (Llama 3.1)</p>
+          <p class="text-[10px] text-gray-400 m-0">Tra cứu runbook; không kết nối telemetry hay AI backend</p>
         </div>
       </div>
-      <button onclick="toggleSreCopilot()" class="p-1.5 text-gray-400 hover:text-white rounded-lg transition">
+      <button aria-label="Đóng trợ lý runbook SRE" onclick="toggleSreCopilot()" class="p-1.5 text-gray-400 hover:text-white rounded-lg transition">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
     </div>
 
     <!-- Message container with generous padding -->
-    <div id="sre-copilot-messages" class="flex-1 p-3.5 pt-4 pb-4 overflow-y-auto space-y-3 bg-gray-950/70">
+    <div id="sre-copilot-messages" role="log" aria-live="polite" class="flex-1 p-3.5 pt-4 pb-4 overflow-y-auto space-y-3 bg-gray-950/70">
       <div class="flex justify-start gap-2 text-xs">
         <div class="h-6 w-6 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-400/30 flex items-center justify-center shrink-0 mt-0.5">
           <i class="fa-solid fa-cloud text-xs"></i>
         </div>
         <div class="bg-gray-900 text-gray-200 border border-gray-800 p-3 rounded-2xl rounded-bl-none max-w-[85%] leading-relaxed shadow-lg">
-          <div class="font-bold text-cyan-300 text-xs mb-1">📌 Xin chào Kỹ sư Vận hành SRE!</div>
+          <div class="font-bold text-cyan-300 text-xs mb-1">📌 Tra cứu hướng dẫn SRE</div>
           <p class="text-xs text-gray-300 leading-relaxed m-0">
-            Tôi là Trợ lý SRE vận hành trên <strong class="text-white font-semibold">Cloudflare Workers AI</strong>. Tôi có thể hỗ trợ bạn:
+            Chọn một chủ đề để xem hướng dẫn và nguồn tham khảo. Nội dung này không xác nhận trạng thái cụm hiện tại.
           </p>
           <div class="flex items-start gap-2 pl-2 my-1 text-gray-300 text-xs">
             <span class="text-cyan-400 font-bold">•</span>
-            <div>Phân tích cơ chế <strong class="text-white">PDB & Zero-Downtime Node Drain</strong>.</div>
+            <div>Giải thích giới hạn của <strong class="text-white">PDB & Node Drain</strong>.</div>
           </div>
           <div class="flex items-start gap-2 pl-2 my-1 text-gray-300 text-xs">
             <span class="text-cyan-400 font-bold">•</span>
-            <div>Giải thích cách <strong class="text-white">NetworkPolicy</strong> chặn đứng xâm nhập trái phép.</div>
+            <div>Cách kiểm chứng <strong class="text-white">NetworkPolicy</strong> đang thực thi.</div>
           </div>
           <div class="flex items-start gap-2 pl-2 my-1 text-gray-300 text-xs">
             <span class="text-cyan-400 font-bold">•</span>
             <div>Tính toán tiêu thụ <strong class="text-white">SLI / Error Budget Burn Rate</strong> khi có sự cố.</div>
           </div>
-          <div class="text-[9px] text-gray-500 text-right mt-1.5">09:00</div>
         </div>
       </div>
     </div>
@@ -1369,8 +1328,8 @@ GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct 
 
     <!-- Input Box -->
     <div class="p-2.5 bg-gray-900 border-t border-gray-800 flex items-center gap-2">
-      <input id="sre-copilot-input" type="text" onkeydown="if(event.key==='Enter') sendSreCopilotMessage()" placeholder="Hỏi SRE AI về sự cố, node drain, SLI..." class="flex-1 text-xs px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500 transition" />
-      <button onclick="sendSreCopilotMessage()" class="bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 h-9 w-9 p-0 flex items-center justify-center rounded-xl text-white cursor-pointer shrink-0 shadow">
+      <input id="sre-copilot-input" aria-label="Nhập chủ đề runbook SRE" type="text" onkeydown="if(event.key==='Enter') sendSreCopilotMessage()" placeholder="Hỏi về PDB, NetworkPolicy, SLI..." class="flex-1 text-xs px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500 transition" />
+      <button aria-label="Tra cứu runbook" onclick="sendSreCopilotMessage()" class="bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 h-9 w-9 p-0 flex items-center justify-center rounded-xl text-white cursor-pointer shrink-0 shadow">
         <i class="fa-solid fa-paper-plane text-xs"></i>
       </button>
     </div>

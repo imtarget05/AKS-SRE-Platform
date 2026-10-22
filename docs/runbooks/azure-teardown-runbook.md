@@ -1,5 +1,14 @@
 # Azure teardown runbook — `aks-portfolio-dev` (AKS-SRE-Platform)
 
+## 1. Metadata & Classification
+- **Trigger:** Kết thúc phiên kiểm thử hiệu năng / đánh giá kiến trúc đám mây; hoặc nhận lệnh cắt giảm chi phí hạ tầng (Cost-containment policy).
+- **Severity:** P2 (Planned Maintenance / Decommissioning)
+- **Impact:** Toàn bộ cụm AKS và tài nguyên phụ thuộc bị xóa; zero ongoing cloud billing ($0/tháng).
+- **Owner:** Platform & SRE Operations Team
+- **Verification Target:** 0 running compute resources; Azure Resource Group deletion verified via Azure CLI (`az group exists --name rg-aks-platform-dev` returns false).
+
+---
+
 **Status: EXECUTED 2026-10-21 — COMPLETE.**
 **This runbook has been run. It is no longer PREPARED.**
 The owner authorised the teardown on 2026-10-21. Every command in

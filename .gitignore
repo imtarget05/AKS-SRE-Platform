@@ -19,6 +19,11 @@ crash.log
 terraform/**/plan.txt
 terraform/**/plan-summary.md
 
+# Local env files — never commit real credentials
+.env
+.env.*
+!.env.example
+
 # Node (app/sre-demo-api)
 node_modules/
 npm-debug.log*
