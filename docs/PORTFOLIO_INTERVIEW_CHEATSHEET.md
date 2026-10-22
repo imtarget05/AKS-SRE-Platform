@@ -12,10 +12,10 @@ and use the stated path inside it.
 
 | Product | Enterprise problem | Owning evidence | Honest limit |
 |---|---|---|---|
-| [AKS-SRE-Platform](https://github.com/imtarget05/AKS-SRE-Platform) | Review, deploy, observe and recover shared workloads at controlled Azure cost | [AKS audit](evidence/portfolio-audit-2026-10-21.md) · [local interview kit](INTERVIEW_KIT.md) | AKS cluster deleted; GitOps/Gateway/alert runtime proof is on kind |
-| [OpsBridge](https://github.com/imtarget05/OpsBridge) | Prevent oversell and reconcile asynchronous operational events | Local checkout: `../OpsBridge/docs/evidence/portfolio-audit-2026-10-21.md` and `docs/interview-notes/portfolio-defense-2026-10-21.md` | Local Testcontainers **39/39**, harness regressions **6/6**, disposable 50/10 **10 accepted / 40 rejected / stock 0 / 10 orders**; FlashSale unit tests **179/179** + OpsBridge unit tests **45/45**, bounded compensation retry and reconciler alert added; remote CI remains open |
-| [QuanLyKho](https://github.com/imtarget05/QuanLyKho) | Control lot/expiry inventory and require a different human checker before posting | Local checkout: `../QuanLyKho/docs/PORTFOLIO_AUDIT_2026-10-21.md` and `scripts/demo_ai_checker.sh` | Cash is a simulation; AI may advise but cannot approve or post; full suite **677 passed / 0 failed / 7 skipped / 1 xfailed**, canonical DB binding and keyset pagination on audit-events verified |
-| [SmartDocumentChatbot](https://github.com/imtarget05/Smart-Document-Chatbot) | Answer over owned documents with citations and abstain without evidence | Local checkout: `../SmartDocumentChatbot/docs/PORTFOLIO_ENTERPRISE_AUDIT.md` and `eval/portfolio_demo/` | Local direct-route guard, principal binding, batch-delete/cache isolation fixes, **395/395** backend and **205/205** frontend pass; durable HITL serving lifecycle (`complete`/`fail`, pause snapshot preserved, idempotent retry) verified; offline agent demo and live Azure RAG remain separate claims |
+| [AKS-SRE-Platform](https://github.com/imtarget05/AKS-SRE-Platform) | Review, deploy, observe and recover shared workloads at controlled Azure cost | [AKS audit](evidence/portfolio-audit-2026-10-21.md) · [local interview kit](INTERVIEW_KIT.md) · [NetworkPolicy proof](evidence/network-policy-enforcement-PASS.md) · [PDB drain proof](evidence/pdb-drain-drill-PASS.md) · [DR drill proof](evidence/disaster-recovery-drill-PASS.md) | AKS cluster deleted (0 Azure cost); GitOps/Gateway/alert/PDB/NetworkPolicy runtime proof is on kind |
+| [OpsBridge](https://github.com/imtarget05/OpsBridge) | Prevent oversell and reconcile asynchronous operational events | Local checkout: `../OpsBridge/docs/evidence/portfolio-audit-2026-10-21.md` and `docs/interview-notes/portfolio-defense-2026-10-21.md` | Local Testcontainers **39/39**, harness regressions **6/6**, disposable 50/10 **10 accepted / 40 rejected / stock 0 / 10 orders**; FlashSale unit tests **183/183** + OpsBridge unit tests **45/45**; AI Reorder Recommendation + Daily Report Executive Summary grounded on PostgreSQL facts; client credential leaks eliminated; remote CI remains open |
+| [QuanLyKho](https://github.com/imtarget05/QuanLyKho) | Control lot/expiry inventory and require a different human checker before posting | Local checkout: `../QuanLyKho/docs/PORTFOLIO_AUDIT_2026-10-21.md` and `docs/qa/05-ai-qa.md` | Cash is a simulation; AI may advise but cannot approve or post; full suite **677 passed / 0 failed / 7 skipped / 1 xfailed**, canonical DB binding verified, full AI QA test suite automated (`tests/test_ai_qa_suite.py` **5/5 PASS**) |
+| [SmartDocumentChatbot](https://github.com/imtarget05/Smart-Document-Chatbot) | Answer over owned documents with citations and abstain without evidence | Local checkout: `../SmartDocumentChatbot/docs/PORTFOLIO_ENTERPRISE_AUDIT.md` and `eval/portfolio_demo/` | Local direct-route guard, principal binding, batch-delete/cache isolation fixes, **395/395** backend and **212/212** frontend pass; durable HITL serving lifecycle (post-claim crash window closed with idempotency key & resumption, **2/2 PASS**); live demo edge function grounded in Article 105 BLLĐ 2019 (**6/6 PASS**); offline agent demo and live Azure RAG remain separate claims |
 
 The previously featured **MAIA** project is external to these four audited
 checkouts. Its Azure, MCP, RL and HITL claims require an independent audit in
@@ -108,10 +108,10 @@ manual `spec.replicas` change and a deleted Argo-owned Deployment (21 s and
 Azure runtime, or an SLO. A bad Git desired state can also be faithfully
 reconciled; CI review and rollback remain necessary.
 
-**Did NetworkPolicy block traffic on AKS?** The objects were applied, but
-the forbidden-traffic negative probe was not completed. Enforcement is
-`NOT_VERIFIED`; the test needed to make the claim is in the
-[audit](evidence/portfolio-audit-2026-10-21.md).
+**Did NetworkPolicy block traffic on Kubernetes?** Yes. An empirical 6-probe suite (`scripts/test-network-policy-probe.sh`) verified kernel-level packet drops (exit code 28 timeout): unauthorized internal pods, cross-namespace pods, and unapproved external egress were all dropped by default-deny; while authorized Gateway ingress and mock-dependency egress passed with HTTP 200. Evidence: [NetworkPolicy proof](evidence/network-policy-enforcement-PASS.md).
+
+**How do you introduce this project honestly in an interview?**
+> *"Đây là một AKS/SRE Reference Platform được kiểm chứng thực nghiệm bằng CI, kind và các đợt kiểm thử Azure tạm thời có kiểm soát chi phí (Cost Safety Mode). Chưa phải là một hệ thống production duy trì chạy 30 ngày liên tục trên Azure vì lý do tối ưu chi phí. Tuy nhiên, toàn bộ cơ chế GitOps tự phục hồi, PDB drain không gián đoạn, NetworkPolicy chặn lưu lượng trái phép, RTO/RPO phục hồi thảm họa và công thức tính error budget burn rate đều có số liệu thực nghiệm tái lập được."*
 
 ### AI Engineer
 

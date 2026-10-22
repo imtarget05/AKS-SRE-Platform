@@ -46,6 +46,7 @@ markdown_extensions:
   - tables
 
 nav:
+  - SRE Console: /
   - Home: index.md
   - Architecture:
     - Overview: architecture/overview.md

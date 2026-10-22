@@ -1,0 +1,5 @@
+# Local workspace repository mapping for GitOps semantic validation
+# Enables full cross-repository kustomize rendering verification.
+# Paths are relative to the repository root.
+FlashSale-Backend: ../OpsBridge
+AKS-SRE-Platform: .

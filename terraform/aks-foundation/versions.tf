@@ -8,6 +8,11 @@ terraform {
     }
   }
 
+  # Canonical backend state ownership:
+  # 1. Post-decommissioning / local verification mode: uses "local" backend.
+  # 2. Cloud deployment mode: uses Azure Blob Storage via backend configuration:
+  #    `terraform init -backend-config=backend-remote.tfbackend.example -reconfigure`
+  # Before any cloud apply/destroy, inspect inventory and review saved plan (P03).
   backend "local" {
     path = "terraform.tfstate"
   }

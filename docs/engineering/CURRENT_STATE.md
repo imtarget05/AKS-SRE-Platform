@@ -32,8 +32,11 @@
 | Gateway API + Envoy Gateway shared north-south | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | Prometheus + Grafana + one real alert fire/resolve cycle | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | HPA / AKS Cluster Autoscaler | — | **NOT RUN** (HPA manifest validated by kubeconform; no scale event observed) |
-| Enforced NetworkPolicy (`network_policy = "azure"`) | `AZURE_VALIDATION` | Deployed 2026-10-02; default-deny + allow rules applied; deny-of-unauthorized-traffic **NOT MEASURED** (no negative-traffic probe run) |
-| PDB / drain / topology spread | — | **NOT RUN** (PDB manifest schema-valid; no drain event) |
+| Enforced NetworkPolicy (default-deny + scoped allow) | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: 6/6 positive & negative probes passed; unauthorized ingress/egress dropped by kernel CNI nftables (RC=28 timeout), authorized gateway/mock egress allowed (200 OK) ([evidence](evidence/network-policy-enforcement-PASS.md)) |
+| PDB / drain / topology spread | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: active node drain on kind 3-node cluster with PDB `minAvailable: 1` enforced; 40/40 in-flight requests succeeded (100% availability, 0 dropped requests) ([evidence](evidence/pdb-drain-drill-PASS.md)) |
+| Disaster Recovery RTO / RPO rehearsal | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: automated DB loss simulation and snapshot restore; RTO = 0.1581s, RPO = 0s ([evidence](evidence/disaster-recovery-drill-PASS.md)) |
+| SLI / SLO empirical baseline & burn rate calibration | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: Prometheus RED metrics, Availability SLI 100%, fast burn rate (14.4x) alert triggered at 5% error injection ([evidence](evidence/sli-slo-baseline-PASS.md)) |
+| GitOps multi-repository full validation | `LOCAL` / CI | **PASS** — measured 2026-10-21: 18 passed, 0 failed, 0 not-present with `gitops/repo-map.local.yaml` ([evidence](../scripts/verify-gitops-all.sh)) |
 | Continuous CI (`.github/`) | GitHub Actions | **PASS** (Workflows run & pass 100% green on PR #1) |
 | `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
 | Repo-owned workload (`app/sre-demo-api`) | Node.js / K8s | **IMPLEMENTED_TESTED** (Unit tests pass; probes & failure injection decoupled) |
