@@ -1,0 +1,83 @@
+name: AKS Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'scripts/rebuild-aks.sh'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action'
+        required: true
+        default: 'plan'
+        type: choice
+        options: [plan, apply, destroy]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.x
+
+      - name: Terraform Init (with Azure backend)
+        run: |
+          cd terraform/aks-foundation
+          terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
+
+      - name: Terraform Format
+        run: |
+          cd terraform/aks-foundation
+          terraform fmt -check -recursive
+
+      - name: Terraform Plan
+        if: github.event.inputs.action != 'destroy'
+        run: |
+          cd terraform/aks-foundation
+          terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          cd terraform/aks-foundation
+          if [[ -f tfplan ]]; then
+            terraform apply tfplan
+          else
+            terraform apply -auto-approve
+          fi
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        run: |
+          cd terraform/aks-foundation
+          terraform destroy -auto-approve
+
+      - name: Bootstrap Argo CD
+        if: github.event.inputs.action == 'apply' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: |
+          RESOURCE_GROUP=$(cd terraform/aks-foundation && terraform output -raw resource_group_name)
+          CLUSTER_NAME=$(cd terraform/aks-foundation && terraform output -raw aks_cluster_name)
+          az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --overwrite-existing
+          cd /Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform
+          ./scripts/bootstrap.sh
+          kubectl get applications -n argocd

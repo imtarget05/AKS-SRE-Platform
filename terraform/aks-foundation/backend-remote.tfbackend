@@ -1,0 +1,15 @@
+# Azure Storage Remote Backend Configuration
+# Usage:
+#   terraform init -backend-config=backend-remote.tfbackend -reconfigure
+#
+# Prerequisites on Azure:
+#   1. Resource Group: rg-aks-tfstate
+#   2. Storage Account: stakssre (Blob Storage, TLS 1.2, Minimum TLS 1.2, Hierarchical namespace / versioning recommended)
+#   3. Storage Container: tfstate
+#   4. RBAC: "Storage Blob Data Contributor" assigned to the deployment identity / engineer
+#
+resource_group_name  = "rg-aks-tfstate"
+storage_account_name = "stakssre"
+container_name       = "tfstate"
+key                  = "aks-sre/validation.terraform.tfstate"
+use_azuread_auth     = true
