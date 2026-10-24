@@ -60,6 +60,14 @@ class StorageManager:
                     FOREIGN KEY(run_id) REFERENCES investigation_runs(run_id)
                 );
 
+                CREATE TABLE IF NOT EXISTS investigation_evidence (
+                    run_id TEXT NOT NULL,
+                    evidence_hash TEXT NOT NULL,
+                    PRIMARY KEY (run_id, evidence_hash),
+                    FOREIGN KEY(run_id) REFERENCES investigation_runs(run_id),
+                    FOREIGN KEY(evidence_hash) REFERENCES evidence_records(evidence_hash)
+                );
+
                 CREATE TABLE IF NOT EXISTS human_decisions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     run_id TEXT NOT NULL,
@@ -132,6 +140,10 @@ class StorageManager:
             action_cols = [row["name"] for row in conn.execute("PRAGMA table_info(action_intents);")]
             if "requested_by" not in action_cols:
                 conn.execute("ALTER TABLE action_intents ADD COLUMN requested_by TEXT NOT NULL DEFAULT '';")
+            conn.execute("""
+                INSERT OR IGNORE INTO investigation_evidence (run_id, evidence_hash)
+                SELECT run_id, evidence_hash FROM evidence_records
+            """)
 
     def save_run(
         self,
@@ -201,8 +213,8 @@ class StorageManager:
     def save_evidence(self, run_id: str, envelope: EvidenceEnvelope) -> None:
         """
         Saves evidence envelope with strict immutability.
-        ON CONFLICT(evidence_hash) DO NOTHING guarantees that original audit records
-        cannot be overwritten by subsequent fetches or hash collisions.
+        ON CONFLICT(evidence_hash) DO NOTHING preserves the original snapshot.
+        Each run still gets its own association with that snapshot.
         """
         now = datetime.now(timezone.utc).isoformat()
         with self._get_connection() as conn:
@@ -230,10 +242,18 @@ class StorageManager:
                 envelope.redaction_level,
                 now
             ))
+            conn.execute("""
+                INSERT OR IGNORE INTO investigation_evidence (run_id, evidence_hash)
+                VALUES (?, ?)
+            """, (run_id, envelope.evidence_hash))
 
     def get_evidences_for_run(self, run_id: str) -> List[EvidenceEnvelope]:
         with self._get_connection() as conn:
-            cur = conn.execute("SELECT * FROM evidence_records WHERE run_id = ?", (run_id,))
+            cur = conn.execute("""
+                SELECT e.* FROM evidence_records e
+                JOIN investigation_evidence r ON r.evidence_hash = e.evidence_hash
+                WHERE r.run_id = ?
+            """, (run_id,))
             rows = cur.fetchall()
             evidences = []
             for row in rows:

@@ -55,7 +55,7 @@ def setup(tmp_path, monkeypatch):
             source_service="opsbridge-flashsale", source_sha="test-sha",
             scope_id="ops-cluster-01", record_version=1,
             expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
-            facts={"messages": [{"messageId": MESSAGE_ID, "deadLetteredAt": VERSION}], "run_id": run_id},
+            facts={"messages": [{"messageId": MESSAGE_ID, "deadLetteredAt": VERSION}]},
             source_refs=["http://order-api.local/api/outbox/stuck"],
         ))
     app.state.run_manager = RunManager(storage=storage)
@@ -112,6 +112,22 @@ def test_intent_hash_binds_run_requester_and_message():
     assert first.intent_hash == ActionIntent(**{**base, "intent_id": "intent-002"}).intent_hash
     assert first.intent_hash != ActionIntent(**{**base, "run_id": "run-02"}).intent_hash
     assert first.intent_hash != ActionIntent(**{**base, "requested_by": "other"}).intent_hash
+
+
+def test_same_canonical_evidence_can_support_two_independent_runs(tmp_path):
+    storage = StorageManager(db_path=str(tmp_path / "shared-evidence.db"))
+    evidence = EvidenceEnvelope(
+        case_type="order_failure", entity_ref="outbox-stuck-events",
+        source_service="opsbridge-flashsale", source_sha="owner-sha",
+        scope_id="ops-cluster-01", record_version=0,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+        facts={"messages": [{"messageId": MESSAGE_ID, "deadLetteredAt": VERSION}]},
+    )
+    for run_id in ("shared-run-a", "shared-run-b"):
+        storage.save_run(run_id, f"unique-{run_id}", "order_failure",
+                         "outbox-stuck-events", "ops-cluster-01", "operator-01", "proposed")
+        storage.save_evidence(run_id, evidence)
+        assert [item.evidence_hash for item in storage.get_evidences_for_run(run_id)] == [evidence.evidence_hash]
 
 
 def test_intent_is_scoped_to_one_event_and_one_investigation(setup):
