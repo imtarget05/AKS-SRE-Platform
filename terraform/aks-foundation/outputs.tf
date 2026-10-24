@@ -6,6 +6,11 @@ output "cluster_name" {
   value = module.aks.cluster_name
 }
 
+output "aks_cluster_name" {
+  value       = module.aks.cluster_name
+  description = "Alias for cluster_name used by deployment workflows."
+}
+
 output "cluster_id" {
   value = module.aks.cluster_id
 }
