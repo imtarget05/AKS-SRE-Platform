@@ -39,7 +39,7 @@ def main() -> int:
     parser.add_argument("--app-dir", type=Path, default=APPS)
     args = parser.parse_args()
     blockers = []
-    for name in ("flashsale", "quanlykho", "retail-finance"):
+    for name in ("flashsale", "quanlykho"):
         path = args.app_dir / f"{name}.yaml"
         if not path.is_file():
             blockers.append(f"{name}: missing Application manifest")

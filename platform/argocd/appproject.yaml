@@ -22,7 +22,6 @@ spec:
     - https://github.com/imtarget05/FlashSale-Backend.git
     - https://github.com/imtarget05/AKS-SRE-Platform.git
     - https://github.com/imtarget05/QuanLyKho.git
-    - https://github.com/imtarget05/retail-finance-core-platform.git
 
   destinations:
     - server: https://kubernetes.default.svc
@@ -31,8 +30,6 @@ spec:
       namespace: legacyapp
     - server: https://kubernetes.default.svc
       namespace: quanlykho
-    - server: https://kubernetes.default.svc
-      namespace: retail-finance
 
   # Namespaced resources only: the two repos carry Deployments, StatefulSets,
   # Jobs, Services, ConfigMaps, Secrets and HTTPRoutes — no cluster-scoped
