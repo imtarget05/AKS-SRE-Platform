@@ -352,3 +352,12 @@ jobs:
 
       - name: gate test matrix (G1-G14)
         run: python3 tests/test_gates.py
+
+      - name: cloud cutover guard unit tests
+        run: python3 -m unittest discover -s tests -p test_cloud_cutover.py
+
+      - name: Azure origin renderer unit tests
+        run: python3 -m unittest discover -s tests -p test_azure_origin.py
+
+      - name: Cloudflare API edge contract
+        run: node --test platform/cloudflare/api-edge/test/*.test.mjs
