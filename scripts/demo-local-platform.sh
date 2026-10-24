@@ -71,7 +71,7 @@ echo "   Response: $ORDER_OUT"
 echo "3. Waiting for asynchronous worker fulfillment..."
 for i in {1..10}; do
   sleep 1
-  POLL_OUT=$(curl -s -H "Host: flashsale.local" "$BASE_URL/api/orders/$IDEM")
+  POLL_OUT=$(curl -s -H "Host: flashsale.local" -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/orders/$IDEM")
   STATUS=$(echo "$POLL_OUT" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).status))")
   echo "   [Poll $i] Status: $STATUS"
   if [ "$STATUS" = "completed" ] || [ "$STATUS" = "Completed" ]; then
