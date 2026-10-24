@@ -21,12 +21,15 @@ spec:
   sourceRepos:
     - https://github.com/imtarget05/FlashSale-Backend.git
     - https://github.com/imtarget05/AKS-SRE-Platform.git
+    - https://github.com/imtarget05/QuanLyKho.git
 
   destinations:
     - server: https://kubernetes.default.svc
       namespace: flashsale
     - server: https://kubernetes.default.svc
       namespace: legacyapp
+    - server: https://kubernetes.default.svc
+      namespace: quanlykho
 
   # Namespaced resources only: the two repos carry Deployments, StatefulSets,
   # Jobs, Services, ConfigMaps, Secrets and HTTPRoutes — no cluster-scoped

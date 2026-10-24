@@ -1,0 +1,36 @@
+# QuanLyKho Operations under GitOps.
+#
+# Same golden path contract as flashsale: public repo as source of truth,
+# Argo CD builds overlays/local with Kustomize and reconciles the quanlykho namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: quanlykho
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: portfolio
+
+  source:
+    repoURL: https://github.com/imtarget05/QuanLyKho.git
+    targetRevision: main
+    path: infra/k8s/overlays/local
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: quanlykho
+
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
