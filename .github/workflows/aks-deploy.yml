@@ -57,7 +57,7 @@ jobs:
           terraform plan -out=tfplan
 
       - name: Terraform Apply
-        if: github.event.inputs.action == 'apply' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
         run: |
           cd terraform/aks-foundation
           if [[ -f tfplan ]]; then
@@ -67,17 +67,16 @@ jobs:
           fi
 
       - name: Terraform Destroy
-        if: github.event.inputs.action == 'destroy'
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
         run: |
           cd terraform/aks-foundation
           terraform destroy -auto-approve
 
       - name: Bootstrap Argo CD
-        if: github.event.inputs.action == 'apply' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
         run: |
           RESOURCE_GROUP=$(cd terraform/aks-foundation && terraform output -raw resource_group_name)
           CLUSTER_NAME=$(cd terraform/aks-foundation && terraform output -raw aks_cluster_name)
           az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --overwrite-existing
-          cd /Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform
           ./scripts/bootstrap.sh
           kubectl get applications -n argocd

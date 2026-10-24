@@ -4,8 +4,9 @@
 
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ACTION="${1:-plan}"
-TERRAFORM_DIR="/Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform/terraform"
+TERRAFORM_DIR="${ROOT}/terraform"
 
 cd "$TERRAFORM_DIR"
 
@@ -29,7 +30,7 @@ case "$ACTION" in
     CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
     az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --overwrite-existing
     # Bootstrap Argo CD
-    cd /Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform
+    cd "$ROOT"
     ./scripts/bootstrap.sh
     echo "✅ Argo CD bootstrapped. Verifying..."
     kubectl get applications -n argocd
