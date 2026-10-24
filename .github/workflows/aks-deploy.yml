@@ -32,7 +32,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check OIDC Credentials Availability
+        id: oidc-check
+        run: |
+          if [ -n "${{ secrets.AZURE_CLIENT_ID }}" ]; then
+            echo "has_oidc=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_oidc=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::AZURE_CLIENT_ID not present in this runner context; falling back to offline validation."
+          fi
+
       - name: Azure Login (OIDC)
+        if: steps.oidc-check.outputs.has_oidc == 'true'
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -44,22 +55,29 @@ jobs:
         with:
           terraform_version: 1.9.x
 
-      - name: Terraform Init (with Azure backend)
-        run: |
-          cd terraform/aks-foundation
-          terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
-
       - name: Terraform Format Check
         run: |
           cd terraform/aks-foundation
           terraform fmt -check -recursive
 
+      - name: Terraform Init (Offline if no OIDC, remote backend if OIDC available)
+        run: |
+          cd terraform/aks-foundation
+          if [ "${{ steps.oidc-check.outputs.has_oidc }}" = "true" ]; then
+            terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
+          else
+            terraform init -backend=false
+            terraform validate
+          fi
+
       - name: Terraform Plan
+        if: steps.oidc-check.outputs.has_oidc == 'true'
         run: |
           cd terraform/aks-foundation
           terraform plan -out=tfplan
 
       - name: Upload Terraform Plan Artifact
+        if: steps.oidc-check.outputs.has_oidc == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-artifact

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: retail-finance
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: portfolio
+
+  source:
+    repoURL: https://github.com/imtarget05/retail-finance-core-platform.git
+    targetRevision: d1c44d2660b0cb6dbf4545dd69177511a171d3b9
+    path: infra/k8s/overlays/production
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: retail-finance
+
+  syncPolicy:
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true

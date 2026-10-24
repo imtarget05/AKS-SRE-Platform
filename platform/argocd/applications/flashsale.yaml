@@ -16,21 +16,15 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/FlashSale-Backend.git
-    targetRevision: main
-    path: infrastructure/kubernetes/overlays/local
+    targetRevision: 1da39efe075e1c42a9aa257b4b42ea22097d6ecc
+    path: infrastructure/kubernetes/overlays/azure-cloud
 
   destination:
     server: https://kubernetes.default.svc
     namespace: flashsale
 
   syncPolicy:
-    # Real reconciliation: a commit on main is the only thing that changes the
-    # running state, and a manual kubectl edit is reverted by selfHeal.
-    # prune is OFF deliberately — this is a laptop cluster and a mis-typed
-    # prune would delete the PostgreSQL PVC evidence.
-    automated:
-      prune: false
-      selfHeal: true
+    # Manual first cutover: automated sync disabled until initial promotion is reviewed
     retry:
       limit: 5
       backoff:
