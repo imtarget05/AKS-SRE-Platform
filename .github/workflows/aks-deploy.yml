@@ -1,11 +1,6 @@
 name: AKS Deploy
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'terraform/**'
-      - 'scripts/rebuild-aks.sh'
   workflow_dispatch:
     inputs:
       action:
@@ -15,16 +10,23 @@ on:
         type: choice
         options: [plan, apply, destroy]
 
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
 jobs:
-  terraform:
+  # =========================================================================
+  # 1. Terraform Plan (Read-Only validation, runs on push & dispatch)
+  # =========================================================================
+  plan:
+    name: Terraform Plan & Validate
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-    env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'destroy')
     steps:
       - uses: actions/checkout@v4
 
@@ -45,38 +47,104 @@ jobs:
           cd terraform/aks-foundation
           terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
 
-      - name: Terraform Format
+      - name: Terraform Format Check
         run: |
           cd terraform/aks-foundation
           terraform fmt -check -recursive
 
       - name: Terraform Plan
-        if: github.event.inputs.action != 'destroy'
         run: |
           cd terraform/aks-foundation
           terraform plan -out=tfplan
 
-      - name: Terraform Apply
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
-        run: |
-          cd terraform/aks-foundation
-          if [[ -f tfplan ]]; then
-            terraform apply tfplan
-          else
-            terraform apply -auto-approve
-          fi
+      - name: Upload Terraform Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-artifact
+          path: terraform/aks-foundation/tfplan
+          retention-days: 1
 
-      - name: Terraform Destroy
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+  # =========================================================================
+  # 2. Terraform Apply (Gated by 'production' Environment & Manual Approval)
+  # =========================================================================
+  apply:
+    name: Terraform Apply (Protected)
+    needs: plan
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.x
+
+      - name: Download Terraform Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-artifact
+          path: terraform/aks-foundation
+
+      - name: Terraform Init (with Azure backend)
         run: |
           cd terraform/aks-foundation
-          terraform destroy -auto-approve
+          terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
+
+      - name: Terraform Apply (Strictly uses plan artifact, NO auto-approve fallback)
+        run: |
+          cd terraform/aks-foundation
+          if [[ ! -f tfplan ]]; then
+            echo "FATAL: tfplan file missing; apply requires a verified plan artifact." >&2
+            exit 1
+          fi
+          terraform apply tfplan
 
       - name: Bootstrap Argo CD
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
         run: |
           RESOURCE_GROUP=$(cd terraform/aks-foundation && terraform output -raw resource_group_name)
           CLUSTER_NAME=$(cd terraform/aks-foundation && terraform output -raw aks_cluster_name)
           az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --overwrite-existing
           ./scripts/bootstrap.sh
           kubectl get applications -n argocd
+
+  # =========================================================================
+  # 3. Terraform Destroy (Gated by 'production' Environment & Manual Approval)
+  # =========================================================================
+  destroy:
+    name: Terraform Destroy (Protected)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.x
+
+      - name: Terraform Init (with Azure backend)
+        run: |
+          cd terraform/aks-foundation
+          terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
+
+      - name: Terraform Destroy
+        run: |
+          cd terraform/aks-foundation
+          terraform destroy -auto-approve
