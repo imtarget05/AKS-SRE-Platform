@@ -1,0 +1,56 @@
+# Copy to wrangler.toml only after the Azure origin, TLS certificate and mTLS
+# client certificate are issued. This file deliberately cannot deploy as-is.
+name = "portfolio-api-edge"
+main = "src/index.mjs"
+compatibility_date = "2026-10-24"
+workers_dev = true
+
+[vars]
+AZURE_ORIGIN_URL = "https://REPLACE_WITH_AZURE_DNS_LABEL.southeastasia.cloudapp.azure.com/"
+ALLOWED_ORIGINS = "https://REPLACE_WITH_OPS.pages.dev,https://REPLACE_WITH_QUAN.workers.dev"
+
+[[mtls_certificates]]
+binding = "AZURE_ORIGIN"
+certificate_id = "REPLACE_WITH_UPLOADED_CLIENT_CERTIFICATE_ID"
+
+[[ratelimits]]
+name = "RATE_ORDER"
+namespace_id = "1001"
+[ratelimits.simple]
+limit = 100
+period = 10
+
+[[ratelimits]]
+name = "RATE_AUTH"
+namespace_id = "1002"
+[ratelimits.simple]
+limit = 30
+period = 60
+
+[[ratelimits]]
+name = "RATE_AI"
+namespace_id = "1003"
+[ratelimits.simple]
+limit = 20
+period = 60
+
+[[ratelimits]]
+name = "RATE_STAFF"
+namespace_id = "1004"
+[ratelimits.simple]
+limit = 30
+period = 60
+
+[[ratelimits]]
+name = "RATE_RETAIL"
+namespace_id = "1005"
+[ratelimits.simple]
+limit = 300
+period = 60
+
+[[ratelimits]]
+name = "RATE_GENERAL"
+namespace_id = "1006"
+[ratelimits.simple]
+limit = 100
+period = 10

@@ -352,3 +352,28 @@ jobs:
 
       - name: gate test matrix (G1-G14)
         run: python3 tests/test_gates.py
+
+      - name: cloud cutover guard unit tests
+        run: python3 -m unittest discover -s tests -p test_cloud_cutover.py
+
+      - name: Azure origin renderer unit tests
+        run: python3 -m unittest discover -s tests -p test_azure_origin.py
+
+      - name: Cloudflare API edge contract
+        run: node --test platform/cloudflare/api-edge/test/*.test.mjs
+
+  agent-hub:
+    name: agent-hub (evals, schemas, hitl execution)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: install agent-hub dependencies
+        run: pip install -r apps/agent-hub/requirements.txt
+
+      - name: run agent-hub evals and tests
+        run: pytest apps/agent-hub/tests apps/agent-hub/tests/evals -v

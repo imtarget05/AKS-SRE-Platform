@@ -21,6 +21,10 @@ terraform/**/plan-summary.md
 
 # Local env files — never commit real credentials
 .env
+.pytest_cache/
+__pycache__/
+*.pyc
+*.db
 .env.*
 !.env.example
 
