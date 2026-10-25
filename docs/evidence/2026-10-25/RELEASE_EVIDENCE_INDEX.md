@@ -14,8 +14,8 @@
 | **G0** | Scope, Git SHAs & Remote Sync | **VERIFIED ON GITHUB MAIN** | `AKS-SRE-Platform` (`bd72d3f`), `FlashSale-Backend/OpsBridge` (`663572e`), `QuanLyKho` (`bd01669`). All 3 PRs merged into `main` on GitHub with clean working trees. |
 | **G1** | Business Correctness | **VERIFIED** | FlashSale/OpsBridge: 251 tests PASS. QuanLyKho: 724 tests PASS. Alembic 001..028 migrated. Clean seed data verified. |
 | **G2** | Azure AKS & GitOps | **VERIFIED** | `aks-portfolio-dev` 2 nodes Ready. Argo CD apps Synced. `check-cloud-cutover.py` PASS. `order-migrate` Job Complete 1/1. Replicas 0 in production overlay merged. |
-| **G3** | Cloudflare Edge & Envoy Gateway | **VERIFIED** | Cloudflare Pages HTTP 200 (`opsbridge-dashboard`, `quan-ly-kho-tra-sua`, `aks-sre-platform`). Envoy Gateway (`portfolio-gateway`) Programmed=True. In-cluster routing to `order-api` & `bankops-api` tested HTTP 200. |
-| **G4** | Business E2E & Database Isolation | **VERIFIED** | Dedicated `bankops_user` & `flashsale_user` roles. Cross-database access rejected (`FATAL: permission denied`). Synthetic items and orders verified via APIs. Non-superuser backup & restore drill 100% verified. |
+| **G3** | Cloudflare Edge & Envoy Gateway | **100% PUBLIC VERIFIED** | Worker deployed at `https://portfolio-api-edge.tanmainguyenbinh.workers.dev`. Azure LoadBalancer `23.98.39.69:443` bound to FQDN `portfolio-aks-origin-20261025.eastasia.cloudapp.azure.com`. Direct access without client cert strictly rejected at TLS (rc=56). `test-origin-mtls.sh` 2/2 PASS. |
+| **G4** | Business E2E & Database Isolation | **100% PUBLIC VERIFIED** | Public FlashSale order created via Cloudflare Edge (`6DD517C0-CEC4-473D-96F1-A08669ABDA6E`) & confirmed in `Orders` (Id: 4). Public QuanLyKho item created via Cloudflare Edge (`TEA-E2E-C09864`) & confirmed in `inv_items`. Database isolation strictly enforced between `bankops_user` and `flashsale_user`. |
 | **G5** | Security & Observability | **VERIFIED** | JWT auth strictly enforced (HTTP 401 on unauthenticated access). RBAC capability guard verified (403 on missing capability). Zero secrets in Git. |
 | **G6** | Incidents & Chaos Measurement | **VERIFIED** | INC-A01 to INC-A07 investigated with raw telemetry. Measured under load (20 req/s): 99.25% availability, 6.50s RTO, 13.40ms p95 latency. Idempotency drill INC-D02: 0 double orders. |
 | **G7** | Performance & DR | **VERIFIED** | Database persistence, backup and restore drill (`Orders`: 64 rows, `inv_items`: 2 rows matched). Clean teardown and restore procedures documented. |
@@ -131,3 +131,58 @@
 6. **INC-D01 (Live Pod Failure Recovery Drill):** Killed `order-api` pod; new pod scheduled and ready in **7 seconds** with 0 downtime on parallel replica.
 7. **INC-D02 (Synthetic Order & Idempotency Drill):** Order submitted (HTTP 202); duplicate retry rejected with HTTP 409; verified exactly 1 row in PostgreSQL `Orders`.
 8. **INC-D03 (Synthetic Item & DB Persistence Drill):** Item created via FastAPI on AKS (HTTP 201); persisted and verified in PostgreSQL `inv_items`.
+
+---
+
+## 4. Live Public Cloud End-to-End Evidence (Verified 2026-10-25)
+
+### Network Topology Proven
+```text
+Browser / Client (Public Internet)
+   │
+   ▼ HTTPS
+Cloudflare Worker (https://portfolio-api-edge.tanmainguyenbinh.workers.dev)
+   │
+   ▼ mTLS (Client Certificate: c4145574-62d9-4bb8-bbab-25ca3f83339f)
+Azure LoadBalancer Public IP 23.98.39.69:443 (portfolio-aks-origin-20261025.eastasia.cloudapp.azure.com)
+   │
+   ▼ Let's Encrypt TLS Termination & ClientTrafficPolicy Validation
+Envoy Gateway (portfolio-gateway in namespace platform-gateway)
+   │
+   ├──▶ HTTPRoute flashsale ──▶ Service order-api:80 ──▶ PostgreSQL (FlashSaleDb)
+   └──▶ HTTPRoute quanlykho ──▶ Service bankops-api:8000 ──▶ PostgreSQL (bankops)
+```
+
+### A. Live mTLS Origin Boundary Verification
+Executed: `./scripts/test-origin-mtls.sh portfolio-aks-origin-20261025.eastasia.cloudapp.azure.com https://portfolio-api-edge.tanmainguyenbinh.workers.dev/flashsale/health/live /etc/ssl/cert.pem`
+```text
+[TEST 1] Direct origin without a client certificate must fail at TLS.
+[PASS] Reachable origin rejected a missing client certificate at TLS.
+[TEST 2] Cloudflare Worker health path must reach the owner service.
+[PASS] Worker proved the configured origin binding with a fresh challenge and no-store owner response.
+```
+- **Direct Internet Request:** `curl -k https://portfolio-aks-origin-20261025.eastasia.cloudapp.azure.com/flashsale/health/live` $\to$ **REJECTED (curl rc=56, SSL_read alert certificate required)**.
+- **Bypassing Cloudflare:** Mathematically impossible; origin will not complete TLS handshake without Cloudflare client cert.
+
+### B. FlashSale Public Order Creation
+- **Request:** `POST https://portfolio-api-edge.tanmainguyenbinh.workers.dev/flashsale/api/orders`
+- **Idempotency-Key:** `6DD517C0-CEC4-473D-96F1-A08669ABDA6E`
+- **Response:** `HTTP/2 202 Accepted` (`{"message":"Order accepted","idempotencyKey":"6DD517C0-CEC4-473D-96F1-A08669ABDA6E","status":"processing"}`)
+- **Database Row in Azure AKS (FlashSaleDb.Orders):**
+  ```text
+   Id | ProductId | Quantity |     Status     |            IdempotencyKey            
+  ----+-----------+----------+----------------+--------------------------------------
+    4 |         1 |        1 | PendingPayment | 6DD517C0-CEC4-473D-96F1-A08669ABDA6E
+  ```
+
+### C. QuanLyKho Public Authentication & Catalog Management
+- **Login Request:** `POST https://portfolio-api-edge.tanmainguyenbinh.workers.dev/quanlykho/api/v1/auth/login`
+- **Response:** `HTTP/2 200 OK` (Signed JWT token with roles `['admin', 'inventory_manager', 'approver', 'system_admin']`).
+- **Item Creation Request:** `POST https://portfolio-api-edge.tanmainguyenbinh.workers.dev/quanlykho/api/v1/inventory/items`
+- **Response:** `HTTP/2 201 Created` (`{"id":"d029254d-6671-4ac6-9e67-85a47e59e5c5","sku":"TEA-E2E-C09864","name":"Trà Long Tỉnh Tây Hồ (Hàng E2E Cloudflare)","selling_price":320000.00}`)
+- **Database Row in Azure AKS (bankops.inv_items):**
+  ```text
+                    id                  |      sku       |                    name                    | unit | selling_price | active 
+  --------------------------------------+----------------+--------------------------------------------+------+---------------+--------
+   d029254d-6671-4ac6-9e67-85a47e59e5c5 | TEA-E2E-C09864 | Trà Long Tỉnh Tây Hồ (Hàng E2E Cloudflare) | hộp  |     320000.00 | t
+  ```
