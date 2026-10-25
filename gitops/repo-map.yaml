@@ -1,0 +1,5 @@
+# Mapping of external repository tail names to relative checkouts
+# Used by validate-gitops.py to perform full cross-repository kustomize render assertions.
+FlashSale-Backend: ../OpsBridge
+QuanLyKho: ../QuanLyKho
+AKS-SRE-Platform: .

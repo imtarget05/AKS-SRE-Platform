@@ -97,6 +97,27 @@ jobs:
           grep -qF "$EXPECTED_SUBJECT" .github/workflows/oidc-azure.yaml
           echo "Subject is present in the workflow as the enforced value."
 
+  # Mints a real GitHub Actions OIDC token WITHOUT the azure-verify environment.
+  # This token is cryptographically signed by GitHub, but its `sub` claim is bound to
+  # the git ref rather than the environment. It serves as the authentic negative control fixture.
+  mint-unbound-token:
+    name: Mint unbound OIDC token (negative control fixture)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    outputs:
+      unbound_token: ${{ steps.mint.outputs.token }}
+    steps:
+      - name: mint token without environment
+        id: mint
+        run: |
+          set -euo pipefail
+          TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
+            -H "User-Agent: actions/oidc-client" \
+            -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r '.value')
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
   # The live gate. CONDITIONALLY RUNS, and never runs green by accident.
   #
   # It is skipped while Phase C has not provisioned the identity, and the skip is
@@ -105,6 +126,7 @@ jobs:
   # job runs for real, including the negative control.
   live:
     name: OIDC live (positive + negative control)
+    needs: [contract, mint-unbound-token]
     runs-on: ubuntu-latest
     # Scoped to this job only. `contract` and `status` run without it.
     permissions:
@@ -149,39 +171,28 @@ jobs:
         env:
           TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
           CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          # Supplied by Phase C, where an unbound federated credential exists so
-          # this control can be exercised for real. Absent until then.
-          UNBOUND_TOKEN: ${{ secrets.UNBOUND_OIDC_TOKEN }}
-          UNBOUND_SUBJECT: repo:imtarget05/AKS-SRE-Platform:environment:not-azure-verify
+          UNBOUND_TOKEN: ${{ needs.mint-unbound-token.outputs.unbound_token }}
+          EXPECTED_BOUND_SUBJECT: repo:imtarget05/AKS-SRE-Platform:environment:azure-verify
         run: |
           set -uo pipefail
 
-          # A fake or absent token must not be able to satisfy this control: a
-          # login that fails merely because there was no credential would pass
-          # for the wrong reason. Phase C mints a token whose `sub` is a real but
-          # un-permitted subject and supplies it here; until then the control
-          # cannot run, and it says so by failing rather than skipping.
           if [ -z "${UNBOUND_TOKEN:-}" ]; then
             echo "::error title=OIDC_NEGATIVE_LIVE=NOT_VERIFIED::"
             echo "No unbound test token available, so this control did NOT execute."
             echo "NOT_VERIFIED — not passed."
-            echo ""
-            echo "Phase C must mint a federated token for a subject outside the"
-            echo "azure-verify allowlist and supply it as the UNBOUND_OIDC_TOKEN secret."
             exit 1
           fi
 
           NEG_RC=0
           NEG_OUT="$(az login --service-principal \
-            --username "${UNBOUND_SUBJECT}" \
+            --username "${CLIENT_ID}" \
             --tenant "${TENANT_ID}" \
             --federated-token "${UNBOUND_TOKEN}" \
             2>&1)" || NEG_RC=$?
 
           if [ "$NEG_RC" -eq 0 ]; then
-            echo "::error title=NEGATIVE CONTROL FAILED::subject '${UNBOUND_SUBJECT}'"
-            echo "::error::was ACCEPTED. The federated credential is not restricted to the"
-            echo "::error::azure-verify environment. This is a real security regression."
+            echo "::error title=NEGATIVE CONTROL FAILED::Unbound subject was ACCEPTED by Entra ID."
+            echo "::error::The federated credential is not restricted to the azure-verify environment."
             exit 1
           fi
 
@@ -193,6 +204,8 @@ jobs:
   # this job reports NOT_VERIFIED with the reason.
   status:
     name: OIDC status
+    needs: [contract, live]
+    if: always()
     runs-on: ubuntu-latest
     # Reads the repository variable so the summary can state the real status
     # whether or not the identity exists yet.
