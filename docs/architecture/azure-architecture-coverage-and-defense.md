@@ -100,10 +100,10 @@ xychart-beta
 
 ### Q4: "How do you guarantee that an AI agent won't corrupt financial ledger data in production?"
 > **Senior Answer:**
-> *"We formalized this in **ADR-023 and our Agent Hub Go/No-Go Decision Paper**:*
-> *- We issued a definitive **No-Go** on autonomous database mutations (ADR-024).*
-> *- Agent Hub operates strictly as a **Read-Only SRE Copilot** (ADR-023). It has zero mutation tools (no `POST`, `PUT`, `DELETE`).*
-> *- All data reads require scoped tokens (`X-Scope-Id`). Financial actions (such as discrepancy approval or outbox requeue) remain strictly gated behind authenticated human-in-the-loop controls."*
+> *"We formalized this in our **Agent Hub Go/No-Go Decision Paper** (`docs/agent-hub-decision.md`) and then enforced it in code, not just in policy:*
+> *- The decision landed on **GO with conditions**: every agent call is authenticated (JWT for user-facing traffic, a dedicated HMAC key for the internal agent surface), agents receive scoped permissions, and every agent is rate-limited.*
+> *- The agent surface we shipped is **read-first**: diagnostics are GET-only (`/internal/agent/outbox/stuck`, `/pending`, `/{id}`). The one mutating command an agent can trigger — requeueing a single dead-lettered outbox event — demands an **approved human intent** (`IntentId`, SHA-256 `IntentHash`, `ApprovedBy`, idempotency key) verified server-side, and the endpoint degrades to 503 if the HMAC key is not provisioned.*
+> *- Financial decisions (reconciliation discrepancy approval, bulk outbox requeue) remain behind authenticated human role policies (`Review`, `StaffOrAdmin`) — there is no code path by which an agent creates, approves, or alters ledger data."*
 
 ---
 
