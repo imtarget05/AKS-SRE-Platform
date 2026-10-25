@@ -1,7 +1,7 @@
 # L9 — OpsBridge (FlashSale workload) under GitOps.
 #
 # Source of truth is the repository, not this laptop: Argo builds
-# infrastructure/kubernetes/overlays/local with Kustomize and reconciles the
+# infrastructure/kubernetes/overlays/azure-cloud with Kustomize and reconciles the
 # flashsale namespace. The repository is public, so no repository credential
 # is stored anywhere in the cluster.
 apiVersion: argoproj.io/v1alpha1
@@ -16,7 +16,7 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/OpsBridge.git
-    targetRevision: 3e7fb0d30dd2a5caffd3a7b9c73ec24367e11bf0
+    targetRevision: 30320bd53ea85fdfcce6794ac26165c7669f569d
     path: infrastructure/kubernetes/overlays/azure-cloud
 
   destination:
@@ -35,9 +35,8 @@ spec:
       - PrunePropagationPolicy=foreground
       - RespectIgnoreDifferences=true
   ignoreDifferences:
-    # The migration Job is a PreSync hook with a fixed name; a completed Job
-    # must not be recreated on every sync just because its generated
-    # pod-template-hash label differs.
+    # Ignore controller-added Job labels when comparing the pre-existing
+    # FlashSale migration Job. OpsBridge's own migration runs separately.
     - group: batch
       kind: Job
       jsonPointers:
