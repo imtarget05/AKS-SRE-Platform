@@ -118,5 +118,74 @@ payment-service: 1/1 Running (Healthz: 200)
 ### Resolution & Evidence
 1. Executed canonical Alembic migrations `001_initial` through `028_reconcile_scope` directly via `python3 -m alembic upgrade head`. All 45 relational tables generated with primary keys, indexes, and constraints.
 2. Seeded verified initial catalog: 10 IAM users, 4 branches/locations, 30 items, 33 balances, 120 stock levels, and 3 cashboxes.
-3. Verified real authentication: `POST /auth/login` with `tanmainguyenbinhtan` returned HTTP 200 with JWT access token and roles `['admin', 'inventory_manager', 'approver', 'system_admin']`.
+3. Verified real authentication: `POST /auth/login` with `maker-bt` returned HTTP 200 with JWT access token.
 4. Set `replicas: 0` for `bankops-frontend` and `cloudflare-tunnel` in the production overlay, eliminating ImagePullBackOff errors and freeing compute resources for the cluster.
+
+---
+
+## 6. INC-A06: Database Multi-Tenant Isolation & Least-Privilege Credentials
+
+### Initial Symptoms
+Both `FlashSale` and `QuanLyKho` workloads were connecting to `postgres.flashsale.svc.cluster.local:5432` using the single superuser role `postgres`, violating data isolation and principle of least privilege.
+
+### Root Cause Analysis
+1. Initial manifest bootstrap used a monolithic secret with superuser credentials for rapid prototyping.
+2. In a shared PostgreSQL deployment, lack of user-level ACLs meant any compromised application could read or drop the other application's database (`FlashSaleDb` vs `bankops`).
+
+### Resolution & Verification
+1. Created dedicated non-superuser database roles:
+   - `bankops_user` (owner of `bankops`)
+   - `flashsale_user` (owner of `FlashSaleDb`)
+2. Revoked `CONNECT` on `PUBLIC` and cross-database permissions:
+   - `bankops_user` connecting to `FlashSaleDb` is strictly rejected:
+     ```text
+     psql: error: connection to server failed: FATAL: permission denied for database "FlashSaleDb"
+     DETAIL: User does not have CONNECT privilege.
+     ```
+   - `flashsale_user` connecting to `bankops` is strictly rejected:
+     ```text
+     psql: error: connection to server failed: FATAL: permission denied for database "bankops"
+     DETAIL: User does not have CONNECT privilege.
+     ```
+3. Verified backup and restore drill under non-superuser credentials:
+   - `pg_dump -U bankops_user` and `pg_dump -U flashsale_user` produced complete schema/data backups.
+   - Restored into scratch databases `bankops_restore_drill` and `flashsale_restore_drill`.
+   - Verified 100% row match (`Orders`: 64, `inv_items`: 2). Scratch databases dropped after verification.
+
+---
+
+## 7. INC-A07: Pod Termination Failover, Availability & Latency Under Load
+
+### Problem Statement
+A container restarts or pod replacement in 6–7 seconds does not empirically prove zero-downtime availability to clients outside the cluster.
+
+### Chaos Drill & Measurement Methodology
+- Client generator sent 20 requests/second continuously through Envoy Gateway (`localhost:18080/health/live`) to `order-api`.
+- Baseline established for 5 seconds (100% HTTP 200, mean latency 5.8ms).
+- Fault injected: terminated active pod `order-api-75d74b86c8-mr6pj` with `kubectl delete pod --now`.
+- Monitored recovery and client telemetry until replacement pod reached `Ready` condition.
+
+### Empirical SRE Telemetry Results
+```text
+=======================================================
+           SRE RESILIENCE & CHAOS BENCHMARK            
+=======================================================
+Victim Pod Terminated:     order-api-75d74b86c8-mr6pj
+Reconciliation & Ready:    6.50 seconds
+Total Client Requests:     268
+Successful (HTTP 200):     266
+Failed / Dropped (Non-200):2
+Observed Availability:     99.25%
+Latency Min:               4.13 ms
+Latency Mean:              7.71 ms
+Latency Median (p50):      6.26 ms
+Latency p95:               13.40 ms
+Latency p99:               32.70 ms
+Latency Max:               93.01 ms
+=======================================================
+```
+
+### Analysis & SRE Takeaways
+1. **True Availability:** 99.25% (2 dropped requests during the ~80ms window between container SIGKILL and EndpointSlice propagation to Envoy).
+2. **Cluster Recovery:** Replacement pod `order-api-75d74b86c8-pmsxb` scheduled, pulled cached image, and passed liveness/readiness probes in **6.50 seconds**.
+3. **Engineering Remediation:** To achieve 100% zero-downtime pod termination, workloads should declare a `preStop` hook (`sleep 3`) to allow the EndpointSlice controller to deregister the pod IP from Envoy before the Kestrel application receives `SIGTERM`.
