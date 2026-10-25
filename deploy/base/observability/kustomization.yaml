@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - argocd-servicemonitor.yaml
+  - servicemonitor-envoy-gateway.yaml
+  - flashsale-workload-prometheusrule.yaml
+  - aks-monitoring-prometheusrule.yaml
+  - local-platform-prometheusrule.yaml
+  - aks-sre-platform-scale-events.yaml
+  - cluster-autoscaler-config.yaml
+  - slo-burn-rate-rules.yaml

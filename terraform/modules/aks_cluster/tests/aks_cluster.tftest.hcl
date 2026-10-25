@@ -66,4 +66,65 @@ run "verify_user_workload_pool" {
     condition     = azurerm_kubernetes_cluster_node_pool.work[0].node_labels["workload"] == "portfolio"
     error_message = "Workload node label must be portfolio"
   }
+
+  assert {
+    condition     = azurerm_kubernetes_cluster_node_pool.work[0].auto_scaling_enabled == false
+    error_message = "Autoscaling must remain opt-in for the cost-safe default"
+  }
+}
+
+run "verify_bounded_user_autoscaler" {
+  command = plan
+
+  variables {
+    workload_pool_autoscaling = {
+      enabled   = true
+      min_nodes = 1
+      max_nodes = 3
+    }
+  }
+
+  assert {
+    condition     = azurerm_kubernetes_cluster.aks.default_node_pool[0].auto_scaling_enabled == false
+    error_message = "System pool must remain fixed while user pool scales"
+  }
+
+  assert {
+    condition     = azurerm_kubernetes_cluster_node_pool.work[0].auto_scaling_enabled == true
+    error_message = "User pool must enable cluster autoscaler"
+  }
+
+  assert {
+    condition     = azurerm_kubernetes_cluster_node_pool.work[0].min_count == 1 && azurerm_kubernetes_cluster_node_pool.work[0].max_count == 3
+    error_message = "User pool autoscaler must stay inside the 1-3 node envelope"
+  }
+}
+
+run "reject_autoscaler_above_quota_envelope" {
+  command = plan
+
+  variables {
+    workload_pool_autoscaling = {
+      enabled   = true
+      min_nodes = 1
+      max_nodes = 4
+    }
+  }
+
+  expect_failures = [var.workload_pool_autoscaling]
+}
+
+run "reject_autoscaler_without_user_pool" {
+  command = plan
+
+  variables {
+    enable_workload_pool = false
+    workload_pool_autoscaling = {
+      enabled   = true
+      min_nodes = 1
+      max_nodes = 3
+    }
+  }
+
+  expect_failures = [azurerm_kubernetes_cluster.aks]
 }

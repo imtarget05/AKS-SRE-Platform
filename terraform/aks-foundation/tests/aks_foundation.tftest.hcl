@@ -46,3 +46,26 @@ run "verify_workload_pool_plan" {
     error_message = "enable_workload_pool must be true in this run"
   }
 }
+
+run "verify_autoscaling_wiring_and_bounds" {
+  command = plan
+
+  variables {
+    enable_workload_pool = true
+    workload_pool_autoscaling = {
+      enabled   = true
+      min_nodes = 1
+      max_nodes = 3
+    }
+  }
+
+  assert {
+    condition     = module.aks.workload_pool_autoscaling.enabled == true
+    error_message = "Foundation must pass the autoscaling flag into its user pool"
+  }
+
+  assert {
+    condition     = module.aks.workload_pool_autoscaling.min_nodes == 1 && module.aks.workload_pool_autoscaling.max_nodes == 3
+    error_message = "Foundation must keep user-pool autoscaling inside the quota envelope"
+  }
+}

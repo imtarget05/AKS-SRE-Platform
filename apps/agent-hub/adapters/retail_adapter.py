@@ -16,7 +16,7 @@ class RetailReadAdapter:
     - Zero write operations (never posts to ledger).
     """
     def __init__(self, base_url: Optional[str] = None, token: Optional[str] = None):
-        self.base_url = base_url or os.getenv("RETAIL_SERVICE_URL", "http://127.0.0.1:8080")
+        self.base_url = base_url or "http://bankops-api.quanlykho.svc.cluster.local:8080"
         self.token = token or os.getenv("RETAIL_API_TOKEN")
         self.username = os.getenv("RETAIL_SERVICE_USER", "ops")
         self.password = os.getenv("RETAIL_SERVICE_PASSWORD", "ChangeMe123!")

@@ -1,0 +1,71 @@
+name: SBOM & Provenance Scan
+
+on:
+  push:
+    branches: [main, release]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sbom-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Scan image with Syft for SBOM
+        uses: docker://anchore/syft-action@v2
+        with:
+          args: . --file format=cyclonedxjson > sbom.json
+
+      - name: Generate SBOM Provenance
+        run: |
+          echo "SBOM generated at $(date)" >> sbom-provenance.txt
+          cat sbom.json | jq '.components | length' > component-count.txt
+
+      - name: Run Trivy Vulnerability Scan
+        uses: aquasec/trivy-action@master
+        with:
+          image: ''
+          format: sarif
+          output: trivy-results.sarif
+          ignore-unfixed: true
+          severity: CRITICAL
+
+      - name: Upload Trivy SARIF results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Cosign Sign SBOM
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} sbom.json
+          cosign verify sbom.json
+
+      - name: Fail on Critical CVEs
+        if: ${{ contains(join(trivy-results.sarif.*.runs.*.results.*.exitCode), '1') || contains(join(trivy-results.sarif.*.runs.*.results.*.text.*.severity), 'CRITICAL') }}
+        run: |
+          echo "::error::Critical CVEs found in image scan"
+          exit 1
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.json
+          retention-days: 30

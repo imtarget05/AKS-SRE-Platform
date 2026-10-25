@@ -1,0 +1,28 @@
+# Platform infrastructure - requires platform team review
+/terraform/                       @platform-team
+/kubernetes/                      @platform-team
+/deploy/                          @platform-team
+/gitops/                          @platform-team
+/platform/                        @platform-team
+/scripts/bootstrap.sh             @platform-team
+/scripts/check-production-environment.py @platform-team
+
+# Legacy application - requires legacy team review
+/apps/legacy-inventory/           @legacy-team
+
+# Observability & SRE - requires SRE team review
+/deploy/base/observability/       @sre-team
+/docs/slo.md                      @sre-team
+/scripts/log_scale_events.py      @sre-team
+/scripts/alert_drill_simulator.py @sre-team
+
+# Security - requires security team review
+/.trivyignore                     @security-team
+.github/workflows/                @security-team
+
+# Documentation - requires docs team review
+/docs/                            @docs-team
+
+# 2-Reviewer pattern - prevent self-approval on core changes
+/* @platform-sre/approval-team=2
+/* @security-team=2

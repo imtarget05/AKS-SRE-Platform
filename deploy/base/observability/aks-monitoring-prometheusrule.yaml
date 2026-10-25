@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aks-monitoring-target-rules
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+spec:
+  groups:
+    - name: aks.monitoring.targets
+      rules:
+        - alert: AKSMonitoringTargetDown
+          expr: >-
+            absent(up{job=~".*kube-state-metrics.*"})
+            or max(up{job=~".*kube-state-metrics.*"}) == 0
+          for: 2m
+          labels:
+            severity: warning
+            team: platform-sre
+          annotations:
+            summary: "AKS kube-state-metrics target is unavailable"
+            description: >-
+              Prometheus has had no healthy kube-state-metrics scrape for two
+              minutes. Inventory, pod-state and HPA dashboards may be stale.

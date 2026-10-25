@@ -193,14 +193,141 @@ jobs:
           echo "- ${{ steps.tags.outputs.legacy }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- legacy-app digest: ${{ steps.push.outputs.digest }}" >> "$GITHUB_STEP_SUMMARY"
 
-  gitops-update:
+  # =========================================================================
+  # Image release gate: scan the digest produced by this workflow before
+  # the production GitOps overlay can move.
+  # =========================================================================
+  sbom-scan:
+    name: SBOM + Image Scan
     needs: release-push
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
+      contents: read
+      security-events: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to ACR
+        run: az acr login --name ${{ vars.ACR_NAME }}
+
+      - name: Bind scan to released image digest
+        id: image-ref
+        run: |
+          DIGEST="${{ needs.release-push.outputs.digest }}"
+          [[ "$DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "Invalid released image digest" >&2; exit 1; }
+          IMAGE="${{ vars.ACR_LOGIN_SERVER }}/legacy-app@${DIGEST}"
+          echo "image=$IMAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Install syft (SBOM generator)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          syft version
+
+      - name: Generate SBOM (SPDX JSON)
+        id: sbom
+        run: |
+          syft "${{ steps.image-ref.outputs.image }}" -o spdx-json=sbom.spdx.json
+          echo "sbom_path=sbom.spdx.json" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SBOM as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ github.sha }}
+          path: sbom.spdx.json
+          retention-days: 90
+
+      - name: Install trivy (pinned + checksummed)
+        env:
+          TRIVY_VERSION: "0.74.0"
+          TRIVY_SHA256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
+        run: |
+          set -euo pipefail
+          ASSET="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sfL --proto '=https' --tlsv1.2 -o "$ASSET" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${ASSET}"
+          echo "${TRIVY_SHA256}  ${ASSET}" | sha256sum -c -
+          tar xzf "$ASSET" trivy
+          sudo mv trivy /usr/local/bin/trivy
+          sudo chmod +x /usr/local/bin/trivy
+          trivy --version
+
+      - name: Trivy image scan (CRITICAL blocks)
+        id: trivy-scan
+        run: |
+          set -euo pipefail
+          trivy image \
+            --severity CRITICAL \
+            --exit-code 1 \
+            --skip-version-check \
+            --ignore-unfixed \
+            --format sarif \
+            --output trivy-results.sarif \
+            "${{ steps.image-ref.outputs.image }}"
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image-scan
+
+      - name: Install Cosign (Sigstore)
+        uses: sigstore/cosign-installer@v3.8.1
+
+      - name: Sign container image digest (Keyless OIDC)
+        run: |
+          cosign sign --yes "${{ steps.image-ref.outputs.image }}"
+
+      - name: Attest SBOM with Cosign
+        run: |
+          cosign attest --yes \
+            --predicate sbom.spdx.json \
+            --type spdxjson \
+            "${{ steps.image-ref.outputs.image }}"
+
+      - name: Verify image signature
+        run: |
+          cosign verify "${{ steps.image-ref.outputs.image }}" \
+            --certificate-identity-regexp "https://github.com/${{ github.repository }}" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+
+      - name: Record image digest in summary
+        run: |
+          {
+            echo "### Image Scan & Provenance Gate"
+            echo "Image: ${{ steps.image-ref.outputs.image }}"
+            echo "Digest: ${{ needs.release-push.outputs.digest }}"
+            echo "SBOM: SPDX JSON (artifact: sbom-${{ github.sha }})"
+            echo "Trivy: CRITICAL scan — PASS"
+            echo "Cosign: Keyless OIDC Signature & SBOM Attestation — PASS"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  gitops-update:
+    needs: [release-push, sbom-scan]
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    # This commit changes the Argo desired state, so it is a production
+    # release even though the workflow does not call kubectl directly.
+    environment: production
+    permissions:
+      actions: read
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Verify independent production review configuration
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/environments/production" |
+            python3 scripts/check-production-environment.py
       # Git state is the desired runtime state (same ownership contract as P01:
       # CI builds, Git holds desired state, nothing kubectl-applied by CI).
       - name: Pin the prod overlay to the released SHA

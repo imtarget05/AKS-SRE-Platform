@@ -529,6 +529,151 @@ def check_inventory(rep):
             )
 
 
+# -------------------------------------------------------------- autoscaling ----
+def check_autoscaling(rep):
+    """Validate HPA, Cluster Autoscaler, and scale-event logging manifests."""
+    # Check deploy/base/autoscaling.yaml exists and has required fields
+    autoscaling_path = os.path.join(ROOT, "deploy", "base", "autoscaling.yaml")
+    if not os.path.isfile(autoscaling_path):
+        rep.add("autoscaling-hpa", "deploy/base/autoscaling.yaml", FAIL, "file missing")
+    else:
+        docs = [d for d in yaml.safe_load_all(open(autoscaling_path)) if d]
+        hpa_doc = next((d for d in docs if d.get("kind") == "HorizontalPodAutoscaler"), None)
+        if not hpa_doc:
+            rep.add("autoscaling-hpa", "deploy/base/autoscaling.yaml", FAIL, "no HorizontalPodAutoscaler document found")
+        else:
+            spec = hpa_doc.get("spec") or {}
+            metrics = spec.get("metrics") or []
+            has_resource_metric = any(m.get("type") == "Resource" for m in metrics)
+            has_behavior = "behavior" in spec
+            min_replicas = spec.get("minReplicas")
+            max_replicas = spec.get("maxReplicas")
+
+            if min_replicas is None or min_replicas < 2:
+                rep.add("autoscaling-hpa-min", "deploy/base/autoscaling.yaml", FAIL, f"minReplicas must be >= 2, got {min_replicas}")
+            else:
+                rep.add("autoscaling-hpa-min", "deploy/base/autoscaling.yaml", OK, f"minReplicas={min_replicas}")
+
+            if max_replicas is None or max_replicas <= min_replicas:
+                rep.add("autoscaling-hpa-max", "deploy/base/autoscaling.yaml", FAIL, f"maxReplicas must be > minReplicas, got {max_replicas}")
+            else:
+                rep.add("autoscaling-hpa-max", "deploy/base/autoscaling.yaml", OK, f"maxReplicas={max_replicas}")
+
+            if not has_resource_metric:
+                rep.add("autoscaling-hpa-metrics", "deploy/base/autoscaling.yaml", FAIL, "no Resource metric defined")
+            else:
+                rep.add("autoscaling-hpa-metrics", "deploy/base/autoscaling.yaml", OK, "Resource metric(s) present")
+
+            if not has_behavior:
+                rep.add("autoscaling-hpa-behavior", "deploy/base/autoscaling.yaml", FAIL, "no scaling behavior configured")
+            else:
+                behavior = spec.get("behavior") or {}
+                scale_up = behavior.get("scaleUp", {})
+                scale_down = behavior.get("scaleDown", {})
+                rep.add("autoscaling-hpa-behavior", "deploy/base/autoscaling.yaml", OK,
+                        f"scaleUp stabilization={scale_up.get('stabilizationWindowSeconds')}s, scaleDown stabilization={scale_down.get('stabilizationWindowSeconds')}s")
+
+    # Check Cluster Autoscaler ConfigMap exists
+    ca_config_path = os.path.join(ROOT, "deploy", "base", "observability", "cluster-autoscaler-config.yaml")
+    if not os.path.isfile(ca_config_path):
+        rep.add("cluster-autoscaler-config", "deploy/base/observability/cluster-autoscaler-config.yaml", FAIL, "file missing")
+    else:
+        docs = [d for d in yaml.safe_load_all(open(ca_config_path)) if d]
+        has_configmap = any(d.get("kind") == "ConfigMap" and d.get("metadata", {}).get("name") == "cluster-autoscaler-status" for d in docs)
+        has_pdb = any(d.get("kind") == "PodDisruptionBudget" and d.get("metadata", {}).get("name") == "cluster-autoscaler" for d in docs)
+
+        if has_configmap:
+            rep.add("cluster-autoscaler-configmap", ca_config_path, OK, "ConfigMap cluster-autoscaler-status present")
+            # Validate key settings
+            for d in docs:
+                if d.get("kind") == "ConfigMap" and d.get("metadata", {}).get("name") == "cluster-autoscaler-status":
+                    data = d.get("data") or {}
+                    required_keys = ["scale-down-unneeded-time", "scale-down-utilization-threshold", "expander"]
+                    for key in required_keys:
+                        if key not in data:
+                            rep.add("cluster-autoscaler-config-keys", ca_config_path, FAIL, f"missing key: {key}")
+                        else:
+                            rep.add("cluster-autoscaler-config-keys", ca_config_path, OK, f"key {key}={data[key]}")
+        else:
+            rep.add("cluster-autoscaler-configmap", ca_config_path, FAIL, "ConfigMap cluster-autoscaler-status not found")
+
+        if has_pdb:
+            rep.add("cluster-autoscaler-pdb", ca_config_path, OK, "PodDisruptionBudget for cluster-autoscaler present")
+        else:
+            rep.add("cluster-autoscaler-pdb", ca_config_path, FAIL, "PodDisruptionBudget for cluster-autoscaler not found")
+
+    # Check scale-event logging PrometheusRule
+    scale_events_path = os.path.join(ROOT, "deploy", "base", "observability", "aks-sre-platform-scale-events.yaml")
+    if not os.path.isfile(scale_events_path):
+        rep.add("scale-events-rule", "deploy/base/observability/aks-sre-platform-scale-events.yaml", FAIL, "file missing")
+    else:
+        docs = [d for d in yaml.safe_load_all(open(scale_events_path)) if d]
+        for doc in docs:
+            if isinstance(doc, dict) and doc.get("kind") == "PrometheusRule":
+                spec = doc.get("spec") or {}
+                groups = spec.get("groups") or []
+                rule_names = []
+                for group in groups:
+                    for rule in group.get("rules") or []:
+                        rule_names.append(rule.get("alert"))  # PrometheusRule uses 'alert' not 'name'
+                required_rules = ["HPAScaleUp", "HPAScaleDown", "ClusterAutoscalerScaleEvent"]
+                for req in required_rules:
+                    if req in rule_names:
+                        rep.add("scale-events-rules", scale_events_path, OK, f"rule {req} present")
+                    else:
+                        rep.add("scale-events-rules", scale_events_path, FAIL, f"missing required rule: {req}")
+                break
+
+    # Check scale-event logging script exists
+    script_path = os.path.join(ROOT, "scripts", "log_scale_events.py")
+    if not os.path.isfile(script_path):
+        rep.add("scale-events-script", "scripts/log_scale_events.py", FAIL, "script missing")
+    else:
+        rep.add("scale-events-script", "scripts/log_scale_events.py", OK, "script present")
+
+    # Check SLO burn rate rules
+    slo_rules_path = os.path.join(ROOT, "deploy", "base", "observability", "slo-burn-rate-rules.yaml")
+    if not os.path.isfile(slo_rules_path):
+        rep.add("slo-burn-rate-rules", "deploy/base/observability/slo-burn-rate-rules.yaml", FAIL, "file missing")
+    else:
+        docs = [d for d in yaml.safe_load_all(open(slo_rules_path)) if d]
+        for doc in docs:
+            if isinstance(doc, dict) and doc.get("kind") == "PrometheusRule":
+                spec = doc.get("spec") or {}
+                groups = spec.get("groups") or []
+                rule_names = []
+                for group in groups:
+                    for rule in group.get("rules") or []:
+                        rule_names.append(rule.get("alert"))
+                required_rules = ["SreDemoApiAvailabilityFastBurn", "SreDemoApiAvailabilitySlowBurn", "SreDemoApiAvailabilityVerySlowBurn"]
+                for req in required_rules:
+                    if req in rule_names:
+                        rep.add("slo-burn-rate-rules", slo_rules_path, OK, f"rule {req} present")
+                    else:
+                        rep.add("slo-burn-rate-rules", slo_rules_path, FAIL, f"missing required rule: {req}")
+                break
+
+    # Check SLO documentation
+    slo_doc_path = os.path.join(ROOT, "docs", "slo.md")
+    if not os.path.isfile(slo_doc_path):
+        rep.add("slo-documentation", "docs/slo.md", FAIL, "file missing")
+    else:
+        content = open(slo_doc_path).read()
+        required_sections = ["sre-demo-api", "argocd", "prometheus", "cluster-autoscaler", "30-Day Observation"]
+        for section in required_sections:
+            if section.lower() in content.lower():
+                rep.add("slo-documentation", slo_doc_path, OK, f"section '{section}' present")
+            else:
+                rep.add("slo-documentation", slo_doc_path, FAIL, f"missing required section: {section}")
+
+    # Check alert drill simulator script
+    drill_script_path = os.path.join(ROOT, "scripts", "alert_drill_simulator.py")
+    if not os.path.isfile(drill_script_path):
+        rep.add("alert-drill-script", "scripts/alert_drill_simulator.py", FAIL, "script missing")
+    else:
+        rep.add("alert-drill-script", "scripts/alert_drill_simulator.py", OK, "script present")
+
+
 def load_repo_map(path):
     """Load {repo_tail: local_checkout}. Rejects machine-specific paths (G3)."""
     data = load(path)
@@ -564,6 +709,7 @@ def main():
     check_projects(rep, entries)
     check_applications(rep, by_name, repo_map, args.require_external)
     check_inventory(rep)
+    check_autoscaling(rep)
 
     rc = rep.exit_code(args.require_external)
 
