@@ -106,7 +106,7 @@ jobs:
     permissions:
       id-token: write
     outputs:
-      unbound_token: ${{ steps.mint.outputs.token }}
+      unbound_token_b64: ${{ steps.mint.outputs.unbound_token_b64 }}
     steps:
       - name: mint token without environment
         id: mint
@@ -115,8 +115,8 @@ jobs:
           TOKEN=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=api://AzureADTokenExchange" \
             -H "User-Agent: actions/oidc-client" \
             -H "Authorization: Bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" | jq -r '.value')
-          echo "::add-mask::$TOKEN"
-          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+          B64_TOKEN=$(echo -n "$TOKEN" | base64 -w 0)
+          echo "unbound_token_b64=$B64_TOKEN" >> "$GITHUB_OUTPUT"
 
   # The live gate. CONDITIONALLY RUNS, and never runs green by accident.
   #
@@ -171,17 +171,19 @@ jobs:
         env:
           TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
           CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-          UNBOUND_TOKEN: ${{ needs.mint-unbound-token.outputs.unbound_token }}
+          UNBOUND_TOKEN_B64: ${{ needs.mint-unbound-token.outputs.unbound_token_b64 }}
           EXPECTED_BOUND_SUBJECT: repo:imtarget05/AKS-SRE-Platform:environment:azure-verify
         run: |
           set -uo pipefail
 
-          if [ -z "${UNBOUND_TOKEN:-}" ]; then
+          if [ -z "${UNBOUND_TOKEN_B64:-}" ]; then
             echo "::error title=OIDC_NEGATIVE_LIVE=NOT_VERIFIED::"
             echo "No unbound test token available, so this control did NOT execute."
             echo "NOT_VERIFIED — not passed."
             exit 1
           fi
+
+          UNBOUND_TOKEN=$(echo -n "${UNBOUND_TOKEN_B64}" | base64 -d)
 
           NEG_RC=0
           NEG_OUT="$(az login --service-principal \
