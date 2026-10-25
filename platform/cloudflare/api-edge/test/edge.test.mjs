@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash, createHmac } from "node:crypto";
 import handler from "../src/index.mjs";
 
-const groups = ["RATE_ORDER", "RATE_AUTH", "RATE_AI", "RATE_STAFF", "RATE_RETAIL", "RATE_GENERAL"];
+const groups = ["RATE_ORDER", "RATE_AUTH", "RATE_AI", "RATE_STAFF", "RATE_GENERAL"];
 
 function env(fetchImpl = async () => new Response('{"ok":true}')) {
   const calls = [];
@@ -17,16 +18,17 @@ function env(fetchImpl = async () => new Response('{"ok":true}')) {
 
 test("only fixed owner prefixes route through the mTLS binding", async () => {
   const { value, calls } = env();
-  const paths = ["/flashsale/api/orders", "/opsbridge/api/v1/orders", "/quanlykho/api/v1/items", "/retail/api/v1/accounts"];
+  const paths = ["/flashsale/api/orders", "/opsbridge/api/v1/orders", "/quanlykho/api/v1/items"];
   for (const path of paths) {
     const response = await handler.fetch(new Request(`https://edge.workers.dev${path}`), value);
     assert.equal(response.status, 200);
     assert.equal(response.headers.get("Cache-Control"), "private, no-store");
   }
-  assert.equal(calls.length, 4);
+  assert.equal(calls.length, 3);
   assert.equal(calls[0][0], "https://portfolio.southeastasia.cloudapp.azure.com/flashsale/api/orders");
   assert.equal((await handler.fetch(new Request("https://edge.workers.dev/admin"), value)).status, 404);
-  assert.equal(calls.length, 4);
+  assert.equal((await handler.fetch(new Request("https://edge.workers.dev/retail/api/v1/accounts"), value)).status, 404);
+  assert.equal(calls.length, 3);
 });
 
 test("missing mTLS or rate binding fails closed and cannot reach origin", async () => {
@@ -55,7 +57,7 @@ test("blocked origin, throttling and upstream outage do not leak business data",
 
 test("forwards owner credentials but strips caller supplied forwarding identity", async () => {
   const { value, calls } = env();
-  const request = new Request("https://edge.workers.dev/retail/api/v1/accounts", {
+  const request = new Request("https://edge.workers.dev/quanlykho/api/v1/items", {
     headers: { Authorization: "Bearer alice", "X-Forwarded-Host": "evil.example", Origin: "https://ops.pages.dev" },
   });
   const response = await handler.fetch(request, value);
@@ -64,4 +66,35 @@ test("forwards owner credentials but strips caller supplied forwarding identity"
   assert.equal(calls[0][1].headers.get("Authorization"), "Bearer alice");
   assert.equal(calls[0][1].headers.get("X-Forwarded-Host"), null);
   assert.equal(calls[0][1].headers.get("X-Forwarded-Proto"), "https");
+});
+
+test("origin proof binds fresh nonce, configured origin host, and owner response", async () => {
+  const body = '{"status":"healthy"}';
+  const { value, calls } = env(async () => new Response(body, { status: 200 }));
+  value.EDGE_PROOF_KEY = "a-private-proof-secret-at-least-32-bytes";
+  const nonce = "a".repeat(32);
+  const response = await handler.fetch(new Request("https://edge.workers.dev/flashsale/health/live", {
+    headers: { "X-Portfolio-Proof-Nonce": nonce },
+  }), value);
+  assert.equal(response.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][1].headers.get("X-Portfolio-Proof-Nonce"), null);
+  assert.equal(response.headers.get("X-Portfolio-Origin-Target"), "portfolio.southeastasia.cloudapp.azure.com");
+  const bodyHash = createHash("sha256").update(body).digest("hex");
+  const expected = createHmac("sha256", value.EDGE_PROOF_KEY)
+    .update(`${nonce}\nportfolio.southeastasia.cloudapp.azure.com\n200\n${bodyHash}`).digest("hex");
+  assert.equal(response.headers.get("X-Portfolio-Origin-Proof"), expected);
+  assert.equal(response.headers.get("Cache-Control"), "private, no-store");
+});
+
+test("origin proof fails closed without secret or healthy owner response", async () => {
+  const { value, calls } = env();
+  const request = new Request("https://edge.workers.dev/flashsale/health/live", {
+    headers: { "X-Portfolio-Proof-Nonce": "b".repeat(32) },
+  });
+  assert.equal((await handler.fetch(request, value)).status, 503);
+  assert.equal(calls.length, 0);
+  value.EDGE_PROOF_KEY = "a-private-proof-secret-at-least-32-bytes";
+  assert.equal((await handler.fetch(request, value)).status, 503);
+  assert.equal(calls.length, 1);
 });

@@ -23,14 +23,18 @@ env:
 
 jobs:
   # =========================================================================
-  # 1. Terraform Plan (Read-Only validation, runs on push & dispatch)
+  # 1. Terraform Plan (dispatch only; destroy also produces a saved plan)
   # =========================================================================
   plan:
     name: Terraform Plan & Validate
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'destroy')
+    if: github.event_name == 'workflow_dispatch'
+    outputs:
+      plan_hash: ${{ steps.fingerprint.outputs.plan_hash }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: Check OIDC Credentials Availability
         id: oidc-check
@@ -39,6 +43,10 @@ jobs:
             echo "has_oidc=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_oidc=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event.inputs.action }}" != "plan" ]; then
+              echo "::error::Destructive dispatch requires Azure OIDC credentials."
+              exit 1
+            fi
             echo "::notice::AZURE_CLIENT_ID not present in this runner context; falling back to offline validation."
           fi
 
@@ -74,15 +82,28 @@ jobs:
         if: steps.oidc-check.outputs.has_oidc == 'true'
         run: |
           cd terraform/aks-foundation
-          terraform plan -out=tfplan
+          if [ "${{ github.event.inputs.action }}" = "destroy" ]; then
+            terraform plan -destroy -out=tfplan
+          else
+            terraform plan -out=tfplan
+          fi
+          chmod 600 tfplan
 
-      - name: Upload Terraform Plan Artifact
+      # The repository is public. A Terraform plan can contain secret values;
+      # publish only a digest and allowlisted non-secret change summary for approval.
+      - name: Publish plan fingerprint and action summary
+        id: fingerprint
         if: steps.oidc-check.outputs.has_oidc == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-artifact
-          path: terraform/aks-foundation/tfplan
-          retention-days: 1
+        run: |
+          cd terraform/aks-foundation
+          PLAN_HASH=$(terraform show -json tfplan | python3 ../../scripts/terraform-plan-fingerprint.py)
+          echo "plan_hash=$PLAN_HASH" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Reviewed Terraform ${{ github.event.inputs.action }} plan"
+            echo "Commit: $GITHUB_SHA"
+            echo "Fingerprint: $PLAN_HASH"
+            terraform show -json tfplan | python3 ../../scripts/terraform-plan-summary.py
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # =========================================================================
   # 2. Terraform Apply (Gated by 'production' Environment & Manual Approval)
@@ -95,6 +116,8 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -108,22 +131,18 @@ jobs:
         with:
           terraform_version: 1.9.x
 
-      - name: Download Terraform Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-artifact
-          path: terraform/aks-foundation
-
       - name: Terraform Init (with Azure backend)
         run: |
           cd terraform/aks-foundation
           terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
 
-      - name: Terraform Apply (Strictly uses plan artifact, NO auto-approve fallback)
+      - name: Replan, verify reviewed fingerprint, then apply
         run: |
           cd terraform/aks-foundation
-          if [[ ! -f tfplan ]]; then
-            echo "FATAL: tfplan file missing; apply requires a verified plan artifact." >&2
+          terraform plan -out=tfplan
+          CURRENT_HASH=$(terraform show -json tfplan | python3 ../../scripts/terraform-plan-fingerprint.py)
+          if [[ -z "${{ needs.plan.outputs.plan_hash }}" || "$CURRENT_HASH" != "${{ needs.plan.outputs.plan_hash }}" ]]; then
+            echo "FATAL: current plan differs from reviewed plan; dispatch a new plan." >&2
             exit 1
           fi
           terraform apply tfplan
@@ -141,11 +160,14 @@ jobs:
   # =========================================================================
   destroy:
     name: Terraform Destroy (Protected)
+    needs: plan
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
 
       - name: Azure Login (OIDC)
         uses: azure/login@v2
@@ -164,7 +186,13 @@ jobs:
           cd terraform/aks-foundation
           terraform init -upgrade -backend-config=backend-remote.tfbackend -reconfigure
 
-      - name: Terraform Destroy
+      - name: Apply saved destroy plan only
         run: |
           cd terraform/aks-foundation
-          terraform destroy -auto-approve
+          terraform plan -destroy -out=tfplan
+          CURRENT_HASH=$(terraform show -json tfplan | python3 ../../scripts/terraform-plan-fingerprint.py)
+          if [[ -z "${{ needs.plan.outputs.plan_hash }}" || "$CURRENT_HASH" != "${{ needs.plan.outputs.plan_hash }}" ]]; then
+            echo "FATAL: current destroy plan differs from reviewed plan; dispatch a new plan." >&2
+            exit 1
+          fi
+          terraform apply tfplan

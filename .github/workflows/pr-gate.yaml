@@ -350,7 +350,7 @@ jobs:
       - run: >-
           pip install --require-hashes --only-binary ':all:' -r requirements.lock
 
-      - name: gate test matrix (G1-G14)
+      - name: gate test matrix (G1-G15)
         run: python3 tests/test_gates.py
 
       - name: cloud cutover guard unit tests
@@ -358,6 +358,12 @@ jobs:
 
       - name: Azure origin renderer unit tests
         run: python3 -m unittest discover -s tests -p test_azure_origin.py
+
+      - name: origin mTLS positive and negative controls
+        run: python3 -m unittest discover -s tests -p test_origin_mtls_contract.py
+
+      - name: protected Terraform destroy contract
+        run: python3 -m unittest discover -s tests -p test_destroy_workflow.py
 
       - name: Cloudflare API edge contract
         run: node --test platform/cloudflare/api-edge/test/*.test.mjs

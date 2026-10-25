@@ -7,7 +7,6 @@ The Worker exposes fixed prefixes on a `workers.dev` hostname:
 | `/flashsale/api/...` | FlashSale | `/api/...` |
 | `/opsbridge/api/v1/...` | OpsBridge | `/api/v1/...` |
 | `/quanlykho/api/v1/...` | QuanLyKho | `/api/v1/...` |
-| `/retail/api/v1/...` | Retail Finance | `/api/v1/...` |
 
 The Worker preserves the prefix for the Azure Gateway. Each workload owns its
 HTTPRoute and its API authentication, outlet/branch authorization, idempotency
@@ -37,7 +36,10 @@ They do not prove Cloudflare or AKS runtime.
 2. Upload the Worker client certificate with Wrangler. Copy
    `wrangler.example.toml` to `wrangler.toml` and replace the certificate ID,
    Azure FQDN and allowed static frontend origins. The sample namespace IDs
-   must be checked against this Cloudflare account before use.
+   must be checked against this Cloudflare account before use. Provision a
+   separate random 32-byte-or-longer `EDGE_PROOF_KEY` as a Worker secret and
+   keep the matching verification value in the operator's secret store. Never
+   put that key in the repository or a command argument.
 3. Configure each frontend BFF to call this Worker. For OpsBridge Pages,
    `API_BACKEND_URL` must be
    `https://<edge-worker>.workers.dev/opsbridge`, so
@@ -46,8 +48,14 @@ They do not prove Cloudflare or AKS runtime.
    Applications because they use local overlays, moving `main` refs and
    automated sync. Do not promote until reviewed cloud overlays with managed
    database connections, image digests, secrets, migration and rollback exist.
-5. Prove direct Azure origin without a client certificate fails; authorized
-   Worker request succeeds; wrong bearer/outlet/branch fails at the owner API;
+5. Load `EDGE_PROOF_KEY` from the secret store into the operator environment,
+   then run `scripts/test-origin-mtls.sh <origin-fqdn>
+   https://<worker>.workers.dev/flashsale/health/live <origin-ca.pem>` only
+   after the Gateway and Worker exist. It requires a reachable origin with a
+   certificate-required TLS alert, a valid server CA, and a healthy response
+   signed with a fresh challenge by this Worker's configured origin binding;
+   DNS failure, HTTP `000` alone, or a generic healthy HTTPS page fail. Then prove
+   wrong bearer/branch fails at the owner API;
    edge 429 and owner strict limiter are distinct; alert and rollback work.
 
 Cloudflare Workers rate limits are approximate and local to a Cloudflare

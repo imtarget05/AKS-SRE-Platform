@@ -1,7 +1,7 @@
-// One Cloudflare Workers API entry point for the four owner services.
+// One Cloudflare Workers API entry point for the three active owner routes.
 // The Azure Gateway still validates the mTLS client certificate and each
 // owner API still authenticates and authorizes its own business requests.
-const prefixes = ["/flashsale/", "/opsbridge/", "/quanlykho/", "/retail/"];
+const prefixes = ["/flashsale/", "/opsbridge/", "/quanlykho/"];
 const noStore = "private, no-store";
 
 function json(status, error, extra = {}) {
@@ -24,7 +24,6 @@ function policy(url, method) {
   }
   if (/\/(login|auth|token)(\/|$)/.test(url.pathname)) return ["RATE_AUTH", "auth"];
   if (/\/ai(\/|$)/.test(url.pathname) || url.pathname.includes("/investigations")) return ["RATE_AI", "ai"];
-  if (url.pathname.startsWith("/retail/")) return ["RATE_RETAIL", "retail"];
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) return ["RATE_STAFF", "staff"];
   return ["RATE_GENERAL", "general"];
 }
@@ -38,6 +37,16 @@ async function actorKey(request, group) {
   if (!credential) return request.headers.get("CF-Connecting-IP") ?? "unknown-ip";
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(credential));
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function originProof(secret, nonce, host, status, body) {
+  const bodyHash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body));
+  const hex = Array.from(new Uint8Array(bodyHash), (b) => b.toString(16).padStart(2, "0")).join("");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key,
+    new TextEncoder().encode(`${nonce}\n${host}\n${status}\n${hex}`));
+  return Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export default {
@@ -70,6 +79,12 @@ export default {
     }
     if (!env.AZURE_ORIGIN?.fetch) return json(503, "MtlsBindingMissing", corsHeaders);
 
+    const proofNonce = request.headers.get("X-Portfolio-Proof-Nonce");
+    const proofRequested = url.pathname === "/flashsale/health/live" && request.method === "GET" && proofNonce !== null;
+    if (proofRequested && (!/^[0-9a-f]{32}$/.test(proofNonce) || (env.EDGE_PROOF_KEY?.length ?? 0) < 32)) {
+      return json(503, "OriginProofUnavailable", corsHeaders);
+    }
+
     const [bindingName, group] = policy(url, request.method);
     const limiter = env[bindingName];
     // A missing rate binding is a deployment error, never an unthrottled path.
@@ -87,7 +102,7 @@ export default {
     target.search = url.search;
     const headers = new Headers(request.headers);
     // A caller may not impersonate the edge or select a different backend.
-    for (const name of ["Host", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Real-IP"]) {
+    for (const name of ["Host", "X-Forwarded-For", "X-Forwarded-Host", "X-Forwarded-Proto", "X-Real-IP", "X-Portfolio-Proof-Nonce"]) {
       headers.delete(name);
     }
     headers.set("X-Forwarded-Proto", "https");
@@ -101,6 +116,16 @@ export default {
       if (response.status >= 300 && response.status < 400) return json(502, "OriginRedirectRejected", corsHeaders);
       const responseHeaders = new Headers(response.headers);
       responseHeaders.set("Cache-Control", noStore);
+      if (proofRequested) {
+        const body = await response.clone().text();
+        if (response.status !== 200 || !/"status"\s*:\s*"healthy"/.test(body)) {
+          return json(503, "OriginProofUnhealthy", corsHeaders);
+        }
+        responseHeaders.set("X-Portfolio-Origin-Proof",
+          await originProof(env.EDGE_PROOF_KEY, proofNonce, target.host, response.status, body));
+        responseHeaders.set("X-Portfolio-Origin-Target", target.host);
+        responseHeaders.set("X-Portfolio-Proof-Nonce", proofNonce);
+      }
       for (const [name, value] of Object.entries(corsHeaders)) responseHeaders.set(name, value);
       return new Response(response.body, { status: response.status, headers: responseHeaders });
     } catch {
