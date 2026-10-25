@@ -387,6 +387,56 @@ def check_applications(rep, by_name, repo_map):
                 "external-render", target, FAIL, f"overlay path {subpath!r} missing in {tail}"
             )
             continue
+        # Check targetRevision against external checkout git HEAD / history
+        if os.path.isdir(os.path.join(checkout, ".git")) and rev:
+            git_rev = subprocess.run(
+                ["git", "-C", checkout, "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                shell=False,
+                check=False,
+            )
+            if git_rev.returncode == 0:
+                head_sha = git_rev.stdout.strip()
+                if rev == "main":
+                    rep.add(
+                        "external-revision-match",
+                        target,
+                        OK,
+                        f"tracks main (checkout HEAD {head_sha[:7]})",
+                    )
+                elif head_sha.startswith(rev) or rev.startswith(head_sha):
+                    rep.add(
+                        "external-revision-match",
+                        target,
+                        OK,
+                        f"checkout HEAD matches targetRevision {rev[:7]}",
+                    )
+                else:
+                    rev_exists = subprocess.run(
+                        ["git", "-C", checkout, "rev-parse", "--verify", f"{rev}^{{commit}}"],
+                        capture_output=True,
+                        text=True,
+                        timeout=15,
+                        shell=False,
+                        check=False,
+                    )
+                    if rev_exists.returncode == 0:
+                        rep.add(
+                            "external-revision-match",
+                            target,
+                            OK,
+                            f"targetRevision {rev[:7]} exists in history (checkout HEAD is {head_sha[:7]})",
+                        )
+                    else:
+                        rep.add(
+                            "external-revision-match",
+                            target,
+                            FAIL,
+                            f"targetRevision {rev[:7]} not found in {tail} git history",
+                        )
+
         # Explicit shell=False / check=False: the argument list is fixed and holds
         # no caller-supplied shell string, so this is a documented hot-spot
         # rather than a finding — but making it explicit means switching it on is

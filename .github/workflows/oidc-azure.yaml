@@ -156,6 +156,10 @@ jobs:
           az account show --output json
           echo "Positive control confirmed: environment-bound OIDC login succeeded."
 
+      - name: mask unbound token fixture
+        run: |
+          echo "::add-mask::${{ needs.mint-unbound-token.outputs.unbound_token_b64 }}"
+
       # NEGATIVE CONTROL: a federated token whose `sub` claim is OUTSIDE the
       # environment allowlist must be rejected by Entra. This proves the
       # federated credential is actually restricted rather than merely present.
@@ -168,6 +172,8 @@ jobs:
       #  2. It uses no `continue-on-error`. If the unbound login unexpectedly
       #     succeeds, the step exits non-zero and fails the job. A masked
       #     `outcome` field would turn that regression into green.
+      #  3. It verifies that the failure reason matches AADSTS700213 so arbitrary
+      #     login failures cannot produce a false green.
       - name: negative control (unbound subject must be rejected)
         env:
           TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
@@ -206,9 +212,15 @@ jobs:
             exit 1
           fi
 
-          echo "Negative control: unbound subject rejected as expected (rc=$NEG_RC)."
-          echo "$NEG_OUT" | grep -iE 'AADSTS70021|AADSTS700213|no matching federated|not.*directory' \
-            || echo "$NEG_OUT" | tail -3
+          if ! echo "$NEG_OUT" | grep -qiE 'AADSTS70021|AADSTS700213|no matching federated'; then
+            echo "::error title=NEGATIVE CONTROL FAILED::Login failed for an unexpected reason, NOT federated subject rejection."
+            echo "Expected AADSTS700213 but got output:"
+            echo "$NEG_OUT"
+            exit 1
+          fi
+
+          echo "Negative control verified: unbound subject rejected by Entra ID with AADSTS700213 as expected (rc=$NEG_RC)."
+          echo "$NEG_OUT" | grep -iE 'AADSTS70021|AADSTS700213|no matching federated|not.*directory'
 
   # Deliberately visible, never a quiet pass. If identity is not provisioned,
   # this job reports NOT_VERIFIED with the reason.
