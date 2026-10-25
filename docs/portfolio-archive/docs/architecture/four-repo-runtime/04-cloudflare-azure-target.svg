@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="1700" viewBox="0 0 2800 1700" role="img">
+<title>Cloudflare and Azure target hybrid architecture</title><desc>Proposed hybrid traffic, release, data and approved-agent action paths with explicit gates before promotion.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2800" height="1700" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2800" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="65" y="74" font-size="20" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">HYBRID ARCHITECTURE  /  04 / TARGET</text>
+<text x="65" y="145" font-size="57" fill="#10263b" font-weight="700" text-anchor="start" class="title">Cloudflare Edge → Azure AKS · kiến trúc đích</text>
+<text x="67" y="191" font-size="24" fill="#52677a" font-weight="400" text-anchor="start" class="">Đường nét đứt là tích hợp cần triển khai và kiểm chứng. Cloudflare giữ edge; Azure chạy business workloads và control plane.</text>
+<line x1="65" y1="218" x2="2735" y2="218" stroke="#cbdbe6" stroke-width="2" stroke-linecap="round"/>
+<rect x="60" y="265" width="1035" height="786" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="265" width="12" height="786" rx="6" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="100" y="313" font-size="19" fill="#dc6b20" font-weight="700" text-anchor="start" class="eyebrow">PUBLIC EDGE / CLOUDFLARE</text>
+<text x="100" y="366" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">UI, identity edge và outbound tunnel</text>
+<text x="100" y="403" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Workers Assets hiện chạy; Access/Tunnel/Pages còn gate triển khai</text>
+<rect x="99" y="568" width="307" height="134" rx="17" fill="#fff8f0" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="99" y="568" width="8" height="134" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="123" y="605" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Browser</text>
+<text x="123" y="641" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Quan staff / Ops staff</text>
+<text x="123" y="670" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">JWT identity + session</text>
+<rect x="490" y="458" width="557" height="136" rx="17" fill="#fff2e5" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="490" y="458" width="8" height="136" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="514" y="495" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Workers Assets / Pages</text>
+<text x="514" y="531" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Flutter Web live; Ops Web Pages config</text>
+<text x="514" y="560" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Static UI, không sở hữu DB</text>
+<rect x="490" y="651" width="557" height="156" rx="17" fill="#fff2e5" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="490" y="651" width="8" height="156" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="514" y="688" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Access + WAF · TARGET</text>
+<text x="514" y="724" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Entra / staff policy + edge controls</text>
+<text x="514" y="753" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">JWT vẫn do owner API kiểm lại</text>
+<rect x="490" y="842" width="557" height="157" rx="17" fill="#fff2e5" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="490" y="842" width="8" height="157" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="514" y="879" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">cloudflared Tunnel · TARGET</text>
+<text x="514" y="915" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Outbound tunnel, không public origin port</text>
+<text x="514" y="944" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Manifest có; AKS runtime chưa chứng minh</text>
+<path d="M406 604 H447 V526 H480" fill="none" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M406 665 H447 V729 H480" fill="none" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<line x1="769" y1="807" x2="769" y2="832" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="1170" y="265" width="1570" height="786" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1170" y="265" width="12" height="786" rx="6" fill="#1681bd" stroke="none" stroke-width="0"/>
+<text x="1210" y="313" font-size="19" fill="#1681bd" font-weight="700" text-anchor="start" class="eyebrow">AZURE / AKS RUNTIME</text>
+<text x="1210" y="366" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Gateway → owner APIs → dữ liệu chuẩn</text>
+<text x="1210" y="403" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">AKS/Argo control plane live; route và workloads cần triển khai</text>
+<rect x="1210" y="842" width="410" height="157" rx="17" fill="#ecf7fc" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1210" y="842" width="8" height="157" rx="4" fill="#1681bd" stroke="none" stroke-width="0"/>
+<text x="1234" y="879" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Envoy Gateway</text>
+<text x="1234" y="915" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">HTTPRoute / namespace policy</text>
+<text x="1234" y="944" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Gateway API chưa có trên AKS</text>
+<rect x="1705" y="451" width="493" height="139" rx="17" fill="#fff6ef" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1705" y="451" width="8" height="139" rx="4" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="1729" y="488" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">FlashSale / OpsBridge</text>
+<text x="1729" y="524" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Order API + Worker / Ops API</text>
+<text x="1729" y="553" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Redis + RabbitMQ; DB riêng</text>
+<rect x="1705" y="650" width="493" height="139" rx="17" fill="#f0faf5" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1705" y="650" width="8" height="139" rx="4" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1729" y="687" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">QuanLyKho FastAPI</text>
+<text x="1729" y="723" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Branch scope + FEFO + approval</text>
+<text x="1729" y="752" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">AI advisory; canonical API</text>
+<rect x="1705" y="842" width="493" height="157" rx="17" fill="#edf9fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1705" y="842" width="8" height="157" rx="4" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="1729" y="879" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Agent Hub executor</text>
+<text x="1729" y="915" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Typed command sau HITL</text>
+<text x="1729" y="944" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Recheck scope/version/idempotency</text>
+<rect x="2285" y="451" width="412" height="338" rx="17" fill="#eef5fd" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="2285" y="451" width="8" height="338" rx="4" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="2309" y="488" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Domain data</text>
+<text x="2309" y="524" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">FlashSale PostgreSQL stock/order</text>
+<text x="2309" y="553" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">OpsBridge PostgreSQL riêng</text>
+<text x="2309" y="582" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Quan PostgreSQL inventory</text>
+<text x="2309" y="611" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Placement/restore: release gate</text>
+<rect x="2285" y="842" width="412" height="157" rx="17" fill="#f4f1fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="2285" y="842" width="8" height="157" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="2309" y="879" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">SRE / Argo</text>
+<text x="2309" y="915" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Prometheus, alert, runbook</text>
+<text x="2309" y="944" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Rollback theo revision đã duyệt</text>
+<line x1="1047" y1="919" x2="1199" y2="919" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<path d="M1620 919 H1658 V720 H1695" fill="none" stroke="#1681bd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<path d="M1620 919 H1658 V521 H1695" fill="none" stroke="#1681bd" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<line x1="2198" y1="521" x2="2275" y2="521" stroke="#c86426" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<line x1="2198" y1="720" x2="2275" y2="720" stroke="#178a70" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<line x1="2198" y1="919" x2="2275" y2="919" stroke="#17879a" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="60" y="1090" width="2680" height="223" rx="21" fill="#ffffff" stroke="#dce6ef" stroke-width="2"/>
+<text x="96" y="1140" font-size="27" fill="#6650aa" font-weight="700" text-anchor="start" class="">Release plane · GitHub Actions → Azure</text>
+<rect x="96" y="1172" width="455" height="108" rx="17" fill="#f3f0fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="96" y="1172" width="8" height="108" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="120" y="1209" font-size="22" fill="#10263b" font-weight="700" text-anchor="start" class="">CI exact SHA</text>
+<text x="120" y="1245" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">tests / k6 / scan</text>
+<line x1="551" y1="1226" x2="608" y2="1226" stroke="#6650aa" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="618" y="1172" width="455" height="108" rx="17" fill="#f3f0fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="618" y="1172" width="8" height="108" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="642" y="1209" font-size="22" fill="#10263b" font-weight="700" text-anchor="start" class="">Entra OIDC</text>
+<text x="642" y="1245" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">protected approval</text>
+<line x1="1073" y1="1226" x2="1130" y2="1226" stroke="#6650aa" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="1140" y="1172" width="455" height="108" rx="17" fill="#f3f0fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1140" y="1172" width="8" height="108" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1164" y="1209" font-size="22" fill="#10263b" font-weight="700" text-anchor="start" class="">ACR digest</text>
+<text x="1164" y="1245" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">immutable image</text>
+<line x1="1595" y1="1226" x2="1652" y2="1226" stroke="#6650aa" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="1662" y="1172" width="455" height="108" rx="17" fill="#f3f0fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1662" y="1172" width="8" height="108" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1686" y="1209" font-size="22" fill="#10263b" font-weight="700" text-anchor="start" class="">Argo CD</text>
+<text x="1686" y="1245" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">desired Git ref</text>
+<line x1="2117" y1="1226" x2="2174" y2="1226" stroke="#6650aa" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="2184" y="1172" width="455" height="108" rx="17" fill="#f3f0fa" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="2184" y="1172" width="8" height="108" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="2208" y="1209" font-size="22" fill="#10263b" font-weight="700" text-anchor="start" class="">AKS rollout</text>
+<text x="2208" y="1245" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">health + rollback</text>
+<rect x="60" y="1350" width="2680" height="247" rx="21" fill="#eaf8f9" stroke="#bfe3e8" stroke-width="2"/>
+<text x="96" y="1402" font-size="28" fill="#17879a" font-weight="700" text-anchor="start" class="">Agent execution plane · ADR 024 target</text>
+<text x="96" y="1460" font-size="23" fill="#10263b" font-weight="400" text-anchor="start" class="">Read evidence → ActionIntent hash → policy → HUMAN APPROVAL → Agent executor → owner command API / Argo → post-state verification</text>
+<text x="96" y="1504" font-size="22" fill="#10263b" font-weight="400" text-anchor="start" class="">Retail Java/MySQL là domain riêng; Ops DLQ replay pilot; Quan voucher theo maker/checker; Argo rollback theo approved revision.</text>
+<rect x="96" y="1530" width="830" height="42" rx="21.0" fill="#d7f0f3" stroke="none" stroke-width="0"/>
+<text x="511.0" y="1557.3" font-size="18" fill="#17879a" font-weight="700" text-anchor="middle" class="">Không có raw SQL / shell / terraform apply cho LLM</text>
+<text x="2720" y="1634" font-size="19" fill="#52677a" font-weight="400" text-anchor="end" class="">TARGET ≠ CURRENT · Gate: tunnel, gateway, pods, CORS/auth, E2E, alert, restore, cost</text>
+</svg>

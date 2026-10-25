@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="1700" viewBox="0 0 2800 1700" role="img">
+<title>Cloudflare and Azure observed state</title><desc>Public Cloudflare frontend and API proxy are separate from a live Azure AKS control plane. The business path to Modal is failing and no Cloudflare-to-AKS route exists.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2800" height="1700" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2800" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="65" y="74" font-size="20" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">HYBRID ARCHITECTURE  /  03 / AS-IS</text>
+<text x="65" y="145" font-size="57" fill="#10263b" font-weight="700" text-anchor="start" class="title">Cloudflare và Azure: hiện trạng quan sát được</text>
+<text x="67" y="191" font-size="24" fill="#52677a" font-weight="400" text-anchor="start" class="">Read-only check 2026-10-24 18:44 ICT. Không nối hai cloud thành một runtime khi đường mạng chưa tồn tại.</text>
+<line x1="65" y1="218" x2="2735" y2="218" stroke="#cbdbe6" stroke-width="2" stroke-linecap="round"/>
+<rect x="60" y="266" width="870" height="1060" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="266" width="12" height="1060" rx="6" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="100" y="314" font-size="19" fill="#dc6b20" font-weight="700" text-anchor="start" class="eyebrow">CLOUDFLARE EDGE</text>
+<text x="100" y="367" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Web hoạt động, API chưa chứng minh</text>
+<text x="100" y="404" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Hai đường yêu cầu tách biệt: tải giao diện và gọi API</text>
+<rect x="97" y="579" width="277" height="135" rx="17" fill="#fff8f0" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="97" y="579" width="8" height="135" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="121" y="616" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Người dùng</text>
+<text x="121" y="652" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Browser / Flutter Web</text>
+<text x="121" y="681" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">gửi request nghiệp vụ</text>
+<rect x="459" y="477" width="429" height="150" rx="17" fill="#fff2e5" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="459" y="477" width="8" height="150" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="483" y="514" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Workers Assets</text>
+<text x="483" y="550" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Flutter Web static: HTTP 200</text>
+<text x="483" y="579" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">version.json: eb446f8</text>
+<rect x="459" y="710" width="429" height="180" rx="17" fill="#fff2e5" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="459" y="710" width="8" height="180" rx="4" fill="#dc6b20" stroke="none" stroke-width="0"/>
+<text x="483" y="747" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">API Worker proxy</text>
+<text x="483" y="783" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Root báo upstream configured</text>
+<text x="483" y="812" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Health local 200 ≠ origin ready</text>
+<text x="483" y="841" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Business API: timeout hôm nay</text>
+<path d="M374 615 H412 V552 H451" fill="none" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M374 676 H412 V800 H451" fill="none" stroke="#dc6b20" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="97" y="979" width="790" height="48" rx="24.0" fill="#fff1e5" stroke="none" stroke-width="0"/>
+<text x="492.0" y="1009.3" font-size="18" fill="#dc6b20" font-weight="700" text-anchor="middle" class="">OpsBridge Web: Pages config, deploy chưa verify</text>
+<rect x="97" y="1044" width="790" height="48" rx="24.0" fill="#fff1e5" stroke="none" stroke-width="0"/>
+<text x="492.0" y="1074.3" font-size="18" fill="#dc6b20" font-weight="700" text-anchor="middle" class="">Workers AI / R2 / Access: thiết kế hoặc config</text>
+<text x="97" y="1170" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">Cloudflare Tunnel có YAML trong Quan base,</text>
+<text x="97" y="1204" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">nhưng overlay Argo local không chọn manifest đó.</text>
+<rect x="1000" y="266" width="790" height="1060" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1000" y="266" width="12" height="1060" rx="6" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1040" y="314" font-size="19" fill="#bf3f49" font-weight="700" text-anchor="start" class="eyebrow">DOCUMENTED ORIGIN · FAILED NOW</text>
+<text x="1040" y="367" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Modal FastAPI + Neon PostgreSQL</text>
+<text x="1040" y="404" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Đường production từng ghi trong QuanLyKho; trạng thái live đã đổi</text>
+<rect x="1038" y="710" width="714" height="180" rx="17" fill="#fff2f1" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="1038" y="710" width="8" height="180" rx="4" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1062" y="747" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Modal FastAPI</text>
+<text x="1062" y="783" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Canonical business API theo ADR</text>
+<text x="1062" y="812" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">URL documented: workspace disabled</text>
+<text x="1062" y="841" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Worker upstream secret thực tế chưa verify</text>
+<rect x="1038" y="948" width="714" height="160" rx="17" fill="#f1faf6" stroke="#d8e3eb" stroke-width="2" stroke-dasharray="10 7"/>
+<rect x="1038" y="948" width="8" height="160" rx="4" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1062" y="985" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Neon PostgreSQL</text>
+<text x="1062" y="1021" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Nguồn dữ liệu chuẩn của QuanLyKho</text>
+<text x="1062" y="1050" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Không kiểm tra DB trực tiếp hôm nay</text>
+<line x1="1395" y1="892" x2="1395" y2="937" stroke="#bf3f49" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow)"/>
+<rect x="1038" y="1170" width="714" height="48" rx="24.0" fill="#ffebe8" stroke="none" stroke-width="0"/>
+<text x="1395.0" y="1200.3" font-size="18" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">UPSTREAM 404/DISABLED · API qua Worker timeout</text>
+<line x1="890" y1="800" x2="1026" y2="800" stroke="#bf3f49" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" marker-end="url(#arrow-red)"/>
+<rect x="1860" y="266" width="880" height="1060" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1860" y="266" width="12" height="1060" rx="6" fill="#1681bd" stroke="none" stroke-width="0"/>
+<text x="1900" y="314" font-size="19" fill="#1681bd" font-weight="700" text-anchor="start" class="eyebrow">AZURE · LIVE CONTROL PLANE</text>
+<text x="1900" y="367" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">AKS chạy, business pods chưa chạy</text>
+<text x="1900" y="404" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">az aks list + kubectl đọc trực tiếp, không đổi tài nguyên</text>
+<rect x="1898" y="449" width="802" height="139" rx="17" fill="#eaf6fc" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="1898" y="449" width="8" height="139" rx="4" fill="#1681bd" stroke="none" stroke-width="0"/>
+<text x="1922" y="486" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">AKS aks-portfolio-dev</text>
+<text x="1922" y="522" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">ProvisioningState: Succeeded</text>
+<text x="1922" y="551" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Azure East Asia; control plane reachable</text>
+<rect x="1898" y="627" width="802" height="139" rx="17" fill="#eaf6fc" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="1898" y="627" width="8" height="139" rx="4" fill="#1681bd" stroke="none" stroke-width="0"/>
+<text x="1922" y="664" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Argo CD control plane</text>
+<text x="1922" y="700" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">argocd deployments Ready</text>
+<text x="1922" y="729" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Application flashsale + quanlykho đăng ký</text>
+<rect x="1898" y="805" width="802" height="160" rx="17" fill="#fff2f1" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="1898" y="805" width="8" height="160" rx="4" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1922" y="842" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Application state</text>
+<text x="1922" y="878" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">flashsale: OutOfSync / Missing</text>
+<text x="1922" y="907" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">quanlykho: OutOfSync / Missing</text>
+<text x="1922" y="936" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Hai namespace chưa có business pods</text>
+<rect x="1898" y="1003" width="802" height="135" rx="17" fill="#fff2f1" stroke="#d8e3eb" stroke-width="2"/>
+<rect x="1898" y="1003" width="8" height="135" rx="4" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1922" y="1040" font-size="24" fill="#10263b" font-weight="700" text-anchor="start" class="">Gateway / Tunnel</text>
+<text x="1922" y="1076" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Gateway API resource: chưa có</text>
+<text x="1922" y="1105" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">cloudflared pod: chưa có trên AKS</text>
+<line x1="2299" y1="588" x2="2299" y2="617" stroke="#1681bd" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="2299" y1="766" x2="2299" y2="795" stroke="#1681bd" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="2299" y1="965" x2="2299" y2="993" stroke="#1681bd" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="1898" y="1182" width="802" height="48" rx="24.0" fill="#ffebe8" stroke="none" stroke-width="0"/>
+<text x="2299.0" y="1212.3" font-size="18" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">CLOUDFLARE → AKS: CHƯA CÓ LIVE ROUTE</text>
+<rect x="60" y="1370" width="2680" height="243" rx="22" fill="#ffffff" stroke="#dce6ef" stroke-width="2"/>
+<text x="100" y="1426" font-size="30" fill="#10263b" font-weight="700" text-anchor="start" class="">Kết luận kiến trúc hiện tại</text>
+<text x="100" y="1477" font-size="23" fill="#10263b" font-weight="400" text-anchor="start" class="">Cloudflare phục vụ Web; Worker API root/health không chứng minh giao dịch chạy. Azure chứng minh cluster/Argo, chưa chứng minh workload.</text>
+<text x="100" y="1520" font-size="23" fill="#10263b" font-weight="400" text-anchor="start" class="">Retail Finance không nằm trên đường Cloudflare này; OpsBridge Pages chỉ có config. Không được vẽ Tunnel → AKS như đường production đã chạy.</text>
+<rect x="100" y="1551" width="580" height="42" rx="21.0" fill="#e9f1f8" stroke="none" stroke-width="0"/>
+<text x="390.0" y="1578.3" font-size="18" fill="#1681bd" font-weight="700" text-anchor="middle" class="">AS-IS · READ-ONLY OBSERVATION</text>
+</svg>

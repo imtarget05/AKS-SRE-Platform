@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1350" viewBox="0 0 2400 1350" role="img">
+<title>Platform golden path and SRE recovery</title><desc>A release path from source to cluster with explicit cloud safety gates, observability, rollback, and measured recovery limits.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2400" height="1350" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2400" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="60" y="75" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">ARCHITECTURE  /  03</text>
+<text x="60" y="139" font-size="52" fill="#10263b" font-weight="700" text-anchor="start" class="title">Platform engineering · release và vận hành</text>
+<text x="62" y="181" font-size="23" fill="#52677a" font-weight="400" text-anchor="start" class="">Một golden path dùng lại cho FlashSale và QuanLyKho; trạng thái Kind và Azure được tách rõ.</text>
+<line x1="60" y1="207" x2="2340" y2="207" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<rect x="60" y="257" width="510" height="279" rx="23" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="257" width="510" height="12" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="89" y="314" font-size="27" fill="#6650aa" font-weight="700" text-anchor="start" class="">01  SOURCE + CI</text>
+<text x="89" y="350" font-size="19" fill="#52677a" font-weight="700" text-anchor="start" class="">Workload owns</text>
+<line x1="89" y1="373" x2="540" y2="373" stroke="#dce6ef" stroke-width="2" stroke-linecap="round"/>
+<text x="89" y="415" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Code / migration / probes</text>
+<text x="89" y="452" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  DB integration · k6 · policy</text>
+<text x="89" y="489" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Exact SHA + raw evidence</text>
+<rect x="650" y="257" width="510" height="279" rx="23" fill="#ffffff" stroke="#dce6ef" stroke-width="2" stroke-dasharray="10 7" filter="url(#shadow)"/>
+<rect x="650" y="257" width="510" height="12" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="679" y="314" font-size="27" fill="#6650aa" font-weight="700" text-anchor="start" class="">02  RELEASE CONTRACT</text>
+<text x="679" y="350" font-size="19" fill="#52677a" font-weight="700" text-anchor="start" class="">Gate còn mở</text>
+<line x1="679" y1="373" x2="1130" y2="373" stroke="#dce6ef" stroke-width="2" stroke-linecap="round"/>
+<text x="679" y="415" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Digest pinning: cần proof</text>
+<text x="679" y="452" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Quan migration: verified Kind</text>
+<text x="679" y="489" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Rollback exact ref: cần proof</text>
+<rect x="1240" y="257" width="510" height="279" rx="23" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1240" y="257" width="510" height="12" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1269" y="314" font-size="27" fill="#6650aa" font-weight="700" text-anchor="start" class="">03  GITOPS CONTROL</text>
+<text x="1269" y="350" font-size="19" fill="#52677a" font-weight="700" text-anchor="start" class="">Platform owns</text>
+<line x1="1269" y1="373" x2="1720" y2="373" stroke="#dce6ef" stroke-width="2" stroke-linecap="round"/>
+<text x="1269" y="415" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Argo AppProject / ref</text>
+<text x="1269" y="452" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Namespace / policy</text>
+<text x="1269" y="489" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Sync, drift, health gate</text>
+<rect x="1830" y="257" width="510" height="279" rx="23" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1830" y="257" width="510" height="12" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1859" y="314" font-size="27" fill="#6650aa" font-weight="700" text-anchor="start" class="">04  RUNTIME</text>
+<text x="1859" y="350" font-size="19" fill="#52677a" font-weight="700" text-anchor="start" class="">Platform + workload</text>
+<line x1="1859" y1="373" x2="2310" y2="373" stroke="#dce6ef" stroke-width="2" stroke-linecap="round"/>
+<text x="1859" y="415" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  Envoy Gateway route</text>
+<text x="1859" y="452" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  FlashSale + Quan pods</text>
+<text x="1859" y="489" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">•  DB truth + business metrics</text>
+<line x1="570" y1="397" x2="643" y2="397" stroke="#6650aa" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 7" marker-end="url(#arrow)"/>
+<line x1="1160" y1="397" x2="1233" y2="397" stroke="#6650aa" stroke-width="4" stroke-linecap="round" stroke-dasharray="9 7" marker-end="url(#arrow)"/>
+<line x1="1750" y1="397" x2="1823" y2="397" stroke="#6650aa" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="60" y="581" width="700" height="370" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="581" width="12" height="370" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="100" y="629" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">FOUNDATION + CHANGE SAFETY</text>
+<text x="100" y="682" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Terraform / OIDC / state</text>
+<text x="100" y="719" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Cloud apply requires a reviewed saved plan and protected environment</text>
+<text x="100" y="756" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• State owner, subscription, quota and budget</text>
+<text x="100" y="793" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Workload identity; no long-lived secret shortcut</text>
+<text x="100" y="830" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Policy: non-root, limits, namespace, route</text>
+<text x="100" y="867" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Push to main does not authorize cloud apply</text>
+<rect x="850" y="581" width="700" height="370" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="850" y="581" width="12" height="370" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="890" y="629" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">OBSERVE + RESPOND</text>
+<text x="890" y="682" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Signals → SLO → on-call</text>
+<text x="890" y="719" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Prometheus / Grafana / alert rules are configuration, not an SLO proof</text>
+<text x="890" y="756" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• API p95, errors; durable order / approval</text>
+<text x="890" y="793" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Alert fire + resolve; trace to business ID</text>
+<text x="890" y="830" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Runbook links to exact release and dashboard</text>
+<text x="890" y="867" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Rollback checks data, not only pod health</text>
+<rect x="1640" y="581" width="700" height="370" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1640" y="581" width="12" height="370" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1680" y="629" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">BACKUP + RECOVER</text>
+<text x="1680" y="682" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Restore is a data decision</text>
+<text x="1680" y="719" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Kind snapshot drill measured a five-order post-snapshot loss</text>
+<text x="1680" y="756" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• Restore to isolated DB; verify invariant</text>
+<text x="1680" y="793" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• RTO 0.787 s in a local synthetic drill</text>
+<text x="1680" y="830" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• RPO: 5 delta orders lost / 4 s window</text>
+<text x="1680" y="867" font-size="21" fill="#10263b" font-weight="400" text-anchor="start" class="">• WAL / PITR needed for lower data loss</text>
+<rect x="60" y="997" width="1090" height="268" rx="23" fill="#eaf7f1" stroke="#b8dfcb" stroke-width="2"/>
+<rect x="98" y="1027" width="352" height="42" rx="21.0" fill="#d0efdd" stroke="none" stroke-width="0"/>
+<text x="274.0" y="1055.0" font-size="20" fill="#126c50" font-weight="700" text-anchor="middle" class="">KIND · DEMONSTRATED</text>
+<text x="98" y="1103" font-size="27" fill="#10263b" font-weight="700" text-anchor="start" class="">FlashSale + Quan: Argo Synced / Healthy</text>
+<text x="98" y="1143" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">Envoy host routing + Alembic migration được ghi trong STATUS.</text>
+<text x="98" y="1175" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">Drill là local synthetic; không suy ra SLA khách hàng.</text>
+<rect x="1190" y="997" width="1150" height="268" rx="23" fill="#fff1e8" stroke="#f0cbb6" stroke-width="2"/>
+<rect x="1228" y="1027" width="350" height="42" rx="21.0" fill="#f9dec7" stroke="none" stroke-width="0"/>
+<text x="1403.0" y="1055.0" font-size="20" fill="#9b4c20" font-weight="700" text-anchor="middle" class="">AZURE AKS · PARTIAL</text>
+<text x="1228" y="1103" font-size="27" fill="#10263b" font-weight="700" text-anchor="start" class="">Cluster evidence ≠ ứng dụng production ready</text>
+<text x="1228" y="1143" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">OIDC / bootstrap và GitOps runtime còn gate chưa đóng.</text>
+<text x="1228" y="1175" font-size="21" fill="#52677a" font-weight="400" text-anchor="start" class="">Cần ACR pull, Argo sync, rollout, rollback, restore và cost.</text>
+<line x1="60" y1="1300" x2="2340" y2="1300" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<text x="60" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="start" class="">Solid = đã có local/Kind evidence được ghi; Azure partial và SLO/DR production cần gate riêng, exact SHA và môi trường.</text>
+<text x="2340" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="end" class="">Senior Engineering Portfolio  •  2026-10-24</text>
+</svg>

@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1350" viewBox="0 0 2400 1350" role="img">
+<title>Four repository architecture and data ownership</title><desc>Three business bounded contexts, a shared platform, and a read-only Agent Hub with explicit truth and authority boundaries.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2400" height="1350" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2400" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="60" y="75" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">ARCHITECTURE  /  01</text>
+<text x="60" y="139" font-size="52" fill="#10263b" font-weight="700" text-anchor="start" class="title">Bốn repo · một kiến trúc có ranh giới</text>
+<text x="62" y="181" font-size="23" fill="#52677a" font-weight="400" text-anchor="start" class="">Mỗi domain giữ dữ liệu chuẩn và quyền ghi của mình; platform triển khai, Agent Hub chỉ điều tra.</text>
+<line x1="60" y1="207" x2="2340" y2="207" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<rect x="60" y="236" width="720" height="770" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="236" width="12" height="770" rx="6" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="100" y="284" font-size="19" fill="#2369c9" font-weight="700" text-anchor="start" class="eyebrow">RETAIL FINANCE</text>
+<text x="100" y="337" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Ledger &amp; đối soát</text>
+<text x="100" y="374" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Java 17 / Spring Boot</text>
+<rect x="840" y="236" width="720" height="770" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="840" y="236" width="12" height="770" rx="6" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="880" y="284" font-size="19" fill="#c86426" font-weight="700" text-anchor="start" class="eyebrow">OPSBRIDGE / FLASHSALE</text>
+<text x="880" y="337" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Đơn hàng, tồn và vận hành</text>
+<text x="880" y="374" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">.NET 10 / C#</text>
+<rect x="1620" y="236" width="720" height="770" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1620" y="236" width="12" height="770" rx="6" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1660" y="284" font-size="19" fill="#178a70" font-weight="700" text-anchor="start" class="eyebrow">QUẢN LÝ KHO</text>
+<text x="1660" y="337" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Lô hàng, FEFO và duyệt phiếu</text>
+<text x="1660" y="374" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Python 3.11 / FastAPI</text>
+<rect x="95" y="410" width="650" height="82" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="95" y="410" width="7" height="82" rx="3" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="117" y="446" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">POS / staff / partner statement</text>
+<text x="117" y="479" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">JWT + outlet scope; dữ liệu đối soát</text>
+<rect x="95" y="523" width="650" height="94" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="95" y="523" width="7" height="94" rx="3" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="117" y="559" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Spring API + service boundary</text>
+<text x="117" y="592" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Auth theo object · idempotency · audit</text>
+<rect x="95" y="648" width="650" height="112" rx="15" fill="#edf5ff" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="95" y="648" width="7" height="112" rx="3" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="117" y="684" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">MySQL · nguồn sự thật ledger</text>
+<text x="117" y="717" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Account + transaction + balance commit</text>
+<text x="117" y="742" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Một lỗi giữa chừng → rollback toàn bộ</text>
+<rect x="95" y="791" width="650" height="108" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="95" y="791" width="7" height="108" rx="3" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="117" y="827" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Python reconciliation</text>
+<text x="117" y="860" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">So khớp settled feed và partner input</text>
+<text x="117" y="885" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Kết quả điều tra không tự ghi tiền</text>
+<line x1="420" y1="492" x2="420" y2="516" stroke="#2369c9" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="420" y1="617" x2="420" y2="641" stroke="#2369c9" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="420" y1="760" x2="420" y2="784" stroke="#2369c9" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="95" y="929" width="645" height="42" rx="21.0" fill="#fff4e9" stroke="none" stroke-width="0"/>
+<text x="417.5" y="956.3" font-size="18" fill="#c86426" font-weight="700" text-anchor="middle" class="">Kafka / RabbitMQ / Redis: CHƯA ở core path</text>
+<rect x="875" y="410" width="650" height="82" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="875" y="410" width="7" height="82" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="897" y="446" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Khách đặt hàng / FactoryFlow webhook</text>
+<text x="897" y="479" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Hai contract; không ghi chéo DB</text>
+<rect x="875" y="523" width="305" height="96" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="875" y="523" width="7" height="96" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="897" y="559" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">FlashSale Order API</text>
+<text x="897" y="592" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Reserve; xử lý đơn</text>
+<rect x="1220" y="523" width="305" height="96" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1220" y="523" width="7" height="96" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="1242" y="559" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">OpsBridge API</text>
+<text x="1242" y="592" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Ingest; reconcile</text>
+<rect x="875" y="651" width="305" height="110" rx="15" fill="#fff7f0" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="875" y="651" width="7" height="110" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="897" y="687" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Redis + RabbitMQ</text>
+<text x="897" y="720" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Fast-fail; at-least-once</text>
+<text x="897" y="745" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Retry / DLQ / idempotency</text>
+<rect x="1220" y="651" width="305" height="110" rx="15" fill="#fff7f0" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1220" y="651" width="7" height="110" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="1242" y="687" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Inbox + outbox</text>
+<text x="1242" y="720" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Webhook → commit → publish</text>
+<text x="1242" y="745" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Broker down: outbox pending</text>
+<rect x="875" y="793" width="305" height="104" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="875" y="793" width="7" height="104" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="897" y="829" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">PostgreSQL FlashSale</text>
+<text x="897" y="862" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Stock / order / payment</text>
+<text x="897" y="887" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">SOURCE OF TRUTH</text>
+<rect x="1220" y="793" width="305" height="104" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1220" y="793" width="7" height="104" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="1242" y="829" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">PostgreSQL OpsBridge</text>
+<text x="1242" y="862" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Supplier recon / staff review</text>
+<text x="1242" y="887" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">OWNED DB</text>
+<line x1="1195" y1="515" x2="1195" y2="905" stroke="#b7c9d8" stroke-width="2" stroke-linecap="round" stroke-dasharray="9 7"/>
+<line x1="1025" y1="619" x2="1025" y2="645" stroke="#c86426" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1370" y1="619" x2="1370" y2="645" stroke="#c86426" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1025" y1="761" x2="1025" y2="787" stroke="#c86426" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1370" y1="761" x2="1370" y2="787" stroke="#c86426" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="875" y="929" width="650" height="42" rx="21.0" fill="#fff4e9" stroke="none" stroke-width="0"/>
+<text x="1200.0" y="956.3" font-size="18" fill="#c86426" font-weight="700" text-anchor="middle" class="">Versioned contract · không truy vấn chéo bảng</text>
+<rect x="1655" y="410" width="650" height="82" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1655" y="410" width="7" height="82" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1677" y="446" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Flutter / warehouse staff</text>
+<text x="1677" y="479" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Maker, checker và branch scope</text>
+<rect x="1655" y="523" width="650" height="94" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1655" y="523" width="7" height="94" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1677" y="559" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">FastAPI · canonical API</text>
+<text x="1677" y="592" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Xác thực + kiểm quyền branch/location</text>
+<rect x="1655" y="648" width="305" height="112" rx="15" fill="#edf9f4" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1655" y="648" width="7" height="112" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1677" y="684" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Inventory service</text>
+<text x="1677" y="717" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Nhập lô · FEFO</text>
+<text x="1677" y="742" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Kiểm kê · movement</text>
+<rect x="2000" y="648" width="305" height="112" rx="15" fill="#edf9f4" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="2000" y="648" width="7" height="112" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="2022" y="684" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Maker → checker</text>
+<text x="2022" y="717" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">AI risk: advisory only</text>
+<text x="2022" y="742" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Checker duyệt có quyền</text>
+<rect x="1655" y="791" width="650" height="108" rx="15" fill="#f8fbfe" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1655" y="791" width="7" height="108" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1677" y="827" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">PostgreSQL · nguồn sự thật tồn kho</text>
+<text x="1677" y="860" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Voucher + balance + audit / outbox</text>
+<text x="1677" y="885" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Approval chỉ post một lần</text>
+<line x1="1980" y1="492" x2="1980" y2="517" stroke="#178a70" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M1980 617 V632 H1805 V643" fill="none" stroke="#178a70" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1980 617 V632 H2150 V643" fill="none" stroke="#178a70" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<line x1="1805" y1="760" x2="1805" y2="785" stroke="#178a70" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="2150" y1="760" x2="2150" y2="785" stroke="#178a70" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="1655" y="929" width="650" height="42" rx="21.0" fill="#e8f7f3" stroke="none" stroke-width="0"/>
+<text x="1980.0" y="956.3" font-size="18" fill="#178a70" font-weight="700" text-anchor="middle" class="">AI không tự approve / ghi tồn</text>
+<rect x="60" y="1040" width="1090" height="228" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="1040" width="12" height="228" rx="6" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="100" y="1088" font-size="19" fill="#17879a" font-weight="700" text-anchor="start" class="eyebrow">INVESTIGATION PLANE · WIP</text>
+<text x="100" y="1141" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Agent Hub: chứng cứ → đề xuất</text>
+<text x="100" y="1178" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Read adapters có scope · verifier deterministic · trích nguồn · human decision</text>
+<rect x="98" y="1194" width="1000" height="52" rx="15" fill="#e9f7f8" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="98" y="1194" width="7" height="52" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="120" y="1230" font-size="20" fill="#10263b" font-weight="700" text-anchor="start" class="">READ-ONLY · không có tool post ledger, approve kho hoặc kubectl apply</text>
+<rect x="1190" y="1040" width="1150" height="228" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1190" y="1040" width="12" height="228" rx="6" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1230" y="1088" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">PLATFORM PLANE · KIND VERIFIED</text>
+<text x="1230" y="1141" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">AKS-SRE-Platform: golden path</text>
+<text x="1230" y="1178" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Terraform/OIDC · Argo CD · Envoy Gateway · policy · observability · backup</text>
+<rect x="1228" y="1194" width="1070" height="52" rx="15" fill="#f2effa" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1228" y="1194" width="7" height="52" rx="3" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1250" y="1230" font-size="20" fill="#10263b" font-weight="700" text-anchor="start" class="">Kind: FlashSale + Quan Synced/Healthy  |  Azure runtime: PARTIAL</text>
+<line x1="60" y1="1300" x2="2340" y2="1300" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<text x="60" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="start" class="">Nguồn sự thật = database của domain. Đường nét đứt / WIP là hợp đồng hoặc gate chưa chứng minh runtime.</text>
+<text x="2340" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="end" class="">Senior Engineering Portfolio  •  2026-10-24</text>
+</svg>

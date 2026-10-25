@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1650" height="930" viewBox="0 0 1650 930" role="img" aria-labelledby="title desc">
+  <title id="title">Kiến trúc bốn repo Senior Engineering Portfolio</title>
+  <desc id="desc">Retail Finance, OpsBridge FlashSale và QuanLyKho là ba miền nghiệp vụ. AKS SRE Platform cung cấp đường triển khai cho OpsBridge và QuanLyKho. Agent Hub đang phát triển, chỉ đọc chứng cứ và đề xuất để con người quyết định.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="13" flood-color="#193650" flood-opacity=".10"/></filter>
+    <marker id="arrowSolid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#536c98"/></marker>
+    <marker id="arrowDash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#168c9b"/></marker>
+    <style>
+      text{font-family:Arial,Helvetica,sans-serif;fill:#173047}
+      .title{font-size:43px;font-weight:800;letter-spacing:-1.2px}
+      .subtitle{font-size:22px;fill:#526c82}
+      .card-title{font-size:29px;font-weight:800}
+      .card-sub{font-size:18px;fill:#526c82}
+      .component{font-size:23px;font-weight:650}
+      .caption{font-size:18px;fill:#4e647a}
+      .badge{font-size:15px;font-weight:800;letter-spacing:.9px}
+      .flow{font-size:20px;font-weight:700}
+      .small{font-size:17px;fill:#4d677c}
+    </style>
+  </defs>
+
+  <rect width="1650" height="930" fill="#f6f9fd"/>
+  <circle cx="1550" cy="50" r="180" fill="#eaf5f4" opacity=".75"/>
+  <circle cx="60" cy="900" r="200" fill="#eaf0fc" opacity=".62"/>
+
+  <text x="60" y="76" class="title">KIẾN TRÚC HỆ THỐNG 4 REPO</text>
+  <text x="60" y="112" class="subtitle">Ba miền nghiệp vụ, một platform triển khai, một Hub điều tra chỉ đọc</text>
+  <line x1="59" y1="144" x2="1592" y2="144" stroke="#d9e4ee" stroke-width="2"/>
+
+  <g transform="translate(1140 82)">
+    <line x1="0" y1="0" x2="55" y2="0" stroke="#536c98" stroke-width="4" marker-end="url(#arrowSolid)"/>
+    <text x="70" y="6" class="small">Kind đã kiểm chứng</text>
+    <line x1="0" y1="30" x2="55" y2="30" stroke="#168c9b" stroke-width="4" stroke-dasharray="8 8" marker-end="url(#arrowDash)"/>
+    <text x="70" y="36" class="small">Hub đang tích hợp</text>
+  </g>
+
+  <!-- Cross-zone data and delivery paths, behind the cards -->
+  <path d="M 295 552 C 295 612, 265 602, 265 658" fill="none" stroke="#168c9b" stroke-width="4" stroke-dasharray="10 9" marker-end="url(#arrowDash)"/>
+  <path d="M 825 552 C 825 615, 565 607, 565 658" fill="none" stroke="#168c9b" stroke-width="4" stroke-dasharray="10 9" marker-end="url(#arrowDash)"/>
+  <path d="M 1355 552 C 1355 618, 728 604, 728 658" fill="none" stroke="#168c9b" stroke-width="4" stroke-dasharray="10 9" marker-end="url(#arrowDash)"/>
+  <path d="M 905 552 C 905 606, 1093 613, 1093 658" fill="none" stroke="#536c98" stroke-width="4" marker-end="url(#arrowSolid)"/>
+  <path d="M 1430 552 C 1430 610, 1407 612, 1407 658" fill="none" stroke="#536c98" stroke-width="4" marker-end="url(#arrowSolid)"/>
+
+  <!-- Retail Finance -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="180" width="470" height="372" rx="24" fill="#fff" stroke="#b8d2f6" stroke-width="2"/>
+    <path d="M 84 180 H 506 Q 530 180 530 204 V 271 H 60 V 204 Q 60 180 84 180 Z" fill="#e5f0ff"/>
+  </g>
+  <circle cx="105" cy="226" r="26" fill="#3b76cd"/>
+  <text x="88" y="234" font-size="19" font-weight="800" fill="white">RF</text>
+  <text x="145" y="219" class="card-title">Retail Finance</text>
+  <text x="145" y="247" class="card-sub">Giao dịch và đối soát chính xác</text>
+  <rect x="82" y="291" width="426" height="57" rx="13" fill="#f2f7ff" stroke="#d2e3fa"/>
+  <text x="104" y="326" class="component">Java 17 · Spring Boot API</text>
+  <rect x="82" y="358" width="426" height="57" rx="13" fill="#f2f7ff" stroke="#d2e3fa"/>
+  <text x="104" y="393" class="component">Python · Reconciliation</text>
+  <rect x="82" y="425" width="426" height="57" rx="13" fill="#f2f7ff" stroke="#d2e3fa"/>
+  <text x="104" y="460" class="component">MySQL · Ledger chuẩn</text>
+  <text x="83" y="516" class="caption">Partner feed → so khớp xác định</text>
+  <rect x="361" y="191" width="147" height="26" rx="13" fill="#c8e5d6"/>
+  <text x="377" y="209" class="badge" fill="#126443">CI VERIFIED</text>
+
+  <!-- OpsBridge -->
+  <g filter="url(#shadow)">
+    <rect x="590" y="180" width="470" height="372" rx="24" fill="#fff" stroke="#f4d0ae" stroke-width="2"/>
+    <path d="M 614 180 H 1036 Q 1060 180 1060 204 V 271 H 590 V 204 Q 590 180 614 180 Z" fill="#fff0df"/>
+  </g>
+  <circle cx="635" cy="226" r="26" fill="#e4913f"/>
+  <text x="617" y="234" font-size="19" font-weight="800" fill="white">OP</text>
+  <text x="675" y="219" class="card-title">OpsBridge</text>
+  <text x="675" y="247" class="card-sub">FlashSale · Đơn hàng và tồn dưới tải</text>
+  <rect x="612" y="291" width="426" height="57" rx="13" fill="#fff8ef" stroke="#f5ddc2"/>
+  <text x="634" y="326" class="component">.NET 10 · APIs</text>
+  <rect x="612" y="358" width="426" height="57" rx="13" fill="#fff8ef" stroke="#f5ddc2"/>
+  <text x="634" y="393" class="component">PostgreSQL · Order / Stock</text>
+  <rect x="612" y="425" width="426" height="57" rx="13" fill="#fff8ef" stroke="#f5ddc2"/>
+  <text x="634" y="460" class="component">Redis · RabbitMQ · Outbox</text>
+  <text x="613" y="516" class="caption">Idempotency · 50 khách / 10 suất</text>
+  <rect x="890" y="191" width="147" height="26" rx="13" fill="#c8e5d6"/>
+  <text x="906" y="209" class="badge" fill="#126443">KIND VERIFIED</text>
+
+  <!-- QuanLyKho -->
+  <g filter="url(#shadow)">
+    <rect x="1120" y="180" width="470" height="372" rx="24" fill="#fff" stroke="#b9dfcc" stroke-width="2"/>
+    <path d="M 1144 180 H 1566 Q 1590 180 1590 204 V 271 H 1120 V 204 Q 1120 180 1144 180 Z" fill="#e6f6eb"/>
+  </g>
+  <circle cx="1165" cy="226" r="26" fill="#39a472"/>
+  <text x="1146" y="234" font-size="19" font-weight="800" fill="white">QK</text>
+  <text x="1205" y="219" class="card-title">QuanLyKho</text>
+  <text x="1205" y="247" class="card-sub">Vận hành kho theo chi nhánh</text>
+  <rect x="1142" y="291" width="426" height="57" rx="13" fill="#f2fbf5" stroke="#d0eadb"/>
+  <text x="1164" y="326" class="component">Flutter → FastAPI</text>
+  <rect x="1142" y="358" width="426" height="57" rx="13" fill="#f2fbf5" stroke="#d0eadb"/>
+  <text x="1164" y="393" class="component">PostgreSQL · Inventory</text>
+  <rect x="1142" y="425" width="426" height="57" rx="13" fill="#f2fbf5" stroke="#d0eadb"/>
+  <text x="1164" y="460" class="component">FEFO · Maker–Checker</text>
+  <text x="1143" y="516" class="caption">AI chỉ tư vấn trên phiếu canonical</text>
+  <rect x="1420" y="191" width="147" height="26" rx="13" fill="#c8e5d6"/>
+  <text x="1436" y="209" class="badge" fill="#126443">KIND VERIFIED</text>
+
+  <!-- Agent Hub -->
+  <g filter="url(#shadow)"><rect x="60" y="664" width="750" height="211" rx="24" fill="#eaf9fa" stroke="#83cbd2" stroke-width="2"/></g>
+  <circle cx="105" cy="712" r="25" fill="#158b9a"/>
+  <text x="88" y="720" font-size="18" font-weight="800" fill="white">AI</text>
+  <text x="145" y="705" class="card-title">Agent Hub</text>
+  <text x="145" y="731" class="card-sub">Điều tra chỉ đọc · đang phát triển</text>
+  <g>
+    <rect x="84" y="758" width="150" height="51" rx="13" fill="#fff" stroke="#9ed4d8"/>
+    <rect x="267" y="758" width="150" height="51" rx="13" fill="#fff" stroke="#9ed4d8"/>
+    <rect x="450" y="758" width="150" height="51" rx="13" fill="#fff" stroke="#9ed4d8"/>
+    <rect x="633" y="758" width="150" height="51" rx="13" fill="#fff" stroke="#9ed4d8"/>
+    <text x="108" y="791" class="flow">Evidence</text>
+    <text x="290" y="791" class="flow">Verifier</text>
+    <text x="470" y="791" class="flow">Proposal</text>
+    <text x="646" y="791" class="flow">Con người</text>
+    <text x="241" y="791" class="flow" fill="#168c9b">→</text>
+    <text x="424" y="791" class="flow" fill="#168c9b">→</text>
+    <text x="607" y="791" class="flow" fill="#168c9b">→</text>
+  </g>
+  <text x="85" y="844" class="caption">Không ghi ledger, đơn hàng, tồn kho hoặc hạ tầng.</text>
+
+  <!-- AKS platform -->
+  <g filter="url(#shadow)"><rect x="850" y="664" width="740" height="211" rx="24" fill="#f0efff" stroke="#c7c1ec" stroke-width="2"/></g>
+  <circle cx="894" cy="712" r="25" fill="#7663bb"/>
+  <text x="875" y="720" font-size="18" font-weight="800" fill="white">PL</text>
+  <text x="934" y="705" class="card-title">AKS-SRE-Platform</text>
+  <text x="934" y="731" class="card-sub">Golden path cho OpsBridge và QuanLyKho</text>
+  <rect x="875" y="758" width="329" height="46" rx="12" fill="#fff" stroke="#d3cdef"/>
+  <rect x="1218" y="758" width="347" height="46" rx="12" fill="#fff" stroke="#d3cdef"/>
+  <rect x="875" y="814" width="329" height="46" rx="12" fill="#fff" stroke="#d3cdef"/>
+  <rect x="1218" y="814" width="347" height="46" rx="12" fill="#fff" stroke="#d3cdef"/>
+  <text x="895" y="788" class="flow">Terraform · OIDC</text>
+  <text x="1238" y="788" class="flow">Argo CD · Envoy Gateway</text>
+  <text x="895" y="844" class="flow">Prometheus · Grafana</text>
+  <text x="1238" y="844" class="flow">Alerts · Backup / DR</text>
+  <rect x="1411" y="675" width="153" height="27" rx="13" fill="#ffe7c5"/>
+  <text x="1427" y="694" class="badge" fill="#915512">AZURE PARTIAL</text>
+
+  <text x="60" y="908" class="small">Nguồn: repo và bằng chứng hiện có · Nét liền: Ops/Quan trên Kind · Nét đứt: Hub read-only đang tích hợp · AKS cloud chưa hoàn tất.</text>
+</svg>

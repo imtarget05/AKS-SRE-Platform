@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2800" height="1700" viewBox="0 0 2800 1700" role="img">
+<title>Approval-gated Agent execution sequence</title><desc>Agent Hub proposes a typed action, receives a human approval bound to the exact intent, executes through a scoped owner API, and verifies the durable post-state.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2800" height="1700" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2800" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="70" y="70" font-size="20" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">CONTROL FLOW / 02</text>
+<text x="70" y="138" font-size="57" fill="#10263b" font-weight="700" text-anchor="start" class="title">Agent có quyền thực thi — sau Human in the Loop</text>
+<text x="72" y="184" font-size="24" fill="#52677a" font-weight="400" text-anchor="start" class="">Agent executor là thành phần có quyền hẹp; domain API và Argo kiểm tra lại trước khi đổi trạng thái.</text>
+<line x1="70" y1="213" x2="2730" y2="213" stroke="#c9d9e5" stroke-width="2" stroke-linecap="round"/>
+<rect x="45" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="45" y="273" width="340" height="9" rx="4" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="215" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Operator / SRE</text>
+<text x="215" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">trigger + approve</text>
+<line x1="215" y1="381" x2="215" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="500" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="500" y="273" width="340" height="9" rx="4" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="670" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Agent planner</text>
+<text x="670" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">evidence + intent</text>
+<line x1="670" y1="381" x2="670" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="955" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="955" y="273" width="340" height="9" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="1125" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Policy engine</text>
+<text x="1125" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">risk + scope</text>
+<line x1="1125" y1="381" x2="1125" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="1410" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="1410" y="273" width="340" height="9" rx="4" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="1580" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Approval service</text>
+<text x="1580" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">HITL + signed decision</text>
+<line x1="1580" y1="381" x2="1580" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="1865" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="1865" y="273" width="340" height="9" rx="4" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="2035" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Agent executor</text>
+<text x="2035" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">scoped execution</text>
+<line x1="2035" y1="381" x2="2035" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="2320" y="273" width="340" height="108" rx="18" fill="#fff" stroke="#d7e4ed" stroke-width="2"/>
+<rect x="2320" y="273" width="340" height="9" rx="4" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="2490" y="319" font-size="23" fill="#10263b" font-weight="700" text-anchor="middle" class="">Owner API / Argo</text>
+<text x="2490" y="351" font-size="18" fill="#52677a" font-weight="400" text-anchor="middle" class="">authoritative effect</text>
+<line x1="2490" y1="381" x2="2490" y2="1241" stroke="#b9cbd9" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 8"/>
+<rect x="2025" y="225" width="705" height="38" rx="19.0" fill="#ffebe6" stroke="none" stroke-width="0"/>
+<text x="2377.5" y="250.3" font-size="18" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">REJECT / EXPIRE / STALE → STOP</text>
+<text x="442.5" y="409" font-size="21" fill="#2369c9" font-weight="700" text-anchor="middle" class="">1  sự cố / task</text>
+<line x1="235" y1="425" x2="639" y2="425" stroke="#2369c9" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="1580.0" y="502" font-size="21" fill="#17879a" font-weight="700" text-anchor="middle" class="">2  GET evidence có scope + source version</text>
+<line x1="690" y1="518" x2="2459" y2="518" stroke="#17879a" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="897.5" y="595" font-size="21" fill="#17879a" font-weight="700" text-anchor="middle" class="">3  typed ActionIntent + hash</text>
+<line x1="690" y1="611" x2="1094" y2="611" stroke="#17879a" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="1352.5" y="688" font-size="21" fill="#6650aa" font-weight="700" text-anchor="middle" class="">4  policy: role / scope / risk</text>
+<line x1="1145" y1="704" x2="1549" y2="704" stroke="#6650aa" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="897.5" y="781" font-size="21" fill="#c86426" font-weight="700" text-anchor="middle" class="">5  exact diff + impact + expiry</text>
+<line x1="1560" y1="797" x2="246" y2="797" stroke="#c86426" stroke-width="4" stroke-linecap="round"/>
+<path d="M245,789 L235,797 L245,805" fill="none" stroke="#c86426" stroke-width="3" stroke-linecap="round"/>
+<text x="897.5" y="874" font-size="21" fill="#c86426" font-weight="700" text-anchor="middle" class="">6  APPROVE / REJECT · MFA · maker ≠ checker</text>
+<line x1="235" y1="890" x2="1549" y2="890" stroke="#c86426" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="1807.5" y="967" font-size="21" fill="#17879a" font-weight="700" text-anchor="middle" class="">7  signed approval bound to intent hash</text>
+<line x1="1600" y1="983" x2="2004" y2="983" stroke="#17879a" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="2262.5" y="1060" font-size="21" fill="#17879a" font-weight="700" text-anchor="middle" class="">8  command API · short-lived ID · idempotency</text>
+<line x1="2055" y1="1076" x2="2459" y2="1076" stroke="#17879a" stroke-width="4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="2262.5" y="1153" font-size="21" fill="#178a70" font-weight="700" text-anchor="middle" class="">9  durable receipt / version / audit</text>
+<line x1="2470" y1="1169" x2="2066" y2="1169" stroke="#178a70" stroke-width="4" stroke-linecap="round"/>
+<path d="M2065,1161 L2055,1169 L2065,1177" fill="none" stroke="#178a70" stroke-width="3" stroke-linecap="round"/>
+<text x="1352.5" y="1241" font-size="21" fill="#17879a" font-weight="700" text-anchor="middle" class="">10  re-read owner state → VERIFIED / UNKNOWN</text>
+<line x1="2015" y1="1257" x2="701" y2="1257" stroke="#17879a" stroke-width="4" stroke-linecap="round"/>
+<path d="M700,1249 L690,1257 L700,1265" fill="none" stroke="#17879a" stroke-width="3" stroke-linecap="round"/>
+<rect x="77" y="1300" width="2646" height="274" rx="21" fill="#fff" stroke="#dce6ef" stroke-width="2"/>
+<text x="112" y="1354" font-size="30" fill="#10263b" font-weight="700" text-anchor="start" class="">Command catalog: Agent thực thi hành động cụ thể, không chạy shell/SQL tùy ý</text>
+<rect x="112" y="1393" width="607" height="139" rx="13" fill="#f7fbfd" stroke="#dce6ef" stroke-width="2"/>
+<rect x="112" y="1393" width="8" height="139" rx="4" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="135" y="1431" font-size="23" fill="#2369c9" font-weight="700" text-anchor="start" class="">Retail</text>
+<text x="135" y="1472" font-size="21" fill="#10263b" font-weight="700" text-anchor="start" class="">Run recon; post adjustment</text>
+<text x="135" y="1505" font-size="18" fill="#52677a" font-weight="400" text-anchor="start" class="">chỉ sau dual control tại ledger</text>
+<rect x="757" y="1393" width="607" height="139" rx="13" fill="#f7fbfd" stroke="#dce6ef" stroke-width="2"/>
+<rect x="757" y="1393" width="8" height="139" rx="4" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="780" y="1431" font-size="23" fill="#c86426" font-weight="700" text-anchor="start" class="">OpsBridge</text>
+<text x="780" y="1472" font-size="21" fill="#10263b" font-weight="700" text-anchor="start" class="">Replay một DLQ event</text>
+<text x="780" y="1505" font-size="18" fill="#52677a" font-weight="400" text-anchor="start" class="">owner RBAC + audit + idempotency</text>
+<rect x="1402" y="1393" width="607" height="139" rx="13" fill="#f7fbfd" stroke="#dce6ef" stroke-width="2"/>
+<rect x="1402" y="1393" width="8" height="139" rx="4" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="1425" y="1431" font-size="23" fill="#178a70" font-weight="700" text-anchor="start" class="">QuanLyKho</text>
+<text x="1425" y="1472" font-size="21" fill="#10263b" font-weight="700" text-anchor="start" class="">Post approved voucher</text>
+<text x="1425" y="1505" font-size="18" fill="#52677a" font-weight="400" text-anchor="start" class="">branch + maker/checker + version</text>
+<rect x="2047" y="1393" width="607" height="139" rx="13" fill="#f7fbfd" stroke="#dce6ef" stroke-width="2"/>
+<rect x="2047" y="1393" width="8" height="139" rx="4" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="2070" y="1431" font-size="23" fill="#6650aa" font-weight="700" text-anchor="start" class="">Platform</text>
+<text x="2070" y="1472" font-size="21" fill="#10263b" font-weight="700" text-anchor="start" class="">Argo rollback một app</text>
+<text x="2070" y="1505" font-size="18" fill="#52677a" font-weight="400" text-anchor="start" class="">revision + env gate + health</text>
+<rect x="77" y="1605" width="755" height="45" rx="22.5" fill="#ffebe6" stroke="none" stroke-width="0"/>
+<text x="454.5" y="1634.15" font-size="19" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">TARGET DESIGN · CURRENT AGENT HUB READ-ONLY</text>
+<text x="2722" y="1637" font-size="19" fill="#52677a" font-weight="400" text-anchor="end" class="">ADR 024 · implement/verify từng command family trước khi claim</text>
+</svg>

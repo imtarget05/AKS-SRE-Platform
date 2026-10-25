@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1350" viewBox="0 0 2400 1350" role="img">
+<title>Agent Hub trust and evidence architecture</title><desc>Read-only investigation design with per-domain authorization, evidence provenance, deterministic verification, abstention, and a human decision boundary. This remains work in progress.</desc>
+<defs><filter id="shadow" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#17344c" flood-opacity=".10"/></filter>
+<marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#71889b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrow-red" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M2,2 L10,6 L2,10" fill="none" stroke="#bf3f49" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+</defs><style>text{font-family:Arial,Helvetica,sans-serif} .title{font-weight:700;letter-spacing:-1px} .label{font-weight:700} .eyebrow{font-weight:700;letter-spacing:2px}</style>
+<rect x="0" y="0" width="2400" height="1350" rx="0" fill="#f4f8fc" stroke="none" stroke-width="2"/>
+<rect x="0" y="0" width="2400" height="18" rx="0" fill="#10263b" stroke="none" stroke-width="2"/>
+<text x="60" y="75" font-size="19" fill="#6650aa" font-weight="700" text-anchor="start" class="eyebrow">ARCHITECTURE  /  04</text>
+<text x="60" y="139" font-size="52" fill="#10263b" font-weight="700" text-anchor="start" class="title">Agent Hub · AI chỉ điều tra, con người quyết định</text>
+<text x="62" y="181" font-size="23" fill="#52677a" font-weight="400" text-anchor="start" class="">Contract thiết kế theo ADR 023; kết nối runtime toàn bộ bốn nguồn chưa được chứng minh.</text>
+<line x1="60" y1="207" x2="2340" y2="207" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<rect x="60" y="247" width="610" height="718" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="60" y="247" width="12" height="718" rx="6" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="100" y="295" font-size="19" fill="#17879a" font-weight="700" text-anchor="start" class="eyebrow">SOURCES · OWNER RECHECKS AUTH</text>
+<text x="100" y="348" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Đọc qua API có scope</text>
+<text x="100" y="385" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Không có đường đọc raw DB chéo domain</text>
+<rect x="96" y="429" width="538" height="89" rx="15" fill="#f7fbfd" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="96" y="429" width="7" height="89" rx="3" fill="#2369c9" stroke="none" stroke-width="0"/>
+<text x="118" y="465" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Retail Finance</text>
+<text x="118" y="498" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Settled feed · outlet scope</text>
+<rect x="96" y="542" width="538" height="89" rx="15" fill="#f7fbfd" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="96" y="542" width="7" height="89" rx="3" fill="#c86426" stroke="none" stroke-width="0"/>
+<text x="118" y="578" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">FlashSale / OpsBridge</text>
+<text x="118" y="611" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Order timeline · outbox / DLQ</text>
+<rect x="96" y="655" width="538" height="89" rx="15" fill="#f7fbfd" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="96" y="655" width="7" height="89" rx="3" fill="#178a70" stroke="none" stroke-width="0"/>
+<text x="118" y="691" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">QuanLyKho</text>
+<text x="118" y="724" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Canonical voucher · branch scope</text>
+<rect x="96" y="768" width="538" height="89" rx="15" fill="#f7fbfd" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="96" y="768" width="7" height="89" rx="3" fill="#6650aa" stroke="none" stroke-width="0"/>
+<text x="118" y="804" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">AKS-SRE-Platform</text>
+<text x="118" y="837" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Alert · Argo status · runbook</text>
+<rect x="96" y="894" width="538" height="42" rx="21.0" fill="#e7f5f8" stroke="none" stroke-width="0"/>
+<text x="365.0" y="921.3" font-size="18" fill="#17879a" font-weight="700" text-anchor="middle" class="">Allowlist GET · 401/403/404 từ nguồn</text>
+<rect x="736" y="247" width="925" height="718" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="736" y="247" width="12" height="718" rx="6" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="776" y="295" font-size="19" fill="#17879a" font-weight="700" text-anchor="start" class="eyebrow">INVESTIGATION PIPELINE · WIP</text>
+<text x="776" y="348" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Chứng cứ trước, suy luận sau</text>
+<text x="776" y="385" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Hub DB chỉ lưu runs, evidence, quyết định và audit</text>
+<rect x="775" y="427" width="846" height="88" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="775" y="427" width="7" height="88" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="797" y="463" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">01  Identity + scope</text>
+<text x="797" y="496" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Danh tính từ server; không tin client scope</text>
+<line x1="1198" y1="516" x2="1198" y2="538" stroke="#17879a" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="775" y="543" width="846" height="88" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="775" y="543" width="7" height="88" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="797" y="579" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">02  Evidence envelope</text>
+<text x="797" y="612" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">service · entity · version · SHA-256 · expiry</text>
+<line x1="1198" y1="632" x2="1198" y2="654" stroke="#17879a" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="775" y="659" width="846" height="88" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="775" y="659" width="7" height="88" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="797" y="695" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">03  Deterministic verifier</text>
+<text x="797" y="728" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Ledger / stock / FEFO / maker-checker invariants</text>
+<line x1="1198" y1="748" x2="1198" y2="770" stroke="#17879a" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="775" y="775" width="846" height="88" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="775" y="775" width="7" height="88" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="797" y="811" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">04  Critic + proposal</text>
+<text x="797" y="844" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Citation đủ → đề xuất; thiếu → abstain</text>
+<rect x="775" y="906" width="846" height="41" rx="20.5" fill="#e7f5f8" stroke="none" stroke-width="0"/>
+<text x="1198.0" y="932.8" font-size="18" fill="#17879a" font-weight="700" text-anchor="middle" class="">Token, scope và evidence hash gắn cùng một investigation run</text>
+<rect x="1727" y="247" width="613" height="718" rx="26" fill="#ffffff" stroke="#dce6ef" stroke-width="2" filter="url(#shadow)"/>
+<rect x="1727" y="247" width="12" height="718" rx="6" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1767" y="295" font-size="19" fill="#bf3f49" font-weight="700" text-anchor="start" class="eyebrow">AUTHORITY BOUNDARY</text>
+<text x="1767" y="348" font-size="35" fill="#10263b" font-weight="700" text-anchor="start" class="title">Không tự thực thi</text>
+<text x="1767" y="385" font-size="20" fill="#52677a" font-weight="400" text-anchor="start" class="">Người có thẩm quyền dùng hệ thống sở hữu action</text>
+<rect x="1764" y="429" width="538" height="100" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1764" y="429" width="7" height="100" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="1786" y="465" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Proposal + unknowns</text>
+<text x="1786" y="498" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Read-only checks; source citations</text>
+<line x1="2033" y1="530" x2="2033" y2="571" stroke="#17879a" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow)"/>
+<rect x="1764" y="577" width="538" height="104" rx="15" fill="#f0fafb" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1764" y="577" width="7" height="104" rx="3" fill="#17879a" stroke="none" stroke-width="0"/>
+<text x="1786" y="613" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Human decision</text>
+<text x="1786" y="646" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Accept / reject giả thuyết</text>
+<text x="1786" y="671" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Run được ghi nhận, không đổi dữ liệu</text>
+<line x1="2033" y1="682" x2="2033" y2="723" stroke="#bf3f49" stroke-width="3" stroke-linecap="round" marker-end="url(#arrow-red)"/>
+<rect x="1764" y="730" width="538" height="114" rx="15" fill="#fff3f2" stroke="#d9e5ee" stroke-width="2"/>
+<rect x="1764" y="730" width="7" height="114" rx="3" fill="#bf3f49" stroke="none" stroke-width="0"/>
+<text x="1786" y="766" font-size="23" fill="#10263b" font-weight="700" text-anchor="start" class="">Owner UI / CLI</text>
+<text x="1786" y="799" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Người có quyền thực hiện tại domain</text>
+<text x="1786" y="824" font-size="19" fill="#52677a" font-weight="400" text-anchor="start" class="">Theo policy, audit và approval riêng</text>
+<rect x="1764" y="894" width="538" height="42" rx="21.0" fill="#fff1ef" stroke="none" stroke-width="0"/>
+<text x="2033.0" y="921.3" font-size="18" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">HUB WRITE TOOL = FORBIDDEN</text>
+<path d="M670 605 H730" fill="none" stroke="#17879a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="9 7" marker-end="url(#arrow)"/>
+<path d="M1661 605 H1720" fill="none" stroke="#17879a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="9 7" marker-end="url(#arrow)"/>
+<rect x="60" y="1005" width="2280" height="261" rx="22" fill="#ffffff" stroke="#dce6ef" stroke-width="2"/>
+<text x="96" y="1054" font-size="29" fill="#bf3f49" font-weight="700" text-anchor="start" class="">Khi thiếu bằng chứng hoặc source từ chối</text>
+<text x="96" y="1096" font-size="22" fill="#10263b" font-weight="400" text-anchor="start" class="">Cross-scope → 403/404. Tool timeout / source conflict / không có citation → abstained + unknowns.</text>
+<text x="96" y="1134" font-size="22" fill="#10263b" font-weight="400" text-anchor="start" class="">Agent Hub hiện là WIP trong monorepo; demo Kind và test synthetic không chứng minh tích hợp production.</text>
+<rect x="96" y="1194" width="453" height="42" rx="21.0" fill="#fff1ef" stroke="none" stroke-width="0"/>
+<text x="322.5" y="1221.3" font-size="18" fill="#bf3f49" font-weight="700" text-anchor="middle" class="">Không gắn nhãn PRODUCTION READY</text>
+<line x1="60" y1="1300" x2="2340" y2="1300" stroke="#d2dfe9" stroke-width="2" stroke-linecap="round"/>
+<text x="60" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="start" class="">Ranh giới đọc/ghi là policy tại domain service. Đường nét đứt là contract WIP, không phải luồng production đã chạy.</text>
+<text x="2340" y="1330" font-size="17" fill="#52677a" font-weight="400" text-anchor="end" class="">Senior Engineering Portfolio  •  2026-10-24</text>
+</svg>

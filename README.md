@@ -128,3 +128,11 @@ Safety Mode: documentation repaired, CI being built, Azure identity and ACR bein
 established. AKS was applied successfully once and is currently stopped and
 destroyed. Read `tasks/current.md` before touching anything.
 
+## Historical portfolio material
+
+The former `Senior-Engineering-Portfolio` monorepo's unique documents,
+evidence, evals, and standalone Retail Finance service are preserved in
+[`docs/portfolio-archive/`](docs/portfolio-archive/ARCHIVE-NOTE.md). This is a
+historical snapshot, not a release input. The current Agent Hub lives in
+[`apps/agent-hub/`](apps/agent-hub/README.md).
+

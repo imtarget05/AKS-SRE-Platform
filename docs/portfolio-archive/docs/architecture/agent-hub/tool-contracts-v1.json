@@ -1,0 +1,322 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Agent Hub Read-Only Domain Tool Contracts",
+    "description": "Standardized Read-Only Tool Contracts for Agent Hub cross-repository investigations. Invariants: 0 write tools, strictly scoped by outlet/branch, versioned responses.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8088",
+      "description": "Shared Ingress / Envoy Gateway endpoint in Kind cluster"
+    }
+  ],
+  "paths": {
+    "/api/v1/retail/reconcile/batches/{batch_id}/discrepancies": {
+      "get": {
+        "summary": "Query Retail Finance reconciliation discrepancies (Read-Only)",
+        "operationId": "getRetailReconciliationDiscrepancies",
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier of the reconciliation batch"
+          },
+          {
+            "name": "X-Outlet-Scope",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Outlet scope identifier for tenant isolation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Discrepancy report with settled transactions and discrepancies list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetailDiscrepancyResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Access outside authorized outlet scope"
+          },
+          "404": {
+            "description": "Batch not found"
+          }
+        }
+      }
+    },
+    "/api/v1/ops/orders/{order_id}/timeline": {
+      "get": {
+        "summary": "Retrieve order lifecycle and outbox events timeline (Read-Only)",
+        "operationId": "getOpsOrderTimeline",
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Unique identifier of the flash-sale order"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order timeline including reservation, payment, and outbox state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsOrderTimelineResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Order not found"
+          }
+        }
+      }
+    },
+    "/api/v1/ops/outbox/stuck": {
+      "get": {
+        "summary": "List stuck outbox events for failure analysis (Read-Only)",
+        "operationId": "getOpsStuckOutboxEvents",
+        "parameters": [
+          {
+            "name": "stuck_threshold_seconds",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 60
+            },
+            "description": "Age in seconds to classify an outbox event as stuck"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of stuck outbox events with retry counts and last error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OutboxEventDetail"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/vouchers/{voucher_id}/canonical": {
+      "get": {
+        "summary": "Fetch canonical inventory adjustment voucher and FEFO lot details (Read-Only)",
+        "operationId": "getQuanLyKhoVoucherCanonical",
+        "parameters": [
+          {
+            "name": "voucher_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inventory voucher ID"
+          },
+          {
+            "name": "X-Branch-Scope",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Branch scope identifier for data isolation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Canonical voucher details with lines, FEFO dates, and maker status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuanLyKhoVoucherResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Voucher belongs to another branch"
+          },
+          "404": {
+            "description": "Voucher not found"
+          }
+        }
+      }
+    },
+    "/api/v1/platform/alerts/active": {
+      "get": {
+        "summary": "Fetch active alerts and incident triggers (Read-Only)",
+        "operationId": "getPlatformActiveAlerts",
+        "responses": {
+          "200": {
+            "description": "List of active Prometheus/Alertmanager alerts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformAlertDetail"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/platform/rollouts/status": {
+      "get": {
+        "summary": "Fetch Argo CD / Kubernetes rollout and image digest status (Read-Only)",
+        "operationId": "getPlatformRolloutStatus",
+        "parameters": [
+          {
+            "name": "app_name",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Application name: flashsale or quanlykho"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current image digest, sync status, and replica health",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformRolloutStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RetailDiscrepancyResponse": {
+        "type": "object",
+        "properties": {
+          "batch_id": { "type": "string" },
+          "outlet_id": { "type": "string" },
+          "record_version": { "type": "integer" },
+          "settled_count": { "type": "integer" },
+          "discrepancies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tx_ref": { "type": "string" },
+                "feed_amount": { "type": "number" },
+                "settled_amount": { "type": "number" },
+                "diff_amount": { "type": "number" },
+                "discrepancy_type": { "type": "string", "enum": ["MISSING_LEDGER", "AMOUNT_MISMATCH", "DUPLICATE_FEED"] }
+              }
+            }
+          }
+        }
+      },
+      "OpsOrderTimelineResponse": {
+        "type": "object",
+        "properties": {
+          "order_id": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "RESERVED", "FULFILLED", "REJECTED"] },
+          "record_version": { "type": "integer" },
+          "reservation_status": { "type": "string" },
+          "outbox_status": { "type": "string" },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "event_type": { "type": "string" },
+                "timestamp": { "type": "string", "format": "date-time" },
+                "details": { "type": "object" }
+              }
+            }
+          }
+        }
+      },
+      "OutboxEventDetail": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "event_type": { "type": "string" },
+          "payload": { "type": "object" },
+          "retry_count": { "type": "integer" },
+          "last_error": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "QuanLyKhoVoucherResponse": {
+        "type": "object",
+        "properties": {
+          "voucher_id": { "type": "string" },
+          "branch_id": { "type": "string" },
+          "record_version": { "type": "integer" },
+          "status": { "type": "string", "enum": ["DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED"] },
+          "maker_id": { "type": "string" },
+          "checker_id": { "type": "string", "nullable": true },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "sku": { "type": "string" },
+                "expected_qty": { "type": "number" },
+                "actual_qty": { "type": "number" },
+                "lot_number": { "type": "string" },
+                "expiry_date": { "type": "string", "format": "date" }
+              }
+            }
+          }
+        }
+      },
+      "PlatformAlertDetail": {
+        "type": "object",
+        "properties": {
+          "fingerprint": { "type": "string" },
+          "alertname": { "type": "string" },
+          "severity": { "type": "string", "enum": ["warning", "critical"] },
+          "service": { "type": "string" },
+          "summary": { "type": "string" },
+          "starts_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PlatformRolloutStatusResponse": {
+        "type": "object",
+        "properties": {
+          "app_name": { "type": "string" },
+          "sync_status": { "type": "string" },
+          "health_status": { "type": "string" },
+          "image_digest": { "type": "string" },
+          "replicas_desired": { "type": "integer" },
+          "replicas_ready": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

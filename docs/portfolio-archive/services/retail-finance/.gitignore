@@ -1,0 +1,29 @@
+# ---- Java / Maven ----
+target/
+*.jar
+*.class
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# ---- IDE ----
+.idea/
+.vscode/
+*.iml
+
+# ---- OS ----
+.DS_Store
+
+# ---- Secrets: never commit real credentials ----
+.env
+.env.*
+!.env.example
