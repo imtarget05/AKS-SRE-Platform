@@ -100,10 +100,11 @@ xychart-beta
 
 ### Q4: "How do you guarantee that an AI agent won't corrupt financial ledger data in production?"
 > **Senior Answer:**
-> *"We formalized this in our **Agent Hub Go/No-Go Decision Paper** (`docs/agent-hub-decision.md`) and then enforced it in code, not just in policy:*
-> *- The decision landed on **GO with conditions**: every agent call is authenticated (JWT for user-facing traffic, a dedicated HMAC key for the internal agent surface), agents receive scoped permissions, and every agent is rate-limited.*
-> *- The agent surface we shipped is **read-first**: diagnostics are GET-only (`/internal/agent/outbox/stuck`, `/pending`, `/{id}`). The one mutating command an agent can trigger — requeueing a single dead-lettered outbox event — demands an **approved human intent** (`IntentId`, SHA-256 `IntentHash`, `ApprovedBy`, idempotency key) verified server-side, and the endpoint degrades to 503 if the HMAC key is not provisioned.*
-> *- Financial decisions (reconciliation discrepancy approval, bulk outbox requeue) remain behind authenticated human role policies (`Review`, `StaffOrAdmin`) — there is no code path by which an agent creates, approves, or alters ledger data."*
+> *"We formalized this in **ADR-023 / ADR-024 and our Agent Hub Go/No-Go Decision Paper** (`docs/decisions/agent-hub-go-no-go-decision.md`; ADR records under `docs/portfolio-archive/docs/adr/`), and enforced it in code, not just in policy:*
+> *- **ADR-024 (autonomous execution) is a definitive NO-GO for production workloads** — the evaluation matrix rejected automated LLM-policy-driven mutations on prompt-injection risk, financial ledger integrity, and unbounded cost; approved execution remains a target architecture, not an implemented capability.*
+> *- **ADR-023 (read-only invariants) is the enforced baseline**: the Agent Hub is an investigative sidecar with zero mutation tools over domain business state, every read carries the operator's bearer token plus an explicit `X-Scope-Id`, and model inputs travel in SHA-256-verified `EvidenceEnvelope`s — the agent abstains rather than hallucinating when evidence fails verification.*
+> *- Enforcement is visible in code: the agent surface in Order.Api is GET-only diagnostics (`/internal/agent/outbox/stuck|pending|{id}`) behind a dedicated HMAC key with no source default (503 if unprovisioned); the single recovery command requires an approved human intent (`IntentId` + SHA-256 `IntentHash` + `ApprovedBy` + idempotency key); financial actions (discrepancy approval, bulk requeue) stay behind human role policies (`Review`, `StaffOrAdmin`).*
+> *- Net result: the agent can look, correlate, and propose — it cannot spend, approve, or mutate. The human decision is cryptographically bound before any state transition."*
 
 ---
 
