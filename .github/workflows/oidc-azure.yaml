@@ -97,18 +97,19 @@ jobs:
           grep -qF "$EXPECTED_SUBJECT" .github/workflows/oidc-azure.yaml
           echo "Subject is present in the workflow as the enforced value."
 
-  # Mints a real GitHub Actions OIDC token WITHOUT the azure-verify environment.
+  # Mints a real GitHub Actions OIDC token bound to the 'not-azure-verify' environment.
   # This token is cryptographically signed by GitHub, but its `sub` claim is bound to
-  # the git ref rather than the environment. It serves as the authentic negative control fixture.
+  # 'repo:imtarget05/AKS-SRE-Platform:environment:not-azure-verify', which Entra ID must reject.
   mint-unbound-token:
     name: Mint unbound OIDC token (negative control fixture)
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    environment: not-azure-verify
     outputs:
       unbound_token_b64: ${{ steps.mint.outputs.unbound_token_b64 }}
     steps:
-      - name: mint token without environment
+      - name: mint token with unbound environment
         id: mint
         run: |
           set -euo pipefail
