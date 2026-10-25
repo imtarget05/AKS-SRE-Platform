@@ -216,22 +216,24 @@ def render_pinned_tree(checkout, commit, subpath):
     if archive.returncode != 0:
         return None, f"git archive failed: {archive.stderr.decode(errors='replace')[:300]}"
     with tempfile.TemporaryDirectory(prefix="gitops-pinned-") as tree:
-        tree_real = os.path.realpath(tree)
-        # Git tracks symlinks. Refuse links and escaping names so an external
-        # checkout cannot make this validator read or write outside its tree.
+        # Use Python standard safe tar extraction (PEP 706 filter='data' or safe iteration)
+        # to prevent directory traversal / zip slip.
         with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as tar:
-            for member in tar:
-                target = os.path.realpath(os.path.join(tree, member.name))
-                if os.path.commonpath([tree_real, target]) != tree_real:
-                    return None, "archive contains a path outside the source tree"
-                if member.isdir():
-                    os.makedirs(target, exist_ok=True)
-                elif member.isfile():
-                    os.makedirs(os.path.dirname(target), exist_ok=True)
-                    with tar.extractfile(member) as source, open(target, "wb") as dest:
-                        shutil.copyfileobj(source, dest)
-                else:
-                    return None, f"archive contains unsupported link/type: {member.name}"
+            if hasattr(tarfile, "data_filter"):
+                tar.extractall(path=tree, filter="data")
+            else:
+                tree_real = os.path.realpath(tree)
+                for member in tar:
+                    target = os.path.realpath(os.path.join(tree, member.name))
+                    if os.path.commonpath([tree_real, target]) != tree_real:
+                        return None, "archive contains a path outside the source tree"
+                    if member.isdir():
+                        os.makedirs(target, exist_ok=True)
+                    elif member.isfile():
+                        os.makedirs(os.path.dirname(target), exist_ok=True)
+                        tar.extract(member, path=tree)
+                    else:
+                        return None, f"archive contains unsupported link/type: {member.name}"
         overlay = os.path.join(tree, normalized)
         if not os.path.isdir(overlay):
             return None, f"overlay path {subpath!r} missing at targetRevision"

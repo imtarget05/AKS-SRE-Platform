@@ -13,7 +13,7 @@ import sys
 def main() -> int:
     try:
         plan = json.load(sys.stdin)
-    except (ValueError, UnicodeDecodeError):
+    except ValueError:
         print("invalid Terraform plan JSON", file=sys.stderr)
         return 2
     if (not isinstance(plan, dict)

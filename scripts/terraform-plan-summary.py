@@ -40,6 +40,22 @@ def find(source, path):
     return None
 
 
+def format_change_row(item: dict) -> str:
+    change = item.get("change") or {}
+    address = item.get("address", "[unknown]")
+    if not isinstance(address, str) or not SAFE_VALUE.fullmatch(address):
+        address = "[redacted]"
+    actions = ", ".join(change.get("actions") or [])
+    before = change.get("before") or {}
+    after = change.get("after") or {}
+    details = []
+    for path in FIELDS:
+        old, new = find(before, path), find(after, path)
+        if old is not None or new is not None:
+            details.append(f"{'.'.join(path)}: {old or '∅'} → {new or '∅'}")
+    return f"| `{address}` | {actions} | {'; '.join(details) or 'none allowlisted'} |"
+
+
 def main() -> int:
     try:
         plan = json.load(sys.stdin)
@@ -53,19 +69,7 @@ def main() -> int:
     print("| Resource | Action | Cost and placement fields (before → after) |")
     print("| --- | --- | --- |")
     for item in changes:
-        change = item.get("change") or {}
-        address = item.get("address", "[unknown]")
-        if not isinstance(address, str) or not SAFE_VALUE.fullmatch(address):
-            address = "[redacted]"
-        actions = ", ".join(change.get("actions") or [])
-        before = change.get("before") or {}
-        after = change.get("after") or {}
-        details = []
-        for path in FIELDS:
-            old, new = find(before, path), find(after, path)
-            if old is not None or new is not None:
-                details.append(f"{'.'.join(path)}: {old or '∅'} → {new or '∅'}")
-        print(f"| `{address}` | {actions} | {'; '.join(details) or 'none allowlisted'} |")
+        print(format_change_row(item))
     print(f"\nTotal resource changes: {len(changes)}. Full values remain private on the runner.")
     return 0
 
