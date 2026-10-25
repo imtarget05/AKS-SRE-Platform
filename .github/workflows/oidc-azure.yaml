@@ -186,16 +186,23 @@ jobs:
 
           UNBOUND_TOKEN=$(echo -n "${UNBOUND_TOKEN_B64}" | base64 -d)
 
-          NEG_RC=0
+          # Use an isolated Azure config directory so cached tokens from the positive control cannot leak.
+          export AZURE_CONFIG_DIR=$(mktemp -d)
+
+          set +e
           NEG_OUT="$(az login --service-principal \
             --username "${CLIENT_ID}" \
             --tenant "${TENANT_ID}" \
             --federated-token "${UNBOUND_TOKEN}" \
-            2>&1)" || NEG_RC=$?
+            2>&1)"
+          NEG_RC=$?
+          set -e
 
           if [ "$NEG_RC" -eq 0 ]; then
             echo "::error title=NEGATIVE CONTROL FAILED::Unbound subject was ACCEPTED by Entra ID."
             echo "::error::The federated credential is not restricted to the azure-verify environment."
+            echo "Output was:"
+            echo "$NEG_OUT"
             exit 1
           fi
 
