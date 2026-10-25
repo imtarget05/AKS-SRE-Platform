@@ -16,7 +16,7 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/FlashSale-Backend.git
-    targetRevision: 71cf53ba722c586915449458824a768ae5c0d372
+    targetRevision: 5c982984978b7f1b619864285f209a3619f08ae6
     path: infrastructure/kubernetes/overlays/azure-cloud
 
   destination:
