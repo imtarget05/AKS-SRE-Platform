@@ -1,0 +1,62 @@
+# AKS profile for the pinned kube-prometheus-stack 91.5.0 chart.
+# Keep kind-only resource and Alertmanager decisions in the separate local file.
+# Secrets named below must be provisioned outside Git before Helm upgrade.
+# AKS manages etcd, controller-manager and scheduler outside this cluster;
+# kube-proxy metrics are not exposed here either. Scraping them would create
+# permanently down targets/default alerts rather than actionable incidents.
+defaultRules:
+  rules:
+    etcd: false
+    kubeControllerManager: false
+    kubeScheduler: false
+    kubeProxy: false
+
+kubeEtcd:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    useExistingSecret: true
+    configSecret: alertmanager-portfolio
+
+prometheus:
+  prometheusSpec:
+    retention: 15d
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        memory: 2Gi
+
+grafana:
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  service:
+    type: ClusterIP
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: monitoring
+
+kubeStateMetrics:
+  enabled: true
+nodeExporter:
+  enabled: true

@@ -1,0 +1,46 @@
+# Cluster Autoscaler configuration for AKS
+# This ConfigMap configures the cluster-autoscaler behavior for the AKS cluster.
+# Applied via the azure/cluster-autoscaler add-on or Helm chart.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-status
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cluster-autoscaler
+    app.kubernetes.io/component: autoscaling
+data:
+  # Scale-down configuration
+  scale-down-delay-after-add: "10m"
+  scale-down-delay-after-delete: "10s"
+  scale-down-delay-after-failure: "3m"
+  scale-down-unneeded-time: "10m"
+  scale-down-utilization-threshold: "0.5"
+  # Scale-up configuration
+  scale-up-delay: "1m"
+  # GPU and resource limits
+  max-node-provision-time: "15m"
+  # Logging
+  verbosity: "4"
+  # Skip nodes with local storage
+  skip-nodes-with-local-storage: "true"
+  skip-nodes-with-system-pods: "true"
+  # Balance similar node groups
+  balance-similar-node-groups: "true"
+  # Expander for node group selection
+  expander: "least-waste"
+---
+# PodDisruptionBudget for cluster-autoscaler itself
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cluster-autoscaler
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cluster-autoscaler

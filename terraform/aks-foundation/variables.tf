@@ -43,6 +43,31 @@ variable "workload_pool_vm_size" {
   description = "User pool SKU."
 }
 
+variable "workload_pool_autoscaling" {
+  description = "Opt-in bounded cluster autoscaler for the user pool. The default keeps the existing fixed-size behavior."
+  type = object({
+    enabled   = bool
+    min_nodes = number
+    max_nodes = number
+  })
+  default = {
+    enabled   = false
+    min_nodes = 1
+    max_nodes = 3
+  }
+
+  validation {
+    condition = (
+      var.workload_pool_autoscaling.min_nodes >= 1 &&
+      var.workload_pool_autoscaling.min_nodes <= var.workload_pool_autoscaling.max_nodes &&
+      var.workload_pool_autoscaling.max_nodes <= 3 &&
+      floor(var.workload_pool_autoscaling.min_nodes) == var.workload_pool_autoscaling.min_nodes &&
+      floor(var.workload_pool_autoscaling.max_nodes) == var.workload_pool_autoscaling.max_nodes
+    )
+    error_message = "User pool autoscaling requires integer min/max nodes with 1 <= min <= max <= 3."
+  }
+}
+
 variable "enable_wi_proof" {
   type        = bool
   default     = false

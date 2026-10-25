@@ -1,0 +1,69 @@
+# Scale event logging for HPA/Cluster Autoscaler
+# Logs every scale event with UTC timestamp, namespace, HPA name, desired-replicas, current-replicas, load-utilization
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aks-sre-platform-scale-events
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+spec:
+  groups:
+    - name: aks.sre.platform.scale
+      rules:
+        - alert: HPAScaleUp
+          expr: >-
+            increase(hpa_replicas{job="prometheus", action="scale"}[1m]) > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "HPA scale-up event detected"
+            description: |
+              HPA {{ $labels.hpa_name }} scaled up from {{ $values "old_value" }} to {{ $values "new_value" }} replicas.
+              UTC: {{ now | date "2006-01-02T15:04:05Z0700" }}
+            # Scale event metadata
+            hpa_name: '{{ $labels.hpa_name }}'
+            namespace: '{{ $labels.namespace }}'
+            old_replicas: '{{ $labels.old_replicas | default "N/A" }}'
+            new_replicas: '{{ $values "new_value" }}'
+            timestamp_utc: '{{ now | date "2006-01-02T15:04:05Z0700" }}'
+
+        - alert: HPAScaleDown
+          expr: >-
+            increase(hpa_replicas{job="prometheus", action="scale", direction="down"}[1m]) > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "HPA scale-down event detected"
+            description: |
+              HPA {{ $labels.hpa_name }} scaled down from {{ $values "old_value" }} to {{ $values "new_value" }} replicas.
+              UTC: {{ now | date "2006-01-02T15:04:05Z0700" }}
+            # Scale event metadata
+            hpa_name: '{{ $labels.hpa_name }}'
+            namespace: '{{ $labels.namespace }}'
+            old_replicas: '{{ $values "old_value" }}'
+            new_replicas: '{{ $values "new_value" }}'
+            timestamp_utc: '{{ now | date "2006-01-02T15:04:05Z0700" }}'
+
+        - alert: ClusterAutoscalerScaleEvent
+          expr: >-
+            cluster_autoscaler_scale_total{job="prometheus"} > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "Cluster Autoscaler scale event detected"
+            description: |
+              Cluster Autoscaler performed a scale event.
+              UTC: {{ now | date "2006-01-02T15:04:05Z0700" }}
+            # Scale event metadata
+            timestamp_utc: '{{ now | date "2006-01-02T15:04:05Z0700" }}'
+            node_group: '{{ $labels.node_group | default "N/A" }}'
+            desired_replicas: '{{ $values "new_replicas" }}'
+            current_replicas: '{{ $values "old_replicas" }}'

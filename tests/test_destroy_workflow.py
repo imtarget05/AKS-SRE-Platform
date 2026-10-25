@@ -45,13 +45,28 @@ class DestroyWorkflowTests(unittest.TestCase):
 
     def test_no_raw_plan_artifact_or_auto_approve_escape(self):
         workflow = WORKFLOW.read_text()
-        self.assertNotIn("upload-artifact", workflow)
+        # Allow SBOM artifact upload in sbom-scan job (required for supply chain gate)
+        # but forbid artifact uploads in plan/apply/destroy jobs
+        uploads = [
+            (job_name, step)
+            for job_name, job in self.jobs.items()
+            for step in job.get("steps", [])
+            if step.get("uses", "").startswith("actions/upload-artifact@")
+            and job_name not in ("sbom-scan",)
+        ]
+        self.assertEqual(uploads, [], f"Unexpected artifact uploads in non-sbom jobs: {uploads}")
+        for name in ("plan", "apply", "destroy"):
+            steps = self.jobs[name]["steps"]
+            self.assertFalse(any("artifact@" in step.get("uses", "") for step in steps))
         self.assertNotIn("download-artifact", workflow)
         self.assertNotIn("-auto-approve", workflow)
         rebuild = (ROOT / "scripts" / "rebuild-aks.sh").read_text()
         self.assertNotIn("terraform destroy", rebuild)
         self.assertNotIn("terraform apply", rebuild)
         self.assertNotIn("-auto-approve", rebuild)
+
+    def test_infrastructure_apply_depends_only_on_reviewed_plan(self):
+        self.assertEqual(self.jobs["apply"]["needs"], "plan")
 
     def test_fingerprint_ignores_only_timestamp_and_covers_sensitive_values(self):
         script = ROOT / "scripts" / "terraform-plan-fingerprint.py"

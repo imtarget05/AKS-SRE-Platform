@@ -5,15 +5,16 @@
 module "aks" {
   source = "../modules/aks_cluster"
 
-  resource_group_name      = var.resource_group_name
-  location                 = var.location
-  cluster_name             = var.cluster_name
-  kubernetes_version       = var.kubernetes_version
-  system_pool_vm_size      = var.system_pool_vm_size
-  system_pool_node_count   = var.system_pool_node_count
-  enable_workload_pool     = var.enable_workload_pool
-  workload_pool_vm_size    = var.workload_pool_vm_size
-  workload_pool_node_count = 1
+  resource_group_name       = var.resource_group_name
+  location                  = var.location
+  cluster_name              = var.cluster_name
+  kubernetes_version        = var.kubernetes_version
+  system_pool_vm_size       = var.system_pool_vm_size
+  system_pool_node_count    = var.system_pool_node_count
+  enable_workload_pool      = var.enable_workload_pool
+  workload_pool_vm_size     = var.workload_pool_vm_size
+  workload_pool_node_count  = 1
+  workload_pool_autoscaling = var.workload_pool_autoscaling
 }
 
 # Decoupled ACR integration boundary (gated by enable_acr_integration)

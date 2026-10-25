@@ -55,7 +55,14 @@ asserts the outcome.
          - the Dockerfile CMD runs the SAME entrypoint, so the image and the
            npm script cannot drift apart again
     G15 external manifests render from the Application targetRevision, never
-        from a newer checkout HEAD that happens to contain the target commit
+         from a newer checkout HEAD that happens to contain the target commit
+    G16 autoscaling and SLO manifests are validated:
+         - HPA with minReplicas >= 2, Resource metrics, scaling behavior
+         - Cluster Autoscaler ConfigMap with required keys
+         - Scale event PrometheusRule with HPAScaleUp, HPAScaleDown, ClusterAutoscalerScaleEvent
+         - SLO burn rate rules for sre-demo-api
+         - SLO documentation with required sections
+         - Scale event logger and alert drill simulator scripts
 
 Run: python3 tests/test_gates.py
 """
@@ -166,6 +173,10 @@ def build(root, *, app_yaml=APP, inventory=INVENTORY, project_yaml=APP_PROJECT,
     os.makedirs(os.path.join(root, "platform", "argocd"), exist_ok=True)
     os.makedirs(os.path.join(root, "gitops", "projects"), exist_ok=True)
     os.makedirs(os.path.join(root, "kubernetes"), exist_ok=True)
+    os.makedirs(os.path.join(root, "deploy", "base"), exist_ok=True)
+    os.makedirs(os.path.join(root, "deploy", "base", "observability"), exist_ok=True)
+    os.makedirs(os.path.join(root, "scripts"), exist_ok=True)
+    os.makedirs(os.path.join(root, "docs"), exist_ok=True)
     shutil.copy2(SOURCE_VALIDATOR, os.path.join(root, "gitops", "validate-gitops.py"))
     with open(os.path.join(root, "platform", "argocd", "applications", "app.yaml"), "w") as fh:
         fh.write(app_yaml)
@@ -179,6 +190,205 @@ def build(root, *, app_yaml=APP, inventory=INVENTORY, project_yaml=APP_PROJECT,
     if inventory is not None:
         with open(os.path.join(root, "MANIFEST-INVENTORY.md"), "w") as fh:
             fh.write(inventory)
+
+    # Add autoscaling files required by the new validator checks
+    autoscaling_yaml = """# minReplicas 2, not 1.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sre-demo-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
+        - type: Pods
+          value: 4
+          periodSeconds: 30
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sre-demo-api
+  labels:
+    app.kubernetes.io/name: sre-demo-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sre-demo-api
+"""
+    with open(os.path.join(root, "deploy", "base", "autoscaling.yaml"), "w") as fh:
+        fh.write(autoscaling_yaml)
+
+    ca_config_yaml = """apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-autoscaler-status
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cluster-autoscaler
+    app.kubernetes.io/component: autoscaling
+data:
+  scale-down-unneeded-time: "10m"
+  scale-down-utilization-threshold: "0.5"
+  expander: "least-waste"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cluster-autoscaler
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cluster-autoscaler
+"""
+    with open(os.path.join(root, "deploy", "base", "observability", "cluster-autoscaler-config.yaml"), "w") as fh:
+        fh.write(ca_config_yaml)
+
+    scale_events_yaml = """apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: aks-sre-platform-scale-events
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+spec:
+  groups:
+    - name: aks.sre.platform.scale
+      rules:
+        - alert: HPAScaleUp
+          expr: increase(hpa_replicas{job="prometheus", action="scale"}[1m]) > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "HPA scale-up event detected"
+        - alert: HPAScaleDown
+          expr: increase(hpa_replicas{job="prometheus", action="scale", direction="down"}[1m]) > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "HPA scale-down event detected"
+        - alert: ClusterAutoscalerScaleEvent
+          expr: cluster_autoscaler_scale_total{job="prometheus"} > 0
+          for: 0m
+          labels:
+            severity: info
+            team: platform-sre
+          annotations:
+            summary: "Cluster Autoscaler scale event detected"
+"""
+    with open(os.path.join(root, "deploy", "base", "observability", "aks-sre-platform-scale-events.yaml"), "w") as fh:
+        fh.write(scale_events_yaml)
+
+    # Create minimal scale events script
+    script_content = """#!/usr/bin/env python3
+print("scale events script")
+"""
+    with open(os.path.join(root, "scripts", "log_scale_events.py"), "w") as fh:
+        fh.write(script_content)
+    os.chmod(os.path.join(root, "scripts", "log_scale_events.py"), 0o755)
+
+    # Create SLO burn rate rules
+    slo_rules_yaml = """apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-burn-rate-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+    slo/alert-type: burn-rate
+spec:
+  groups:
+    - name: slo.burn-rate.sre-demo-api
+      rules:
+        - alert: SreDemoApiAvailabilityFastBurn
+          expr: (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[1h])) / sum(rate(http_requests_total{job="sre-demo-api"}[1h]))) > 0.002
+          for: 2m
+          labels:
+            severity: critical
+            slo: sre-demo-api-availability
+        - alert: SreDemoApiAvailabilitySlowBurn
+          expr: (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[6h])) / sum(rate(http_requests_total{job="sre-demo-api"}[6h]))) > 0.005
+          for: 15m
+          labels:
+            severity: warning
+            slo: sre-demo-api-availability
+        - alert: SreDemoApiAvailabilityVerySlowBurn
+          expr: (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[3d])) / sum(rate(http_requests_total{job="sre-demo-api"}[3d]))) > 0.01
+          for: 1h
+          labels:
+            severity: warning
+            slo: sre-demo-api-availability
+"""
+    with open(os.path.join(root, "deploy", "base", "observability", "slo-burn-rate-rules.yaml"), "w") as fh:
+        fh.write(slo_rules_yaml)
+
+    # Create minimal SLO documentation
+    slo_doc = """# SLI/SLO Definitions
+
+## Service: sre-demo-api
+### SLI: Availability
+Target: 99.9%
+
+## Service: argocd
+### SLI: Availability
+Target: 99.95%
+
+## Service: prometheus
+### SLI: Scrape Success Rate
+Target: 99%
+
+## Service: cluster-autoscaler
+### SLI: Scale Decision Latency
+Target: 5 minutes
+
+## 30-Day Observation Requirement
+All thresholds are PROPOSED pending 30-day observation.
+"""
+    with open(os.path.join(root, "docs", "slo.md"), "w") as fh:
+        fh.write(slo_doc)
+
+    # Create minimal alert drill simulator script
+    drill_script = """#!/usr/bin/env python3
+print("alert drill simulator")
+"""
+    with open(os.path.join(root, "scripts", "alert_drill_simulator.py"), "w") as fh:
+        fh.write(drill_script)
+    os.chmod(os.path.join(root, "scripts", "alert_drill_simulator.py"), 0o755)
 
 
 def run_validator(root, *args):

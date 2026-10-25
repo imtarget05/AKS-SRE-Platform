@@ -1,0 +1,108 @@
+# SLO-derived Burn Rate Alerts for Core Services
+#
+# These alerts implement Multi-Window, Multi-Burn-Rate (MWMBR) alerting
+# based on the SLO definitions in docs/slo.md.
+#
+# Thresholds are PROPOSED and require 30-day observation calibration.
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-burn-rate-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+    slo/alert-type: burn-rate
+spec:
+  groups:
+    - name: slo.burn-rate.sre-demo-api
+      rules:
+        # Fast burn: 2% error budget in 1 hour (14.4x burn rate for 99.9% SLO)
+        - alert: SreDemoApiAvailabilityFastBurn
+          expr: |
+            (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[1h]))
+               / sum(rate(http_requests_total{job="sre-demo-api"}[1h])))
+            > 0.002
+          for: 2m
+          labels:
+            severity: critical
+            slo: sre-demo-api-availability
+            burn_rate: "14.4x"
+          annotations:
+            summary: "sre-demo-api availability fast burn (2% budget in 1h)"
+            description: |
+              sre-demo-api has consumed 2% of its monthly error budget in the last hour.
+              This is a 14.4x burn rate for the 99.9% availability SLO.
+              Error budget remaining: {{ printf "%.2f" (100 * (1 - (1 - (sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[1h])) / sum(rate(http_requests_total{job="sre-demo-api"}[1h])))) / 0.001)) }}%
+            runbook: docs/runbooks/sre-demo-api-availability.md
+
+        # Slow burn: 5% error budget in 6 hours (2x burn rate)
+        - alert: SreDemoApiAvailabilitySlowBurn
+          expr: |
+            (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[6h]))
+               / sum(rate(http_requests_total{job="sre-demo-api"}[6h])))
+            > 0.005
+          for: 15m
+          labels:
+            severity: warning
+            slo: sre-demo-api-availability
+            burn_rate: "2x"
+          annotations:
+            summary: "sre-demo-api availability slow burn (5% budget in 6h)"
+            description: |
+              sre-demo-api has consumed 5% of its monthly error budget in the last 6 hours.
+              This is a 2x burn rate for the 99.9% availability SLO.
+            runbook: docs/runbooks/sre-demo-api-availability.md
+
+        # Very slow burn: 10% error budget in 3 days (0.5x burn rate)
+        - alert: SreDemoApiAvailabilityVerySlowBurn
+          expr: |
+            (1 - sum(rate(http_requests_total{job="sre-demo-api",code=~"2..|3.."}[3d]))
+               / sum(rate(http_requests_total{job="sre-demo-api"}[3d])))
+            > 0.01
+          for: 1h
+          labels:
+            severity: warning
+            slo: sre-demo-api-availability
+            burn_rate: "0.5x"
+          annotations:
+            summary: "sre-demo-api availability very slow burn (10% budget in 3d)"
+            description: |
+              sre-demo-api has consumed 10% of its monthly error budget in the last 3 days.
+              This is a 0.5x burn rate for the 99.9% availability SLO.
+            runbook: docs/runbooks/sre-demo-api-availability.md
+
+    - name: slo.burn-rate.argocd
+      rules:
+        # Argo CD availability fast burn (99.95% SLO = 0.05% error budget/month)
+        # Fast burn: 1% of budget in 1h = 0.0005 error rate
+        - alert: ArgocdAvailabilityFastBurn
+          expr: |
+            (1 - up{job="argocd-server-metrics"}) > 0
+          for: 2m
+          labels:
+            severity: critical
+            slo: argocd-availability
+            burn_rate: "fast"
+          annotations:
+            summary: "Argo CD server is down"
+            description: "Argo CD API server has been unreachable for 2 minutes."
+            runbook: docs/runbooks/argocd-availability.md
+
+    - name: slo.burn-rate.prometheus
+      rules:
+        # Prometheus scrape success rate slow burn
+        - alert: PrometheusScrapeSuccessRateSlowBurn
+          expr: |
+            (sum(up) / count(up)) < 0.99
+          for: 15m
+          labels:
+            severity: warning
+            slo: prometheus-scrape-success
+            burn_rate: "slow"
+          annotations:
+            summary: "Prometheus scrape success rate below 99%"
+            description: |
+              Prometheus scrape success rate is {{ printf "%.2f" (sum(up) / count(up) * 100) }}%.
+              Target is ≥ 99%.
+            runbook: docs/runbooks/prometheus-scraping.md
