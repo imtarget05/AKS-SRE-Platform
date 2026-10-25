@@ -98,3 +98,14 @@ test("origin proof fails closed without secret or healthy owner response", async
   assert.equal((await handler.fetch(request, value)).status, 503);
   assert.equal(calls.length, 1);
 });
+
+test("declarative route policy registry decouples application-specific rate limit tiers", async () => {
+  const { resolvePolicy } = await import("../src/routes.mjs");
+  assert.deepEqual(resolvePolicy("/flashsale/api/orders", "POST"), ["RATE_ORDER", "order"]);
+  assert.deepEqual(resolvePolicy("/flashsale/api/orders", "GET"), ["RATE_GENERAL", "general"]);
+  assert.deepEqual(resolvePolicy("/quanlykho/api/v1/auth/login", "POST"), ["RATE_AUTH", "auth"]);
+  assert.deepEqual(resolvePolicy("/quanlykho/api/v1/ai/summary", "POST"), ["RATE_AI", "ai"]);
+  assert.deepEqual(resolvePolicy("/opsbridge/investigations/run", "POST"), ["RATE_AI", "ai"]);
+  assert.deepEqual(resolvePolicy("/quanlykho/api/v1/items", "POST"), ["RATE_STAFF", "staff"]);
+  assert.deepEqual(resolvePolicy("/quanlykho/api/v1/items", "GET"), ["RATE_GENERAL", "general"]);
+});

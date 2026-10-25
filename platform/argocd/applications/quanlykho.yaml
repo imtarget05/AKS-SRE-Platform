@@ -14,7 +14,7 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/QuanLyKho.git
-    targetRevision: bd01669aad1d20d32b70b09772c4838ec4b82a55
+    targetRevision: ad0ec80bdb82982ec6dda27fd29e57c0e0087a46
     path: infra/k8s/overlays/production
 
   destination:
@@ -43,3 +43,9 @@ spec:
       name: cloudflare-tunnel
       jsonPointers:
         - /spec/replicas
+    - group: batch
+      kind: Job
+      jsonPointers:
+        - /spec/selector
+        - /spec/template/metadata/labels/controller-uid
+        - /spec/template/metadata/labels/batch.kubernetes.io~1controller-uid

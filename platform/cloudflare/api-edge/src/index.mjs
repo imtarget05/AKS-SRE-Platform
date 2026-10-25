@@ -1,7 +1,10 @@
-// One Cloudflare Workers API entry point for the three active owner routes.
-// The Azure Gateway still validates the mTLS client certificate and each
-// owner API still authenticates and authorizes its own business requests.
-const prefixes = ["/flashsale/", "/opsbridge/", "/quanlykho/"];
+import { ROUTE_REGISTRY, resolvePolicy } from "./routes.mjs";
+
+// Reusable Cloudflare Edge Gateway entry point.
+// Applications register their routing contracts in routes.mjs.
+// The Azure Gateway validates mTLS client certificate; each owner API
+// authenticates and authorizes its own business requests.
+const prefixes = ROUTE_REGISTRY.map((r) => r.prefix);
 const noStore = "private, no-store";
 
 function json(status, error, extra = {}) {
@@ -19,13 +22,7 @@ function cors(origin, env) {
 }
 
 function policy(url, method) {
-  if (url.pathname.startsWith("/flashsale/") && method === "POST" && /\/api\/orders\/?$/.test(url.pathname)) {
-    return ["RATE_ORDER", "order"];
-  }
-  if (/\/(login|auth|token)(\/|$)/.test(url.pathname)) return ["RATE_AUTH", "auth"];
-  if (/\/ai(\/|$)/.test(url.pathname) || url.pathname.includes("/investigations")) return ["RATE_AI", "ai"];
-  if (!["GET", "HEAD", "OPTIONS"].includes(method)) return ["RATE_STAFF", "staff"];
-  return ["RATE_GENERAL", "general"];
+  return resolvePolicy(url.pathname, method);
 }
 
 async function actorKey(request, group) {
