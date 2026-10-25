@@ -1,5 +1,10 @@
 # AKS-SRE-Platform — Current Tasks
 
+> **Latest cloud recheck (2026-10-25 13:27 UTC):** The earlier G0–G7 acceptance
+> below is historical. Live Argo now reports FlashSale and QuanLyKho Healthy
+> but OutOfSync, and the public OpsBridge path returns 404. Exact revisions,
+> probes and limits: [cloud-recheck-1327-utc.md](../docs/evidence/2026-10-25/cloud-recheck-1327-utc.md).
+
 > **Updated: 2026-10-25** — **All Cloud Gates (G0 — G7) 100% Closed & Independently VERIFIED.**
 > Monorepo Scope: `FlashSale-Backend`, `QuanLyKho`, `AKS-SRE-Platform`.
 > Live Cluster: `aks-portfolio-dev` (Azure East Asia) + Cloudflare Edge (`portfolio-api-edge.tanmainguyenbinh.workers.dev`).

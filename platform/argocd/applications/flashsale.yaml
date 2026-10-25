@@ -1,4 +1,4 @@
-# L9 — FlashSale-Backend (P01) under GitOps.
+# L9 — OpsBridge (FlashSale workload) under GitOps.
 #
 # Source of truth is the repository, not this laptop: Argo builds
 # infrastructure/kubernetes/overlays/local with Kustomize and reconciles the
@@ -15,8 +15,8 @@ spec:
   project: portfolio
 
   source:
-    repoURL: https://github.com/imtarget05/FlashSale-Backend.git
-    targetRevision: 4a19aeb0a25bfc874c46cad73741b3e5e6a8892e
+    repoURL: https://github.com/imtarget05/OpsBridge.git
+    targetRevision: 3e7fb0d30dd2a5caffd3a7b9c73ec24367e11bf0
     path: infrastructure/kubernetes/overlays/azure-cloud
 
   destination:

@@ -14,12 +14,12 @@ metadata:
     # bootstrap ordering (project must exist before its Applications).
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Local-platform portfolio (FlashSale-Backend + imported LegacyApp subtree) on kind.
+  description: Portfolio workloads (OpsBridge, QuanLyKho, imported LegacyApp subtree).
 
   # P01 owns the flashsale namespace, P02 owns legacyapp. P03 (this repo)
   # owns the cluster-scoped platform (Envoy Gateway, AppProject, Applications).
   sourceRepos:
-    - https://github.com/imtarget05/FlashSale-Backend.git
+    - https://github.com/imtarget05/OpsBridge.git
     - https://github.com/imtarget05/AKS-SRE-Platform.git
     - https://github.com/imtarget05/QuanLyKho.git
 
