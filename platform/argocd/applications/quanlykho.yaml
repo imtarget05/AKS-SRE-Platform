@@ -22,9 +22,7 @@ spec:
     namespace: quanlykho
 
   syncPolicy:
-    automated:
-      prune: false
-      selfHeal: true
+    # Manual first cutover: automated sync disabled until initial promotion is reviewed
     retry:
       limit: 5
       backoff:

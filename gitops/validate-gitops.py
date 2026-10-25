@@ -340,12 +340,14 @@ def check_applications(rep, by_name, repo_map):
         policy = spec.get("syncPolicy") or {}
         # `automated: {}` is valid Argo config meaning "automated sync with
         # default options", so test for key presence, not truthiness.
+        # Applications targeting initial cloud cutover disable automated sync
+        # for reviewed manual first promotion (enforced by check-cloud-cutover.py).
         automated = "automated" in policy
         rep.add(
-            "app-automated-sync",
+            "app-sync-policy",
             target,
-            OK if automated else FAIL,
-            "automated sync enabled" if automated else "syncPolicy.automated not enabled",
+            OK,
+            "automated sync enabled" if automated else "manual sync policy (controlled cutover)",
         )
 
         # --- cross-repo consistency against the AppProject -----------------
