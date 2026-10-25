@@ -34,7 +34,7 @@ set -e
 if [[ "$NEG_CODE" != "000" ]] ||
    [[ "$NEG_RC" != "35" && "$NEG_RC" != "56" ]] ||
    ! grep -qi 'Connected to' "$NEG_LOG" ||
-   ! grep -Eqi '(alert.*certificate|required.*certificate|certificate.*required)' "$NEG_LOG"; then
+   ! grep -Eqi '(alert.*certificate|required.*certificate|certificate.*required|reason\(1116\))' "$NEG_LOG"; then
     echo "[FAIL] Origin did not prove certificate-required TLS rejection (curl rc=$NEG_RC, HTTP=$NEG_CODE)." >&2
     cat "$NEG_LOG" >&2
     exit 1
