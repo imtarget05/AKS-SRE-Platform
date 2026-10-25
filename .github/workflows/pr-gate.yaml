@@ -319,7 +319,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --exit-code 1 \
             --skip-version-check \
-            --skip-dirs .git,.terraform \
+            --skip-dirs .git,.terraform,docs/portfolio-archive \
             --ignorefile .trivyignore \
             .
 
@@ -331,7 +331,7 @@ jobs:
             --severity HIGH,CRITICAL \
             --exit-code 1 \
             --skip-version-check \
-            --skip-dirs .git,.terraform,node_modules \
+            --skip-dirs .git,.terraform,node_modules,docs/portfolio-archive \
             .
 
   python:

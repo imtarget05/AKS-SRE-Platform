@@ -51,8 +51,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Agent Hub Investigation Service",
-    description="Cross-repo investigation with one approval-gated OpsBridge recovery command",
-    version="1.0.0",
+    description="Cross-repo investigation with approval-gated recovery commands for OpsBridge, QuanLyKho, and AKS SRE Platform",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -72,8 +72,8 @@ class RecordDecisionRequest(BaseModel):
 
 class CreateIntentRequest(BaseModel):
     run_id: str = Field(..., description="Originating investigation run ID")
-    command_type: str = Field(..., description="Allowlisted command: REPLAY_STUCK_OUTBOX")
-    owner_service: str = Field(..., description="Target service: opsbridge-flashsale")
+    command_type: str = Field(..., description="Allowlisted command: REPLAY_STUCK_OUTBOX | REPLAY_STUCK_VOUCHER | ACKNOWLEDGE_INCIDENT")
+    owner_service: str = Field(..., description="Target service: opsbridge-flashsale | quanlykho | aks-sre-platform")
     scope_id: str = Field(..., description="Scope boundary (e.g. ops-cluster-01)")
     entity_ref: str = Field(..., description="Target entity ref")
     idempotency_key: str = Field(..., description="Client idempotency key")

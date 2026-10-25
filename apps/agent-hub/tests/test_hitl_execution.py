@@ -75,7 +75,7 @@ def proposal(client, run_id="run-01", actor="operator-01", message_id=MESSAGE_ID
         "scope_id": "ops-cluster-01",
         "entity_ref": message_id,
         "idempotency_key": key,
-        "parameters": {"expected_dead_lettered_at": VERSION},
+        "parameters": {"expected_version": VERSION},
     })
 
 
@@ -105,7 +105,7 @@ def test_intent_hash_binds_run_requester_and_message():
         command_type="REPLAY_STUCK_OUTBOX", owner_service="opsbridge-flashsale",
         target_endpoint=f"/internal/agent/outbox/{MESSAGE_ID}/requeue",
         scope_id="ops-cluster-01", entity_ref=MESSAGE_ID,
-        parameters={"expected_dead_lettered_at": VERSION},
+        parameters={"expected_version": VERSION},
         idempotency_key="requeue-one-01",
     )
     first = ActionIntent(**base)

@@ -60,7 +60,7 @@ spec:
             claimName: agent-hub-pvc
       containers:
         - name: agent-hub
-          image: acrflashsalep6.azurecr.io/agent-hub:sha-4457b78
+          image: acrflashsalep6.azurecr.io/agent-hub:sha-agent-hub-v2.0.0
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

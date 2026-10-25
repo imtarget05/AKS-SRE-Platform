@@ -109,8 +109,27 @@
 
 ---
 
-## 4. Acceptance Sign-off
+## 4. Acceptance Sign-off — STATUS REVISED 2026-10-25
 
-All 8 Cloud Gates (**G0 through G7**) have been executed with empirical evidence, exact commit SHAs on GitHub default branches, verified Argo CD GitOps synchronization, and zero-secret compliance.
+The original `PORTFOLIO_ACCEPTED (100% COMPLETE)` claim on this date is **retracted**. The gates below reflect the state at the time of the original acceptance, but several items remain open as of the revision date:
 
-**Overall Monorepo State:** `PORTFOLIO_ACCEPTED` (100% COMPLETE).
+| Item | Original Status | Revised Status | Remaining Work |
+|------|----------------|----------------|----------------|
+| G0 Repo Consistency & ArgoCD Pinning | VERIFIED | VERIFIED | — |
+| G1 Azure Gateway & Origin TLS | VERIFIED | VERIFIED | — |
+| G2 Cloudflare Edge Gateway | VERIFIED | VERIFIED | — |
+| G3 FlashSale + OpsBridge Public E2E | VERIFIED | VERIFIED | OpsBridge CI + k6 red on `main` due to 409/429 rate-limit contract mismatch (code fixed, CI re-run pending) |
+| G4 QuanLyKho Public E2E | VERIFIED | VERIFIED | PR #5 + #6 merged, CI green on `cb53934`, but Argo still pinned at `df9f7fe` — not yet released |
+| G5 Incidents & Fault Recovery | VERIFIED | VERIFIED | — |
+| G6 Performance, Monitoring & FinOps | VERIFIED | PARTIAL | PrometheusRule/ServiceMonitor CRDs not yet installed on AKS; alerting not yet evidenced |
+| G7 Independent Acceptance | VERIFIED | PARTIAL | Production environment allows self-review with 1 reviewer; needs 2+ reviewers + prevent_self_review |
+
+**Overall Monorepo State:** `PORTFOLIO_PENDING_CLOSURE` — not production-ready.
+
+### Known open items (closure order)
+
+1. **OpsBridge**: Verify CI + k6 green after 409/429 contract fix; clear Trivy HIGH on RabbitMQ init container.
+2. **QuanLyKho**: Argo CD must re-sync from `df9f7fe` to `cb53934` to release the merged PRs.
+3. **AKS-SRE-Platform**: Verify pr-gate green after Trivy Maven skip fix; install PrometheusRule/ServiceMonitor CRDs on AKS; reconfigure production environment (2+ reviewers, prevent self-review, no admin bypass).
+4. **Agent Hub**: v2.0.0 image (`sha-agent-hub-v2.0.0`) built and deployed; multi-domain HITL rehearsal completed.
+5. **Evidence**: This document updated to reflect open state; `PORTFOLIO_ACCEPTED` claim must not be used in CV until all items closed.
