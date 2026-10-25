@@ -1,0 +1,44 @@
+# L10.3 — the one LOCAL alert whose fire/resolve is actually proven.
+#
+# Deliberately not a contrived `vector(1)` rule: it fires on a real condition —
+# a metric source the dashboards and the other rules depend on has stopped
+# being scraped — and it is tested by injecting exactly that failure (scale the
+# source to zero, observe, restore). Nothing persistent is touched to prove it.
+#
+# `for: 30s` keeps the proof inside a couple of minutes without making the
+# alert useless (a single missed scrape does not page anyone).
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: local-platform-proof
+  namespace: monitoring
+  labels:
+    platform.local/component: observability
+spec:
+  groups:
+    - name: local-platform.proof
+      rules:
+        - alert: LocalPlatformMetricSourceDown
+          # Two real failure modes, one alert:
+          #   * the target still exists but scraping fails  -> up == 0
+          #   * the target is gone entirely (endpoints empty, e.g. the
+          #     workload was scaled to zero)                -> absent(...)
+          # `up == 0` alone is not enough: when a target disappears from
+          # service discovery the series goes stale and the comparison yields
+          # no sample at all instead of 0, so the alert would stay silent for
+          # exactly the failure it exists to catch.
+          expr: >-
+            absent(up{job=~".*kube-state-metrics.*"})
+            or up{job=~".*kube-state-metrics.*"} == 0
+          for: 30s
+          labels:
+            severity: warning
+            component: observability
+            proof: local-platform-l10
+          annotations:
+            summary: "Local platform metric source {{ $labels.job }} is down"
+            description: >-
+              Prometheus has not been able to scrape {{ $labels.job }} at
+              {{ $labels.instance }} for 30s. Pod/service/workload state
+              metrics and every dashboard panel built on them are stale while
+              this is firing.

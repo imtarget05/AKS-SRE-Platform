@@ -1,0 +1,31 @@
+# L10.1 — Argo CD metrics into Prometheus.
+#
+# Argo CD exposes its own Prometheus endpoint on every component, and the
+# chart already creates a Service per component whose port is literally named
+# `metrics` (application-controller 8082, server 8083, repo-server 8084,
+# applicationset 8080, notifications 9001, dex 5558). One selector on the
+# shared `app.kubernetes.io/part-of: argocd` label therefore covers them all —
+# the GitOps dashboard reads argocd_app_info from here.
+#
+# Services without a `metrics` port (e.g. argocd-redis) simply produce no
+# targets; the operator does not invent one.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: argocd
+    platform.local/component: observability
+spec:
+  namespaceSelector:
+    matchNames:
+      - argocd
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: argocd
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
