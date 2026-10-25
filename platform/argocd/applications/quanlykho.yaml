@@ -32,3 +32,14 @@ spec:
     syncOptions:
       - PrunePropagationPolicy=foreground
       - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: bankops-frontend
+      jsonPointers:
+        - /spec/replicas
+    - group: apps
+      kind: Deployment
+      name: cloudflare-tunnel
+      jsonPointers:
+        - /spec/replicas
