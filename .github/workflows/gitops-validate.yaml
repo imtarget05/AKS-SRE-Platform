@@ -63,7 +63,7 @@ jobs:
               print(f"{len(not_present)} external source tree(s) correctly reported NOT_PRESENT.")
           PY
 
-      - name: gate test matrix (G1-G9)
+      - name: gate test matrix (G1-G15)
         run: python3 tests/test_gates.py
 
   negative-control:

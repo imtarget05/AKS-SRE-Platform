@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Rebuild AKS cluster + Argo CD bootstrap
-# Usage: ./scripts/rebuild-aks.sh [plan|apply|destroy]
+# Local AKS plan helper. Cloud mutation uses the protected AKS Deploy workflow.
+# Usage: ./scripts/rebuild-aks.sh [plan]
 
 set -euo pipefail
 
@@ -18,29 +18,15 @@ case "$ACTION" in
     terraform plan -out=tfplan
     ;;
   apply)
-    echo "🚀 Running terraform apply..."
-    if [[ ! -f tfplan ]]; then
-      echo "❌ No tfplan found. Run 'plan' first."
-      exit 1
-    fi
-    terraform apply tfplan
-    echo "✅ AKS cluster created. Bootstrapping Argo CD..."
-    # Get AKS credentials
-    RESOURCE_GROUP=$(terraform output -raw resource_group_name)
-    CLUSTER_NAME=$(terraform output -raw aks_cluster_name)
-    az aks get-credentials --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --overwrite-existing
-    # Bootstrap Argo CD
-    cd "$ROOT"
-    ./scripts/bootstrap.sh
-    echo "✅ Argo CD bootstrapped. Verifying..."
-    kubectl get applications -n argocd
+    echo "Apply requires the reviewed AKS Deploy workflow's protected production gate." >&2
+    exit 2
     ;;
   destroy)
-    echo "💥 Destroying AKS cluster..."
-    terraform destroy -auto-approve
+    echo "Destruction requires the reviewed AKS Deploy workflow's protected production gate." >&2
+    exit 2
     ;;
   *)
-    echo "Usage: $0 [plan|apply|destroy]"
+    echo "Usage: $0 [plan]"
     exit 1
     ;;
 esac

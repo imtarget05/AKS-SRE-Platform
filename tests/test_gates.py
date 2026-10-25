@@ -54,6 +54,8 @@ asserts the outcome.
            exports a factory and never listens is what made the script a no-op)
          - the Dockerfile CMD runs the SAME entrypoint, so the image and the
            npm script cannot drift apart again
+    G15 external manifests render from the Application targetRevision, never
+        from a newer checkout HEAD that happens to contain the target commit
 
 Run: python3 tests/test_gates.py
 """
@@ -79,7 +81,7 @@ WORKFLOW = os.path.join(REPO, ".github", "workflows", "pr-gate.yaml")
 # file advertises a control that does not exist.
 GATE_GROUPS = (
     "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13",
-    "G14",
+    "G14", "G15",
 )
 
 APP_PROJECT = """apiVersion: argoproj.io/v1alpha1
@@ -187,6 +189,7 @@ def run_validator(root, *args):
         text=True,
         cwd=root,
         timeout=60,
+        check=False,
     )
 
 
@@ -598,6 +601,98 @@ def main():
               bool(cmd) and bool(m) and m.group(1) in cmd,
               f"CMD={cmd!r} start={start!r}")
     g14()
+
+    print("G15 external render uses the exact Application targetRevision")
+    def g15(tmp):
+        external = os.path.join(tmp, "external")
+        overlay = os.path.join(external, "infrastructure", "kubernetes", "overlays", "prod")
+        os.makedirs(overlay)
+
+        def git(*args):
+            return subprocess.run(
+                ["git", "-C", external, *args], capture_output=True,
+                text=True, check=True,
+            ).stdout.strip()
+
+        git("init", "-q", "-b", "main")
+        git("config", "user.email", "test@example.invalid")
+        git("config", "user.name", "GitOps Gate")
+        kustomization = os.path.join(overlay, "kustomization.yaml")
+        with open(kustomization, "w") as fh:
+            fh.write("resources:\n  - missing.yaml\n")
+        git("add", ".")
+        git("commit", "-qm", "invalid target overlay")
+        bad_ref = git("rev-parse", "HEAD")
+
+        with open(kustomization, "w") as fh:
+            fh.write("resources:\n  - configmap.yaml\n")
+        with open(os.path.join(overlay, "configmap.yaml"), "w") as fh:
+            fh.write("apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: good-target\n")
+        git("add", ".")
+        git("commit", "-qm", "valid checkout HEAD")
+        good_ref = git("rev-parse", "HEAD")
+        remote = os.path.join(tmp, "release.git")
+        subprocess.run(["git", "init", "--bare", "-q", "-b", "main", remote],
+                       check=True, capture_output=True, text=True)
+        fixture_url = "https://github.com/example/FlashSale-Backend.git"
+        git("remote", "add", "origin", fixture_url)
+        git("config", f"url.{remote}.insteadOf", fixture_url)
+        git("push", "-q", "-u", "origin", "main")
+
+        app_path = os.path.join(tmp, "platform", "argocd", "applications", "app.yaml")
+        with open(app_path, "w") as fh:
+            fh.write(APP_EXTERNAL.replace("targetRevision: main", f"targetRevision: {bad_ref}"))
+        map_path = os.path.join(tmp, "gitops", "repo-map.yaml")
+        with open(map_path, "w") as fh:
+            fh.write("FlashSale-Backend: external\n")
+        result = run_validator(tmp, "--repo-map", map_path, "--require-external", "--json")
+        check("G15 invalid pinned ref fails despite valid checkout HEAD",
+              result.returncode == 1 and any(
+                  row["check"] == "external-render" and row["outcome"] == "FAIL"
+                  for row in json.loads(result.stdout)["checks"]
+              ), f"rc={result.returncode} {result.stdout[-350:]}")
+
+        with open(app_path, "w") as fh:
+            fh.write(APP_EXTERNAL.replace("targetRevision: main", f"targetRevision: {good_ref}"))
+        with open(kustomization, "w") as fh:
+            fh.write("resources:\n  - missing-again.yaml\n")
+        git("add", ".")
+        git("commit", "-qm", "break checkout HEAD after pinned ref")
+        result = run_validator(tmp, "--repo-map", map_path, "--require-external", "--json")
+        checks = json.loads(result.stdout)["checks"]
+        check("G15 valid pinned ref passes despite broken checkout HEAD",
+              result.returncode == 0 and any(
+                  row["check"] == "external-render" and row["outcome"] == "PASS"
+                  for row in checks
+              ), f"rc={result.returncode} {result.stdout[-350:]}")
+
+        with open(kustomization, "w") as fh:
+            fh.write("resources:\n  - configmap.yaml\n")
+        git("add", ".")
+        git("commit", "-qm", "valid but local-only overlay")
+        local_only_ref = git("rev-parse", "HEAD")
+        with open(app_path, "w") as fh:
+            fh.write(APP_EXTERNAL.replace("targetRevision: main", f"targetRevision: {local_only_ref}"))
+        cloud = run_validator(tmp, "--repo-map", map_path, "--require-external", "--json")
+        check("G15 local-only commit cannot pass cloud gate",
+              cloud.returncode == 1 and any(
+                  row["check"] == "external-remote-reachability" and row["outcome"] == "FAIL"
+                  for row in json.loads(cloud.stdout)["checks"]
+              ), f"rc={cloud.returncode} {cloud.stdout[-350:]}")
+        offline = run_validator(tmp, "--repo-map", map_path, "--json")
+        check("G15 offline fixture may render a local-only commit",
+              offline.returncode == 0 and any(
+                  row["check"] == "external-render" and row["outcome"] == "PASS"
+                  for row in json.loads(offline.stdout)["checks"]
+              ), f"rc={offline.returncode} {offline.stdout[-350:]}")
+        git("config", "remote.origin.url", "https://github.com/example/other-repo.git")
+        mismatch = run_validator(tmp, "--repo-map", map_path, "--require-external", "--json")
+        check("G15 mismatched checkout origin cannot pass cloud gate",
+              mismatch.returncode == 1 and any(
+                  row["check"] == "external-origin-match" and row["outcome"] == "FAIL"
+                  for row in json.loads(mismatch.stdout)["checks"]
+              ), f"rc={mismatch.returncode} {mismatch.stdout[-350:]}")
+    with_tmp({"app_yaml": APP_EXTERNAL, "project_yaml": APP_PROJECT_EXTERNAL}, g15)
 
     passed = sum(1 for _n, ok in RESULTS if ok)
     failed = len(RESULTS) - passed

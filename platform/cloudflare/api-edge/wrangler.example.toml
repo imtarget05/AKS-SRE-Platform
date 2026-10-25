@@ -8,6 +8,7 @@ workers_dev = true
 [vars]
 AZURE_ORIGIN_URL = "https://REPLACE_WITH_AZURE_DNS_LABEL.southeastasia.cloudapp.azure.com/"
 ALLOWED_ORIGINS = "https://REPLACE_WITH_OPS.pages.dev,https://REPLACE_WITH_QUAN.workers.dev"
+# EDGE_PROOF_KEY is a Worker secret, never a [vars] value or committed file.
 
 [[mtls_certificates]]
 binding = "AZURE_ORIGIN"
@@ -39,13 +40,6 @@ name = "RATE_STAFF"
 namespace_id = "1004"
 [ratelimits.simple]
 limit = 30
-period = 60
-
-[[ratelimits]]
-name = "RATE_RETAIL"
-namespace_id = "1005"
-[ratelimits.simple]
-limit = 300
 period = 60
 
 [[ratelimits]]

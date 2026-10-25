@@ -49,11 +49,15 @@ USAGE
 Exit codes: 0 all required checks passed · 1 a check failed · 2 bad usage.
 """
 import argparse
+import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
 
 try:
     import yaml
@@ -138,6 +142,106 @@ def usage_error(msg):
 def repo_tail(url):
     tail = url.rstrip("/").rsplit("/", 1)[-1]
     return tail[:-4] if tail.endswith(".git") else tail
+
+
+def pinned_commit(checkout, revision):
+    """Resolve the same source revision that Argo will render, never HEAD."""
+    if revision == "main":
+        candidates = ("refs/remotes/origin/main", "refs/heads/main")
+    elif re.fullmatch(r"[0-9a-f]{40}", revision):
+        candidates = (revision,)
+    else:
+        return None
+    for candidate in candidates:
+        result = subprocess.run(
+            ["git", "-C", checkout, "rev-parse", "--verify", f"{candidate}^{{commit}}"],
+            capture_output=True, text=True, timeout=15, shell=False, check=False,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    return None
+
+
+def refresh_release(checkout):
+    """Refresh advertised remote heads before resolving an Application revision."""
+    fetched = subprocess.run(
+        ["git", "-C", checkout, "fetch", "--quiet", "--no-tags", "--force", "--prune",
+         "origin", "+refs/heads/*:refs/remotes/origin/*"],
+        capture_output=True, text=True, timeout=60, shell=False, check=False,
+    )
+    if fetched.returncode != 0:
+        return False, f"cannot fetch origin branches: {fetched.stderr.strip()[:200]}"
+    return True, "fetched advertised origin branches"
+
+
+def checkout_origin_matches(checkout, expected_url):
+    """The mapped checkout must fetch from the Application's configured repo."""
+    origin = subprocess.run(
+        ["git", "-C", checkout, "config", "--get", "remote.origin.url"],
+        capture_output=True, text=True, timeout=15, shell=False, check=False,
+    )
+    return origin.returncode == 0 and origin.stdout.strip() == expected_url
+
+
+def fetched_release_contains(checkout, commit):
+    """Cloud gate: accept only a commit advertised on a fetched origin branch."""
+    refs = subprocess.run(
+        ["git", "-C", checkout, "for-each-ref", "--format=%(refname)",
+         "refs/remotes/origin"],
+        capture_output=True, text=True, timeout=15, shell=False, check=False,
+    )
+    if refs.returncode != 0:
+        return False, f"cannot list fetched origin branches: {refs.stderr.strip()[:200]}"
+    for ref in refs.stdout.splitlines():
+        if ref.endswith("/HEAD"):
+            continue
+        reachable = subprocess.run(
+            ["git", "-C", checkout, "merge-base", "--is-ancestor", commit, ref],
+            capture_output=True, text=True, timeout=15, shell=False, check=False,
+        )
+        if reachable.returncode == 0:
+            return True, f"{commit} reachable from freshly fetched {ref}"
+    return False, f"{commit} is local-only or unreachable from advertised origin branches"
+
+
+def render_pinned_tree(checkout, commit, subpath):
+    """Archive the exact commit into a throwaway tree before Kustomize render."""
+    normalized = os.path.normpath(subpath)
+    if os.path.isabs(subpath) or normalized in ("", ".", "..") or normalized.startswith("../"):
+        return None, "source.path escapes or does not name an overlay"
+    archive = subprocess.run(
+        ["git", "-C", checkout, "archive", "--format=tar", commit],
+        capture_output=True, timeout=120, shell=False, check=False,
+    )
+    if archive.returncode != 0:
+        return None, f"git archive failed: {archive.stderr.decode(errors='replace')[:300]}"
+    with tempfile.TemporaryDirectory(prefix="gitops-pinned-") as tree:
+        tree_real = os.path.realpath(tree)
+        # Git tracks symlinks. Refuse links and escaping names so an external
+        # checkout cannot make this validator read or write outside its tree.
+        with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as tar:
+            for member in tar:
+                target = os.path.realpath(os.path.join(tree, member.name))
+                if os.path.commonpath([tree_real, target]) != tree_real:
+                    return None, "archive contains a path outside the source tree"
+                if member.isdir():
+                    os.makedirs(target, exist_ok=True)
+                elif member.isfile():
+                    os.makedirs(os.path.dirname(target), exist_ok=True)
+                    with tar.extractfile(member) as source, open(target, "wb") as dest:
+                        shutil.copyfileobj(source, dest)
+                else:
+                    return None, f"archive contains unsupported link/type: {member.name}"
+        overlay = os.path.join(tree, normalized)
+        if not os.path.isdir(overlay):
+            return None, f"overlay path {subpath!r} missing at targetRevision"
+        result = subprocess.run(
+            ["kubectl", "kustomize", overlay],
+            capture_output=True, text=True, timeout=120, shell=False, check=False,
+        )
+        if result.returncode != 0:
+            return None, f"kustomize failed: {result.stderr.strip()[:300]}"
+        return result.stdout, None
 
 
 # ---------------------------------------------------------------- projects ----
@@ -277,7 +381,7 @@ def project_allows(project_doc, repo_url, namespace):
 
 
 # ------------------------------------------------------------ applications ----
-def check_applications(rep, by_name, repo_map):
+def check_applications(rep, by_name, repo_map, require_external=False):
     if not os.path.isdir(APPS_DIR):
         rep.add("applications-present", "platform/argocd/applications", FAIL, "directory missing")
         return
@@ -381,80 +485,34 @@ def check_applications(rep, by_name, repo_map):
                 f"mapped checkout for {tail} does not exist: {checkout}",
             )
             continue
-        overlay = os.path.join(checkout, subpath)
-        if not os.path.isdir(overlay):
-            rep.add(
-                "external-render", target, FAIL, f"overlay path {subpath!r} missing in {tail}"
-            )
+        if require_external:
+            if not checkout_origin_matches(checkout, repo_url):
+                rep.add("external-origin-match", target, FAIL,
+                        "mapped checkout origin does not match Application repoURL")
+                continue
+            rep.add("external-origin-match", target, OK,
+                    "mapped checkout origin matches Application repoURL")
+            refreshed, detail = refresh_release(checkout)
+            if not refreshed:
+                rep.add("external-remote-reachability", target, FAIL, detail)
+                continue
+        commit = pinned_commit(checkout, rev)
+        if not commit:
+            rep.add("external-revision-match", target, FAIL,
+                    f"targetRevision {rev!r} is not a resolvable main ref or full commit SHA")
             continue
-        # Check targetRevision against external checkout git HEAD / history
-        if os.path.isdir(os.path.join(checkout, ".git")) and rev:
-            git_rev = subprocess.run(
-                ["git", "-C", checkout, "rev-parse", "HEAD"],
-                capture_output=True,
-                text=True,
-                timeout=15,
-                shell=False,
-                check=False,
-            )
-            if git_rev.returncode == 0:
-                head_sha = git_rev.stdout.strip()
-                if rev == "main":
-                    rep.add(
-                        "external-revision-match",
-                        target,
-                        OK,
-                        f"tracks main (checkout HEAD {head_sha[:7]})",
-                    )
-                elif head_sha.startswith(rev) or rev.startswith(head_sha):
-                    rep.add(
-                        "external-revision-match",
-                        target,
-                        OK,
-                        f"checkout HEAD matches targetRevision {rev[:7]}",
-                    )
-                else:
-                    rev_exists = subprocess.run(
-                        ["git", "-C", checkout, "rev-parse", "--verify", f"{rev}^{{commit}}"],
-                        capture_output=True,
-                        text=True,
-                        timeout=15,
-                        shell=False,
-                        check=False,
-                    )
-                    if rev_exists.returncode == 0:
-                        rep.add(
-                            "external-revision-match",
-                            target,
-                            OK,
-                            f"targetRevision {rev[:7]} exists in history (checkout HEAD is {head_sha[:7]})",
-                        )
-                    else:
-                        rep.add(
-                            "external-revision-match",
-                            target,
-                            FAIL,
-                            f"targetRevision {rev[:7]} not found in {tail} git history",
-                        )
-
-        # Explicit shell=False / check=False: the argument list is fixed and holds
-        # no caller-supplied shell string, so this is a documented hot-spot
-        # rather than a finding — but making it explicit means switching it on is
-        # a reviewable diff instead of a silent injection surface.
-        r = subprocess.run(
-            ["kubectl", "kustomize", overlay],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            shell=False,
-            check=False,
-        )
-        if r.returncode != 0:
-            rep.add(
-                "external-render", target, FAIL, f"kustomize failed: {r.stderr.strip()[:300]}"
-            )
+        if require_external:
+            reachable, detail = fetched_release_contains(checkout, commit)
+            rep.add("external-remote-reachability", target, OK if reachable else FAIL, detail)
+            if not reachable:
+                continue
+        rep.add("external-revision-match", target, OK,
+                f"targetRevision {rev[:7]} resolved to {commit}; rendering that commit")
+        rendered, error = render_pinned_tree(checkout, commit, subpath)
+        if error:
+            rep.add("external-render", target, FAIL, error)
             continue
-        docs = [d for d in yaml.safe_load_all(r.stdout) if d]
+        docs = [d for d in yaml.safe_load_all(rendered) if d]
         if not docs:
             rep.add("external-render", target, FAIL, "render produced zero objects")
             continue
@@ -516,7 +574,7 @@ def main():
     rep = Report()
     by_name, entries = collect_projects(rep)
     check_projects(rep, entries)
-    check_applications(rep, by_name, repo_map)
+    check_applications(rep, by_name, repo_map, args.require_external)
     check_inventory(rep)
 
     rc = rep.exit_code(args.require_external)

@@ -85,5 +85,5 @@ quanlykho   OutOfSync     Missing
 
 ## 3. Engineering Rigor & Production Takeaways
 1. **Zero Secret Footprint:** No Azure credentials, client secrets, or storage account keys are stored in GitHub Actions. All access is minted dynamically via short-lived OIDC tokens validated against Microsoft Entra ID.
-2. **Immutable Approval Gate:** Changes to Azure production require passing a verified `tfplan-artifact` through the GitHub `production` Protected Environment, preventing unauthorized or accidental infrastructure modifications.
+2. **Reviewed plan gate (current workflow contract, not a live deployment claim):** The public repository no longer uploads a raw Terraform plan. The dispatch plan job publishes a value-free action list and a canonical plan fingerprint. After `production` environment approval, the apply or destroy job recomputes a local plan and proceeds only when its fingerprint matches; drift or nondeterministic output fails closed.
 3. **Reproducibility Across Tiers:** The exact same Argo CD manifests and AppProject configurations run on both local Kind (for fast developer loop & fault injection) and Azure AKS (for cloud governance and enterprise interview proof).
