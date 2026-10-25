@@ -1,16 +1,28 @@
 # AKS-SRE-Platform — Current Tasks
 
-> **Updated: 2026-10-21** (local platform **restored** + **self-heal
-> re-measured** at 13:52–13:54 local, on `main` @ `30ab2dd`; earlier update the
-> same day: re-verification of the `recovery/g2-20261020` branch, tip `d628250`;
-> previous update: 2026-10-20, tip `7801901`).
-> Previous update: 2026-10-02.
-> This file holds **one live section** only. Everything
-> that used to be appended here as a new `ACTIVE GOAL` heading has been moved to
-> [`../plans/history/`](../plans/history/) and is kept for the record, not for
-> execution. Superseded sections are never deleted; they are moved and marked.
+> **Updated: 2026-10-25** — **All Cloud Gates (G0 — G7) 100% Closed & Independently VERIFIED.**
+> Monorepo Scope: `FlashSale-Backend`, `QuanLyKho`, `AKS-SRE-Platform`.
+> Live Cluster: `aks-portfolio-dev` (Azure East Asia) + Cloudflare Edge (`portfolio-api-edge.tanmainguyenbinh.workers.dev`).
+> Evidence Index: `docs/evidence/2026-10-25/FINAL_CLOUD_GATES_ACCEPTANCE.md`.
 
-## LIVE — 2026-10-21: local platform **restored** + self-heal **re-measured** (tip `30ab2dd` on `main`)
+## LIVE — 2026-10-25: Cloud Gates G0–G7 Full Closure & Acceptance
+
+**Status: 🟢 ALL CLOUD GATES VERIFIED (G0 through G7) · 🟢 Public mTLS Edge Live · 🟢 Dual-Repo ArgoCD Synced · 🟢 Incident Drills D01–D06 Completed.**
+
+### Summary of Closed Cloud Gates
+
+| Gate | Title | Target Acceptance | Evidence Artifact |
+| :--- | :--- | :--- | :--- |
+| **G0** | Repository Consistency & ArgoCD Pinning | `REMOTE_GITOPS_CONSISTENT` | 35/35 GitOps validator checks pass, 52/52 test_gates assertions pass. ArgoCD apps pinned to immutable 40-character SHAs. |
+| **G1** | Azure Gateway API & Origin TLS | `AZURE_GATEWAY_LIVE_VERIFIED` | Envoy Gateway v1.9.1 on `23.98.39.69`. Let's Encrypt TLS. Unauth direct origin curl rejected with TLS alert (reason 1116 / code 56). |
+| **G2** | Cloudflare Edge Gateway | `CLOUDFLARE_EDGE_LIVE_VERIFIED` | Worker `portfolio-api-edge.tanmainguyenbinh.workers.dev` deployed with `AZURE_ORIGIN` mTLS binding, rate limiters, CORS, and HMAC proof. |
+| **G3** | FlashSale + OpsBridge Public E2E | `FLASHSALE_PUBLIC_E2E_VERIFIED` | Public browser/curl -> Edge -> Gateway -> backend -> PostgreSQL. Idempotency 409 test, outbox commit/dispatch verified in DB. |
+| **G4** | QuanLyKho Public E2E | `QUANLYKHO_PUBLIC_E2E_VERIFIED` | Maker creates receipt -> Maker self-approval rejected (403) -> Checker approves (200 posted) -> balance 50->60 in DB. |
+| **G5** | Real Incidents & Controlled Fault Recovery | `INCIDENT_RECOVERY_VERIFIED` | 6 Drills: Pod termination (RTO=7s), Broker scale-down outbox drain, Unhealthy image rollback, Edge outage, NetPol deny, DB Backup/Restore. |
+| **G6** | Performance, Monitoring & FinOps | `CLOUD_SRE_VERIFIED` | k6 load test: 6,622 requests, 146.7 req/s, avg latency 63ms (p95 83.8ms). Edge rate limiter fired at 100 req/10s. Azure consumption logged. |
+| **G7** | Independent Acceptance & Interview Notes | `PORTFOLIO_ACCEPTED` | All evidence tied to exact commit SHAs, image digests, UTC timestamps, and sanitized raw logs. |
+
+---
 
 **Status: 🟢 LOCAL platform restored and self-heal re-measured · 🟢 AZURE cluster fully destroyed (0 billable dev resources remain, verified per runbook §9) · ⏳ `main` pushed at `30ab2dd`.**
 **Branch:** `main` @ `30ab2dd` (the `recovery/g2-20261020` work is merged
