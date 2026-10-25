@@ -11,14 +11,14 @@
 
 | Gate | Scope | Status | Primary Evidence & Artifacts |
 |---|---|---|---|
-| **G0** | Scope, Git SHAs & Freeze | **VERIFIED** | `AKS-SRE-Platform` (`0905088`), `FlashSale-Backend/OpsBridge` (`71cf53b`), `QuanLyKho` (`c45701e`). Clean trees. |
+| **G0** | Scope, Git SHAs & Remote Sync | **VERIFIED ON GITHUB MAIN** | `AKS-SRE-Platform` (`bd72d3f`), `FlashSale-Backend/OpsBridge` (`663572e`), `QuanLyKho` (`bd01669`). All 3 PRs merged into `main` on GitHub with clean working trees. |
 | **G1** | Business Correctness | **VERIFIED** | FlashSale/OpsBridge: 251 tests PASS. QuanLyKho: 724 tests PASS. Alembic 001..028 migrated. Clean seed data verified. |
-| **G2** | Azure AKS & GitOps | **VERIFIED** | `aks-portfolio-dev` 2 nodes Ready. Argo CD apps Synced. `check-cloud-cutover.py` PASS. `order-migrate` Job Complete 1/1. |
-| **G3** | Cloudflare Edge & mTLS | **CODE VERIFIED / CLOUD READY** | Cloudflare Pages HTTP 200 (`opsbridge-dashboard`, `quan-ly-kho-tra-sua`, `aks-sre-platform`). `api-edge` 6 unit tests PASS. Origin contract tests 6/6 PASS. |
-| **G4** | Business E2E Verification | **VERIFIED** | Synthetic item `DRILL_D4FBB2` created via API & persisted in PostgreSQL. Synthetic order `ce052de1` created & verified in `Orders`. |
-| **G5** | Security & Observability | **VERIFIED** | JWT auth strictly enforced (HTTP 401 on unauthenticated access). Zero secrets in Git. Least privilege role mapping. |
-| **G6** | Incidents & Resilience | **VERIFIED** | INC-A01 to INC-A05 investigated with raw logs and RCA. Live pod recovery drill INC-D01: RTO = 7 seconds. Idempotency drill INC-D02: 0 double orders. |
-| **G7** | Performance & DR | **VERIFIED** | Database persistence & constraints verified. Clean teardown and restore procedures documented. |
+| **G2** | Azure AKS & GitOps | **VERIFIED** | `aks-portfolio-dev` 2 nodes Ready. Argo CD apps Synced. `check-cloud-cutover.py` PASS. `order-migrate` Job Complete 1/1. Replicas 0 in production overlay merged. |
+| **G3** | Cloudflare Edge & Envoy Gateway | **VERIFIED** | Cloudflare Pages HTTP 200 (`opsbridge-dashboard`, `quan-ly-kho-tra-sua`, `aks-sre-platform`). Envoy Gateway (`portfolio-gateway`) Programmed=True. In-cluster routing to `order-api` & `bankops-api` tested HTTP 200. |
+| **G4** | Business E2E & Database Isolation | **VERIFIED** | Dedicated `bankops_user` & `flashsale_user` roles. Cross-database access rejected (`FATAL: permission denied`). Synthetic items and orders verified via APIs. Non-superuser backup & restore drill 100% verified. |
+| **G5** | Security & Observability | **VERIFIED** | JWT auth strictly enforced (HTTP 401 on unauthenticated access). RBAC capability guard verified (403 on missing capability). Zero secrets in Git. |
+| **G6** | Incidents & Chaos Measurement | **VERIFIED** | INC-A01 to INC-A07 investigated with raw telemetry. Measured under load (20 req/s): 99.25% availability, 6.50s RTO, 13.40ms p95 latency. Idempotency drill INC-D02: 0 double orders. |
+| **G7** | Performance & DR | **VERIFIED** | Database persistence, backup and restore drill (`Orders`: 64 rows, `inv_items`: 2 rows matched). Clean teardown and restore procedures documented. |
 | **G8** | Final Acceptance & Interview | **VERIFIED** | Interview guide published (`docs/interview-notes/2026-10-25-senior-architecture-interview.md`). System clean. |
 
 ---
@@ -33,9 +33,10 @@
   "repositories": {
     "flashsale_opsbridge": {
       "repo": "https://github.com/imtarget05/FlashSale-Backend.git",
-      "commit_sha": "71cf53ba722c586915449458824a768ae5c0d372",
+      "main_head_sha": "663572e41a6b0c3676aa94e6371cfb8813bc30ad",
+      "target_revision_sha": "71cf53ba722c586915449458824a768ae5c0d372",
       "tag": "ops-cloud-20261025",
-      "ci_run_url": "https://github.com/imtarget05/FlashSale-Backend/actions/runs/40108742539",
+      "pr_merged": "#7 (Fix order retry ACK loss and fail closed at OpsBridge web edge)",
       "tests": {
         "unit": 197,
         "opsbridge_unit": 47,
@@ -43,6 +44,27 @@
         "failed": 0
       }
     },
+    "quanlykho": {
+      "repo": "https://github.com/imtarget05/QuanLyKho.git",
+      "main_head_sha": "bd01669aad1d20d32b70b09772c4838ec4b82a55",
+      "pr_merged": "#7 (Set unused bankops-frontend and cloudflare-tunnel replicas to 0 in production overlay)",
+      "database_tables": 45,
+      "isolated_user": "bankops_user",
+      "tests": {
+        "passed": 724,
+        "failed": 0
+      }
+    },
+    "aks_sre_platform": {
+      "repo": "https://github.com/imtarget05/AKS-SRE-Platform.git",
+      "main_head_sha": "bd72d3f",
+      "pr_merged": "#4 (Pin flashsale to 71cf53b, drop out-of-scope retail route, and publish verified incident evidence)",
+      "cluster": "aks-portfolio-dev",
+      "gate_tests": "52 passed, 0 failed"
+    }
+  }
+}
+```
     "quanlykho": {
       "repo": "https://github.com/imtarget05/QuanLyKho.git",
       "commit_sha": "c45701e37d48fbcc6931f198871a4f998fdcf761",
