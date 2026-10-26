@@ -25,20 +25,37 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Scan image with Syft for SBOM
-        uses: docker://anchore/syft-action@v2
+      # No legacy-app image exists in either portfolio ACR (acrflashsalep6 /
+      # crportfolioa3deec), so this workflow builds the image from source and
+      # scans the local tag — same contract as legacyapp-ci docker-build-scan.
+      - name: Build legacy-app image (local, no push)
+        uses: docker/build-push-action@v6
         with:
-          args: . --file format=cyclonedxjson > sbom.json
+          context: ./apps/legacy-inventory
+          file: ./apps/legacy-inventory/Dockerfile
+          push: false
+          load: true
+          tags: legacy-app:ci-${{ github.sha }}
+
+      - name: Scan image with Syft for SBOM (SPDX JSON)
+        id: sbom
+        uses: anchore/sbom-action@v0
+        with:
+          image: legacy-app:ci-${{ github.sha }}
+          format: spdx-json
+          artifactName: sbom.spdx.json
 
       - name: Generate SBOM Provenance
         run: |
+          cp "${{ steps.sbom.outputs.sbomPath }}" sbom.spdx.json
           echo "SBOM generated at $(date)" >> sbom-provenance.txt
-          cat sbom.json | jq '.components | length' > component-count.txt
+          jq '.packages | length' sbom.spdx.json > component-count.txt
 
       - name: Run Trivy Vulnerability Scan
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image: ''
+          scan-type: image
+          image-ref: legacy-app:ci-${{ github.sha }}
           format: sarif
           output: trivy-results.sarif
           ignore-unfixed: true
@@ -48,17 +65,27 @@ jobs:
 
       - name: Upload Trivy SARIF results
         if: ${{ always() }}
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
+          category: trivy-legacy-app-scan
 
+      - name: Install Cosign (Sigstore)
+        uses: sigstore/cosign-installer@v3.8.1
+
+      # COSIGN_PRIVATE_KEY is not configured on this repo yet; sign/verify is
+      # skipped with an explicit message (same never-faked contract as Sonar).
       - name: Cosign Sign SBOM
         if: github.event_name != 'pull_request'
         env:
-          COSIGN_EXPERIMENTAL: "1"
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
         run: |
-          cosign sign --key ${{ secrets.COSIGN_PRIVATE_KEY }} sbom.json
-          cosign verify sbom.json
+          if [ -z "${COSIGN_PRIVATE_KEY}" ]; then
+            echo "COSIGN_PRIVATE_KEY not configured — cosign sign/verify SKIPPED (not faked)"
+            exit 0
+          fi
+          cosign sign --key env://COSIGN_PRIVATE_KEY sbom.spdx.json
+          cosign verify --key env://COSIGN_PRIVATE_KEY sbom.spdx.json
 
       - name: Fail on Critical CVEs
         run: |
@@ -73,5 +100,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sbom
-          path: sbom.json
+          path: |
+            sbom.spdx.json
+            sbom-provenance.txt
+            component-count.txt
           retention-days: 30
