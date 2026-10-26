@@ -43,11 +43,14 @@ jobs:
         with:
           image: legacy-app:ci-${{ github.sha }}
           format: spdx-json
-          artifactName: sbom.spdx.json
+          artifact-name: sbom.spdx.json
+          upload-artifact: false
 
+      # sbom-action exposes the generated SBOM via ANCHORE_SBOM_ACTION_PRIOR_ARTIFACT.
       - name: Generate SBOM Provenance
         run: |
-          cp "${{ steps.sbom.outputs.sbomPath }}" sbom.spdx.json
+          set -euo pipefail
+          cp "${ANCHORE_SBOM_ACTION_PRIOR_ARTIFACT:?sbom-action did not report the SBOM file}" sbom.spdx.json
           echo "SBOM generated at $(date)" >> sbom-provenance.txt
           jq '.packages | length' sbom.spdx.json > component-count.txt
 
