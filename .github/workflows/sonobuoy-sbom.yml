@@ -38,19 +38,17 @@ jobs:
           tags: legacy-app:ci-${{ github.sha }}
 
       - name: Scan image with Syft for SBOM (SPDX JSON)
-        id: sbom
         uses: anchore/sbom-action@v0
         with:
           image: legacy-app:ci-${{ github.sha }}
           format: spdx-json
-          artifact-name: sbom.spdx.json
+          output-file: sbom.spdx.json
           upload-artifact: false
 
-      # sbom-action exposes the generated SBOM via ANCHORE_SBOM_ACTION_PRIOR_ARTIFACT.
       - name: Generate SBOM Provenance
         run: |
           set -euo pipefail
-          cp "${ANCHORE_SBOM_ACTION_PRIOR_ARTIFACT:?sbom-action did not report the SBOM file}" sbom.spdx.json
+          test -s sbom.spdx.json || { echo "SBOM file missing/empty" >&2; exit 1; }
           echo "SBOM generated at $(date)" >> sbom-provenance.txt
           jq '.packages | length' sbom.spdx.json > component-count.txt
 
@@ -67,7 +65,7 @@ jobs:
           limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF results
-        if: ${{ always() }}
+        if: ${{ always() && hashFiles('trivy-results.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: trivy-results.sarif
