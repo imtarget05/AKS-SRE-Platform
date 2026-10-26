@@ -36,7 +36,7 @@ jobs:
           cat sbom.json | jq '.components | length' > component-count.txt
 
       - name: Run Trivy Vulnerability Scan
-        uses: aquasec/trivy-action@master
+        uses: aquasecurity/trivy-action@master
         with:
           image: ''
           format: sarif
