@@ -43,8 +43,11 @@ jobs:
           output: trivy-results.sarif
           ignore-unfixed: true
           severity: CRITICAL
+          exit-code: '0'
+          limit-severities-for-sarif: true
 
       - name: Upload Trivy SARIF results
+        if: ${{ always() }}
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: trivy-results.sarif
@@ -58,10 +61,13 @@ jobs:
           cosign verify sbom.json
 
       - name: Fail on Critical CVEs
-        if: ${{ contains(join(trivy-results.sarif.*.runs.*.results.*.exitCode), '1') || contains(join(trivy-results.sarif.*.runs.*.results.*.text.*.severity), 'CRITICAL') }}
         run: |
-          echo "::error::Critical CVEs found in image scan"
-          exit 1
+          critical_count=$(jq '[.runs[].results[]?] | length' trivy-results.sarif)
+          echo "Critical (unfixed) CVEs reported by Trivy: ${critical_count}"
+          if [ "${critical_count}" -gt 0 ]; then
+            echo "::error::Critical CVEs found in image scan (${critical_count})" >&2
+            exit 1
+          fi
 
       - name: Upload SBOM artifact
         uses: actions/upload-artifact@v4
