@@ -51,7 +51,7 @@ variable "workload_pool_autoscaling" {
     max_nodes = number
   })
   default = {
-    enabled   = false
+    enabled   = true
     min_nodes = 1
     max_nodes = 3
   }

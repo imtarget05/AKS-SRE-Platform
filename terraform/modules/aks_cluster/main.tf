@@ -23,7 +23,9 @@ resource "azurerm_kubernetes_cluster" "aks" {
     vm_size                      = var.system_pool_vm_size
     type                         = "VirtualMachineScaleSets"
     only_critical_addons_enabled = true
-    auto_scaling_enabled         = false
+    auto_scaling_enabled         = true
+    min_count                    = 1
+    max_count                    = 3
   }
 
   identity {
