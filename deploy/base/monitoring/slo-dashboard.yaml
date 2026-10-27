@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opsbridge-slo-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  opsbridge-slo.json: |
+    {
+      "dashboard": {
+        "title": "OpsBridge & QuanLyKho SLO Dashboard",
+        "tags": ["slo", "opsbridge", "quanlykho"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "title": "OpsBridge API - Request Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"opsbridge-api\"}[5m]))",
+                "legendFormat": "requests/s"
+              }
+            ]
+          },
+          {
+            "title": "OpsBridge API - Error Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"opsbridge-api\",status=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"opsbridge-api\"}[5m]))",
+                "legendFormat": "error rate"
+              }
+            ]
+          },
+          {
+            "title": "OpsBridge API - P99 Latency",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"opsbridge-api\"}[5m])) by (le))",
+                "legendFormat": "P99"
+              }
+            ]
+          },
+          {
+            "title": "Node CPU Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+                "legendFormat": "{{ instance }}"
+              }
+            ]
+          },
+          {
+            "title": "Pod Restarts",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "rate(kube_pod_container_status_restarts_total[15m])",
+                "legendFormat": "{{ namespace }}/{{ pod }}"
+              }
+            ]
+          },
+          {
+            "title": "Cluster Node Count",
+            "type": "stat",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "count(kube_node_info)",
+                "legendFormat": "nodes"
+              }
+            ]
+          }
+        ],
+        "schemaVersion": 38,
+        "version": 1
+      }
+    }
