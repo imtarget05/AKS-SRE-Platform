@@ -10,3 +10,6 @@ resources:
   - aks-sre-platform-scale-events.yaml
   - cluster-autoscaler-config.yaml
   - slo-burn-rate-rules.yaml
+  - loki-deployment.yaml
+  - promtail-daemonset.yaml
+  - loki-servicemonitor.yaml

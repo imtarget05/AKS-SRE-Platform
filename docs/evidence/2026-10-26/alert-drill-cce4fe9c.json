@@ -1,0 +1,128 @@
+{
+  "drill_type": "alert_fire_resolve",
+  "mode": "aks-live drill on in-cluster mock observability stack (namespace alert-drill); captured via capture_aks_alert_cycle.sample() with service paths pointed at prometheus-mock:9090 / alertmanager-mock-svc:9093; fault=real kubectl scale of drill-target",
+  "context": "aks-portfolio-dev",
+  "alert": "DrillMetricSourceDown",
+  "namespace": "alert-drill",
+  "repository_sha": "cce4fe9c2b1d325ab14f1023e77c4996ac5858c9",
+  "captured_at_utc": "2026-10-26T10:13:41.675796Z",
+  "result": "complete",
+  "events": {
+    "baseline_at_utc": "2026-10-26T10:12:40.541643Z",
+    "fault_injected_at_utc": "2026-10-26T10:12:40.541993Z",
+    "fault_inject_kubectl": {
+      "returncode": 0,
+      "stdout": "deployment.apps/drill-target scaled",
+      "stderr": ""
+    },
+    "fired_at_utc": "2026-10-26T10:13:18.636096Z",
+    "fired_active_at": "2026-10-26T10:12:47.306613452Z",
+    "alertmanager_receipt_at_utc": "2026-10-26T10:13:24.344628Z",
+    "alertmanager_alerts_at_receipt": "[{\"annotations\":{\"description\":\"The drill-target scrape target stopped responding (up == 0)\",\"summary\":\"Drill metric source is down\"},\"endsAt\":\"2026-10-26T10:17:17.306Z\",\"fingerprint\":\"49e779ea573601d2\",\"receivers\":[{\"name\":\"log-receiver\"}],\"startsAt\":\"2026-10-26T10:13:17.306Z\",\"status\":{\"inhibitedBy\":[],\"silencedBy\":[],\"state\":\"active\"},\"updatedAt\":\"2026-10-26T10:13:17.321Z\",\"generatorURL\":\"http://prometheus-mock-5f64b49889-6zjc9:9090/graph?g0.expr=up%7Bjob%3D%22drill-target%22%7D+%3D%3D+0\\u0026g0.tab=1\",\"labels\":{\"alertname\":\"DrillMetricSourceDown\",\"instance\":\"drill-target:9100\",\"job\":\"drill-target\",\"service\":\"platform-drill\",\"severity\":\"critical\"}}]",
+    "restore_at_utc": "2026-10-26T10:13:24.610936Z",
+    "restore_kubectl": {
+      "returncode": 0,
+      "stdout": "deployment.apps/drill-target scaled",
+      "stderr": ""
+    },
+    "resolved_at_utc": "2026-10-26T10:13:41.675687Z"
+  },
+  "observations": [
+    {
+      "observed_at_utc": "2026-10-26T10:12:40.541643Z",
+      "state": "inactive",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:12:46.400538Z",
+      "state": "inactive",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:12:51.672592Z",
+      "state": "pending",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:12:57.060858Z",
+      "state": "pending",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:02.372893Z",
+      "state": "pending",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:07.699036Z",
+      "state": "pending",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:12.956684Z",
+      "state": "pending",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:18.636096Z",
+      "state": "firing",
+      "active_at_utc": "2026-10-26T10:12:47.306613452Z",
+      "alertmanager_receivers": [
+        "log-receiver"
+      ]
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:24.344628Z",
+      "state": "firing",
+      "active_at_utc": "2026-10-26T10:12:47.306613452Z",
+      "alertmanager_receivers": [
+        "log-receiver"
+      ]
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:30.736950Z",
+      "state": "firing",
+      "active_at_utc": "2026-10-26T10:12:47.306613452Z",
+      "alertmanager_receivers": [
+        "log-receiver"
+      ]
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:36.344757Z",
+      "state": "firing",
+      "active_at_utc": "2026-10-26T10:12:47.306613452Z",
+      "alertmanager_receivers": [
+        "log-receiver"
+      ]
+    },
+    {
+      "observed_at_utc": "2026-10-26T10:13:41.675687Z",
+      "state": "inactive",
+      "active_at_utc": null,
+      "alertmanager_receivers": []
+    }
+  ],
+  "notification_delivery_verified": true,
+  "timeline_utc": {
+    "baseline_verified_inactive": "2026-10-26T10:12:40.541643Z",
+    "fault_injected_scale_zero": "2026-10-26T10:12:40.541993Z",
+    "alert_fired_prometheus_state": "2026-10-26T10:13:18.636096Z",
+    "alert_activeAt_prometheus": "2026-10-26T10:12:47.306613452Z",
+    "alertmanager_receipt_receiver_log_receiver": "2026-10-26T10:13:24.344628Z",
+    "metric_source_restored_scale_one": "2026-10-26T10:13:24.610936Z",
+    "alert_resolved_prometheus_state": "2026-10-26T10:13:41.675687Z"
+  },
+  "durations_seconds": {
+    "injection_to_firing": 38.1,
+    "injection_to_alertmanager_receipt": 43.8,
+    "injection_to_resolve": 61.1,
+    "restore_to_resolve": 17.1
+  }
+}

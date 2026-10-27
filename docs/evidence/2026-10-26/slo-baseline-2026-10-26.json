@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "purpose": "Baseline capture for the 30-day SLO observation period start (2026-10-26 UTC). All numbers below come from live measurements on AKS cluster aks-portfolio-dev; none are estimated.",
+  "observation_start_utc": "2026-10-26T10:09:35Z",
+  "collected_at_utc": "2026-10-26T10:50:36Z",
+  "cluster_context": "aks-portfolio-dev",
+  "data_sources": {
+    "prometheus_mock_query_api": {
+      "url": "http://prometheus-mock.alert-drill:9090 (via kubectl port-forward svc/prometheus-mock -n alert-drill 9091:9090)",
+      "version": "prom/prometheus:v2.51.0",
+      "scrape_interval": "5s",
+      "tsdb_window_utc": "2026-10-26T10:09:35Z to 2026-10-26T10:50:36Z",
+      "used_for": "opsbridge-api server-side counters (http_requests_received_total) and latency histogram (http_request_duration_seconds_*)",
+      "note": "prometheus-mock scrapes opsbridge-api.flashsale:80. It is NOT kube-prometheus-stack; no CronJob was deployed."
+    },
+    "in_cluster_probe_job": {
+      "method": "batch Job sli-probe-baseline (ns default, image curlimages/curl:8.11.1), 30 sequential GETs per endpoint, curl -w time_total",
+      "raw_output": "sli-probe-raw-output.txt",
+      "used_for": "external-probe availability + latency for opsbridge-api (/healthz), bankops-api (/api/v1/health/live, /api/v1/health/ready)"
+    },
+    "keda_metrics_api": "Not used for baseline HTTP SLIs; available via keda-operator-metrics-apiserver for autoscaling-driven SLIs later."
+  },
+  "sli_definitions_applied": {
+    "availability": "1 - (5xx_count / total_requests). Codes 2xx+3xx count as success (docs/slo.md, deploy/sli/availability.md). Source docs use status buckets 2xx/4xx on opsbridge-api middleware.",
+    "error_rate": "5xx_count / total_request_count. Target < 1% (deploy/sli/error_rate.md).",
+    "latency_p95": "95th percentile of request latency. Target p95 < 500ms (deploy/sli/latency_p95.md). Histogram buckets present in mock: le in {0.001..32.768}; nearest bucket to 500ms is 0.512s."
+  },
+  "services": {
+    "opsbridge-api": {
+      "namespace": "flashsale",
+      "endpoint_probed": "GET /healthz",
+      "app_image_digest": "sha256:41f3d65fc3a7b328090025ed30b408d7ee13651b73267d915b747eb5d660247f",
+      "registry_image": "acrflashsalep6.azurecr.io/opsbridge-api",
+      "in_cluster_probe": {
+        "n": 30,
+        "status_codes": {"200": 30},
+        "availability_pct": 100.0,
+        "error_rate_pct": 0.0,
+        "latency_ms": {"min": 9.35, "p50": 22.94, "p90": 33.02, "p95": 54.55, "p99": 74.3, "max": 74.3}
+      },
+      "prometheus_mock_server_side": {
+        "window": "40m (full TSDB history of the mock at capture time)",
+        "counters": {"2xx": 14418, "4xx": 6, "5xx": 0},
+        "availability_pct": 100.0,
+        "error_rate_5xx_pct": 0.0,
+        "requests_per_second": 0.3181058495821727,
+        "p95_seconds": 0.0009516637478108581,
+        "p99_seconds": 0.0009917368421052631,
+        "within_500ms_fraction_le_0_512": 1.0,
+        "note": "4xx are 6 POST /api/v1/outbox/requeue unauthorized attempts from the alert-drill; not 5xx."
+      }
+    },
+    "bankops-api": {
+      "namespace": "quanlykho",
+      "endpoint_probed": "GET /api/v1/health/live and GET /api/v1/health/ready",
+      "app_image_digest": "sha256:c5ec4b6a321754ba1815da388d254a4539cc20ce32d2216ad327c135592ce9d8",
+      "registry_image": "ghcr.io/imtarget05/bankops-api",
+      "in_cluster_probe": {
+        "live": {
+          "n": 30,
+          "status_codes": {"200": 30},
+          "availability_pct": 100.0,
+          "error_rate_pct": 0.0,
+          "latency_ms": {"min": 2.37, "p50": 6.92, "p90": 11.15, "p95": 13.65, "p99": 21.02, "max": 21.02}
+        },
+        "ready": {
+          "n": 30,
+          "status_codes": {"200": 30},
+          "availability_pct": 100.0,
+          "error_rate_pct": 0.0,
+          "latency_ms": {"min": 3.63, "p50": 9.2, "p90": 14.21, "p95": 15.21, "p99": 15.22, "max": 15.22}
+        }
+      },
+      "prometheus_mock_server_side": {
+        "status": "NOT AVAILABLE",
+        "reason": "prometheus-mock scrape config has no quanlykho job (only opsbridge, prometheus, drill-target)."
+      }
+    },
+    "sre-demo-api": {
+      "status": "NOT DEPLOYED on cluster aks-portfolio-dev; scripts/measure_sli_30day.py (which queries sre_api_requests_total) cannot run against this cluster."
+    }
+  },
+  "proposed_thresholds_from_docs_slo_md": {
+    "availability": ">= 99.9% over 30-day rolling window (error budget 0.1% ~ 43 min/month)",
+    "latency_p99": "<= 500ms over 5-minute window; requests > 500ms must be < 1%",
+    "latency_p95": "< 500ms over 1m rolling window (deploy/sli/latency_p95.md)",
+    "error_rate_5xx": "< 1% over rolling window",
+    "throughput": ">= 100 RPS sustained with p99 <= 500ms",
+    "status": "PROPOSED — not binding until 30-day observation completes and stakeholders sign off"
+  },
+  "baseline_vs_proposed": {
+    "availability": "PASS on captured sample (100% on all three probes; mock shows 0 5xx over 40m)",
+    "latency_p95": "PASS on captured sample (54.55ms opsbridge / 15.21ms bankops worst case, far under 500ms)",
+    "throughput": "NOT MEASURED — baseline sample is health-endpoint traffic; opsbridge server-side rate 0.32 RPS; 100 RPS test requires load generator and is out of scope for this capture"
+  },
+  "known_findings": [
+    {
+      "finding": "ClusterIP service access to bankops-api.quanlykho.svc.cluster.local:8000 times out from a pod in ns default (curl code 000 after ~135s), while direct pod IP 10.224.0.22:8000 returns 200 in ~4.5ms and kubectl port-forward works. No NetworkPolicy exists in quanlykho (kubectl get netpol -n quanlykho = empty). Likely kube-proxy/service-segment quirk on AKS; re-test before relying on cross-namespace ClusterIP access.",
+      "impact": "Daily SLI probe for bankops-api used pod IP directly (recorded above); pod IP must be re-resolved each run."
+    },
+    {
+      "finding": "prometheus-mock does not expose the metric names required by scripts/measure_sli_30day.py (sre_api_requests_total for sre-demo-api). Observation runs use the mock's own counter/histogram names for opsbridge and direct probes for bankops.",
+      "impact": "Daily capture cannot reuse the repo script as-is; runbook below uses direct Prom queries."
+    }
+  ],
+  "evidence_files": [
+    "docs/evidence/2026-10-26/slo-baseline-2026-10-26.json",
+    "docs/evidence/2026-10-26/sli-probe-raw-output.txt",
+    "docs/evidence/2026-10-26/README.md"
+  ]
+}
