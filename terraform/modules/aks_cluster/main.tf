@@ -19,12 +19,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   default_node_pool {
     name                         = "sys"
-    node_count                   = var.system_pool_node_count
     vm_size                      = var.system_pool_vm_size
     type                         = "VirtualMachineScaleSets"
     only_critical_addons_enabled = true
     auto_scaling_enabled         = true
-    min_count                    = 1
+    min_count                    = var.system_pool_node_count
     max_count                    = 3
   }
 

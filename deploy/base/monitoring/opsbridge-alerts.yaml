@@ -1,0 +1,97 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: opsbridge-slo-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: opsbridge-slo
+      rules:
+        - alert: OpsBridgeApiHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="opsbridge-api",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="opsbridge-api"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            service: opsbridge-api
+          annotations:
+            summary: "OpsBridge API error rate > 5%"
+            description: "Error rate is {{ $value | humanizePercentage }}"
+
+        - alert: OpsBridgeApiHighLatency
+          expr: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="opsbridge-api"}[5m])) by (le)) > 2
+          for: 5m
+          labels:
+            severity: warning
+            service: opsbridge-api
+          annotations:
+            summary: "OpsBridge API P99 latency > 2s"
+            description: "P99 latency is {{ $value }}s"
+
+        - alert: OrderApiDown
+          expr: up{job="order-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: order-api
+          annotations:
+            summary: "Order API is down"
+            description: "Order API has been down for 2 minutes"
+
+        - alert: PaymentServiceDown
+          expr: up{job="payment-service"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: payment-service
+          annotations:
+            summary: "Payment Service is down"
+            description: "Payment Service has been down for 2 minutes"
+
+        - alert: NodeCpuHigh
+          expr: |
+            100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 10m
+          labels:
+            severity: warning
+            service: node
+          annotations:
+            summary: "Node CPU usage > 80%"
+            description: "Node {{ $labels.instance }} CPU usage is {{ $value }}%"
+
+        - alert: PodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+            service: pod
+          annotations:
+            summary: "Pod is crash looping"
+            description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is restarting"
+
+    - name: quanlykho-slo
+      rules:
+        - alert: BankOpsApiDown
+          expr: up{job="bankops-api"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: bankops-api
+          annotations:
+            summary: "BankOps API is down"
+            description: "BankOps API has been down for 2 minutes"
+
+        - alert: BankOpsApiHighLatency
+          expr: |
+            histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="bankops-api"}[5m])) by (le)) > 3
+          for: 5m
+          labels:
+            severity: warning
+            service: bankops-api
+          annotations:
+            summary: "BankOps API P99 latency > 3s"
+            description: "P99 latency is {{ $value }}s"
