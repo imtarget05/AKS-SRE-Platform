@@ -40,3 +40,4 @@ __pycache__/
 .venv/
 *.log
 .wrangler/
+.DS_Store
