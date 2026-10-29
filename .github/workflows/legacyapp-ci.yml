@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build legacy-app image (no push)
         uses: docker/build-push-action@v6
         with:
@@ -171,7 +171,7 @@ jobs:
         id: tags
         run: |
           echo "legacy=${{ vars.ACR_LOGIN_SERVER }}/legacy-app:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - name: Build and push legacy-app:<sha>
         uses: docker/build-push-action@v6
         with:
