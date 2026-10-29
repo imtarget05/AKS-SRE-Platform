@@ -280,7 +280,7 @@ jobs:
           category: trivy-image-scan
 
       - name: Install Cosign (Sigstore)
-        uses: sigstore/cosign-installer@v3.8.1
+        uses: sigstore/cosign-installer@v4.1.2
 
       - name: Sign container image digest (Keyless OIDC)
         run: |

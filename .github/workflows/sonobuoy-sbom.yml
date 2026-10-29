@@ -72,7 +72,7 @@ jobs:
           category: trivy-legacy-app-scan
 
       - name: Install Cosign (Sigstore)
-        uses: sigstore/cosign-installer@v3.8.1
+        uses: sigstore/cosign-installer@v4.1.2
 
       # COSIGN_PRIVATE_KEY is not configured on this repo yet; sign/verify is
       # skipped with an explicit message (same never-faked contract as Sonar).
