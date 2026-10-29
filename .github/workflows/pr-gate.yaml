@@ -69,7 +69,7 @@ jobs:
       # controls after it: with the original order the tflint steps were reported
       # as "skipped" on every run, so a lint regression would have been invisible
       # for as long as the test step stayed red.
-      - uses: terraform-linters/setup-tflint@6770de8d186019a148cc2b144e8bfa627f7d4aa8 # v5
+      - uses: terraform-linters/setup-tflint@ae78205cfffec9e8d93fd2b3115c7e9d3166d4b6 # v5
         with:
           tflint_version: ${{ env.TFLINT_VERSION }}
 
