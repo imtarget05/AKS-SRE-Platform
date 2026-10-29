@@ -1,13 +1,4 @@
-# P2.3 — OpenTelemetry Collector DaemonSet.
-#
-# Scrapes Prometheus metrics (from the cluster Prometheus) and re-exports them
-# to Prometheus: the `prometheus` exporter exposes :9464/metrics (scraped by
-# Prometheus) and `prometheusremotewrite` forwards via the remote-write API.
-# OTLP receiver (4318) also accepts metrics/logs/traces from instrumented
-# workloads. Runs as DaemonSet so every node has a local collector.
-#
-# Image version: pin to the collector release in use before prod apply.
-
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -30,44 +21,19 @@ metadata:
     app.kubernetes.io/part-of: aks-sre-platform
     app.kubernetes.io/managed-by: kustomize
 data:
-  otel-collector-config.yaml: |
-    receivers:
-      prometheus:
-        config:
-          scrape_configs:
-            - job_name: otel-collector-scrape-prometheus
-              honor_labels: true
-              scrape_interval: 30s
-              static_configs:
-                - targets:
-                    - prometheus-operated.monitoring.svc.cluster.local:9090
-      otlp:
-        protocols:
-          http:
-            endpoint: 0.0.0.0:4318
-    processors:
-      memory_limiter:
-        limit_mib: 512
-        spike_limit_mib: 128
-        check_interval: 1s
-      batch:
-        timeout: 5s
-        send_batch_max_size: 1024
-    exporters:
-      prometheus:
-        # Exported back to Prometheus: Prometheus scrapes :9464/metrics.
-        endpoint: 0.0.0.0:9464
-      prometheusremotewrite:
-        # Remote-write into the cluster Prometheus.
-        endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
-      logging:
-        loglevel: debug
-    service:
-      pipelines:
-        metrics:
-          receivers: [prometheus, otlp]
-          processors: [memory_limiter, batch]
-          exporters: [prometheus, prometheusremotewrite, logging]
+  otel-collector-config.yaml: "receivers:\n  prometheus:\n    config:\n      scrape_configs:\n\
+    \        - job_name: otel-collector-scrape-prometheus\n          honor_labels:\
+    \ true\n          scrape_interval: 30s\n          static_configs:\n          \
+    \  - targets:\n                - prometheus-operated.monitoring.svc.cluster.local:9090\n\
+    \  otlp:\n    protocols:\n      http:\n        endpoint: 0.0.0.0:4318\nprocessors:\n\
+    \  memory_limiter:\n    limit_mib: 512\n    spike_limit_mib: 128\n    check_interval:\
+    \ 1s\n  batch:\n    timeout: 5s\n    send_batch_max_size: 1024\nexporters:\n \
+    \ prometheus:\n    # Exported back to Prometheus: Prometheus scrapes :9464/metrics.\n\
+    \    endpoint: 0.0.0.0:9464\n  prometheusremotewrite:\n    # Remote-write into\
+    \ the cluster Prometheus.\n    endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write\n\
+    \  logging:\n    loglevel: debug\nservice:\n  pipelines:\n    metrics:\n     \
+    \ receivers: [prometheus, otlp]\n      processors: [memory_limiter, batch]\n \
+    \     exporters: [prometheus, prometheusremotewrite, logging]\n"
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -92,33 +58,69 @@ spec:
     spec:
       serviceAccountName: otel-collector
       containers:
-        - name: otel-collector
-          image: otel/opentelemetry-collector-contrib:0.102.0
-          command: ["/otelcol-contrib"]
-          args:
-            - --config=/etc/otel-collector/otel-collector-config.yaml
-          ports:
-            - name: otlp-http
-              containerPort: 4318
-              protocol: TCP
-            - name: prometheus
-              containerPort: 9464
-              protocol: TCP
-          resources:
-            requests:
-              cpu: 100m
-              memory: 128Mi
-            limits:
-              cpu: 500m
-              memory: 512Mi
-          volumeMounts:
-            - name: config
-              mountPath: /etc/otel-collector
-              readOnly: true
-      volumes:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:0.102.0
+        command:
+        - /otelcol-contrib
+        args:
+        - --config=/etc/otel-collector/otel-collector-config.yaml
+        ports:
+        - name: otlp-http
+          containerPort: 4318
+          protocol: TCP
+        - name: prometheus
+          containerPort: 9464
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
         - name: config
-          configMap:
-            name: otel-collector-config
+          mountPath: /etc/otel-collector
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: prometheus
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: prometheus
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /metrics
+            port: prometheus
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: config
+        configMap:
+          name: otel-collector-config
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: otel-collector
 ---
 apiVersion: v1
 kind: Service
@@ -134,7 +136,7 @@ spec:
   selector:
     app: otel-collector
   ports:
-    - name: prometheus
-      port: 9464
-      targetPort: 9464
+  - name: prometheus
+    port: 9464
+    targetPort: 9464
   type: ClusterIP

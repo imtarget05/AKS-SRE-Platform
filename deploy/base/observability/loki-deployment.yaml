@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,26 +22,68 @@ spec:
         app.kubernetes.io/part-of: aks-sre-platform
     spec:
       containers:
-        - name: loki
-          image: grafana/loki:3.0.1
-          args:
-            - -config=/etc/loki/local-config.yaml
-            - -auto-update-config
-          ports:
-            - name: http
-              containerPort: 3100
-          volumeMounts:
-            - name: config
-              mountPath: /etc/loki
-              readOnly: true
-            - name: storage
-              mountPath: /var/loki
-      volumes:
+      - name: loki
+        image: grafana/loki:3.0.1
+        args:
+        - -config=/etc/loki/local-config.yaml
+        - -auto-update-config
+        ports:
+        - name: http
+          containerPort: 3100
+        volumeMounts:
         - name: config
-          configMap:
-            name: loki-config
+          mountPath: /etc/loki
+          readOnly: true
         - name: storage
-          emptyDir: {}
+          mountPath: /var/loki
+        livenessProbe:
+          httpGet:
+            path: /metrics
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /metrics
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        startupProbe:
+          httpGet:
+            path: /metrics
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      volumes:
+      - name: config
+        configMap:
+          name: loki-config
+      - name: storage
+        emptyDir: {}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app: loki
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -52,41 +95,14 @@ metadata:
     app.kubernetes.io/name: loki
     app.kubernetes.io/part-of: aks-sre-platform
 data:
-  local-config.yaml: |
-    auth_enabled: false
-    server:
-      http_listen_port: 3100
-      grpc_listen_port: 9096
-    common:
-      path_prefix: /var/loki
-      storage:
-        type: local
-        local:
-          directory: /var/loki
-      ring:
-        instance_addr: 127.0.0.1
-        kvstore:
-          store: inmemory
-    schema_config:
-      configs:
-        - from: 0
-          store: boltdb
-          object_store: local
-          index:
-            prefix: index_
-            period: 168h
-    distributor:
-      ring:
-        kvstore:
-          store: inmemory
-    ingester:
-      ring:
-        kvstore:
-          store: inmemory
-    frontend:
-      log_queries_longer_than: 5s
-    queries:
-      log_query_length: 5m
+  local-config.yaml: "auth_enabled: false\nserver:\n  http_listen_port: 3100\n  grpc_listen_port:\
+    \ 9096\ncommon:\n  path_prefix: /var/loki\n  storage:\n    type: local\n    local:\n\
+    \      directory: /var/loki\n  ring:\n    instance_addr: 127.0.0.1\n    kvstore:\n\
+    \      store: inmemory\nschema_config:\n  configs:\n    - from: 0\n      store:\
+    \ boltdb\n      object_store: local\n      index:\n        prefix: index_\n  \
+    \      period: 168h\ndistributor:\n  ring:\n    kvstore:\n      store: inmemory\n\
+    ingester:\n  ring:\n    kvstore:\n      store: inmemory\nfrontend:\n  log_queries_longer_than:\
+    \ 5s\nqueries:\n  log_query_length: 5m\n"
 ---
 apiVersion: v1
 kind: Service
@@ -101,28 +117,6 @@ spec:
   selector:
     app: loki
   ports:
-    - name: http
-      port: 3100
-      targetPort: 3100
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: loki
-  namespace: monitoring
-  labels:
-    app: loki
-    app.kubernetes.io/name: loki
-    app.kubernetes.io/part-of: aks-sre-platform
-    release: kps
-spec:
-  selector:
-    matchLabels:
-      app: loki
-  namespaceSelector:
-    matchNames:
-      - monitoring
-  endpoints:
-    - port: http
-      interval: 30s
-      path: /metrics
+  - name: http
+    port: 3100
+    targetPort: 3100
