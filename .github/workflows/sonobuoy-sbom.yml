@@ -29,7 +29,7 @@ jobs:
       # crportfolioa3deec), so this workflow builds the image from source and
       # scans the local tag — same contract as legacyapp-ci docker-build-scan.
       - name: Build legacy-app image (local, no push)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ./apps/legacy-inventory
           file: ./apps/legacy-inventory/Dockerfile
