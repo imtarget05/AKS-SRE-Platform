@@ -23,7 +23,7 @@ jobs:
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       # No legacy-app image exists in either portfolio ACR (acrflashsalep6 /
       # crportfolioa3deec), so this workflow builds the image from source and
