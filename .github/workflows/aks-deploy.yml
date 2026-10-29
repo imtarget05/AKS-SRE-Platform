@@ -34,7 +34,7 @@ jobs:
     outputs:
       plan_hash: ${{ steps.fingerprint.outputs.plan_hash }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -122,7 +122,7 @@ jobs:
     outputs:
       image_digest: ${{ steps.digest.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -224,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
@@ -283,7 +283,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
 
