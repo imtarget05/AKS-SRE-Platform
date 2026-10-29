@@ -143,6 +143,6 @@ During observation:
 
 The following PrometheusRule manifests implement the SLO-derived alerts:
 - `deploy/base/observability/slo-alerts.yaml` (to be created)
-- `deploy/base/observability/slo-burn-rate-rules.yaml` (to be created)
+- `deploy/base/observability/slo-burn-rate-rules.yaml` (implemented: availability, latency_p95, error_rate burn-rate rules)
 
 The scale-event logger (`scripts/log_scale_events.py`) provides the data for cluster-autoscaler SLIs.

@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+  - slo-prod-rules.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: sre-demo-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: sre-demo-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 10
+
+# P2.9 — Image sign & digest-pin policy (docs/ACR/image-sign-policy.md).
+#
+# prod MUST deploy a digest-pinned, signed image. The base manifest uses the
+# mutable tag `sre-demo-api:0.1.0`; this overlay replaces it with an immutable
+# digest. The SHA256 digest below is a PLACEHOLDER and MUST be replaced by the
+# CI release/supply-chain pipeline (SBOM + Trivy + sign + publish) with the
+# real signed digest before any prod apply. prod must never roll out a mutable
+# tag.
+images:
+  - name: sre-demo-api
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000  # REPLACE with signed digest from release pipeline
+
+commonAnnotations:
+  aks-sre-platform.io/profile: prod
+  aks-sre-platform.io/cost-mode: production

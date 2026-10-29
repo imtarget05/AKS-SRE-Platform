@@ -22,6 +22,7 @@ spec:
     - https://github.com/imtarget05/OpsBridge.git
     - https://github.com/imtarget05/AKS-SRE-Platform.git
     - https://github.com/imtarget05/QuanLyKho.git
+    - https://github.com/imtarget05/Productionized-LegacyApp.git
 
   destinations:
     - server: https://kubernetes.default.svc

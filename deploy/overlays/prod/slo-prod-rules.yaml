@@ -1,0 +1,65 @@
+# Prod SLO burn-rate alerts (calibrated for the prod overlay).
+# Complements deploy/base/observability/slo-burn-rate-rules.yaml with
+# prod-calibrated latency and error-rate SLOs.
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: slo-prod-burn-rate
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/part-of: aks-sre-platform
+    slo/overlay: prod
+    slo/alert-type: burn-rate
+spec:
+  groups:
+    - name: slo.burn-rate.prod.sre-demo-api
+      rules:
+        - alert: SreDemoApiLatencyP95Burn
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket{job="sre-demo-api"}[5m])))
+            > 0.5
+          for: 5m
+          labels:
+            severity: critical
+            slo: sre-demo-api-latency-p95
+            overlay: prod
+          annotations:
+            summary: "sre-demo-api P95 latency burn (prod)"
+            description: "sre-demo-api P95 latency exceeds 500ms for 5 minutes in prod."
+            runbook: docs/runbooks/sre-demo-api-latency.md
+
+        - alert: SreDemoApiErrorRateFastBurn
+          expr: |
+            sum(rate(http_requests_total{job="sre-demo-api",code=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="sre-demo-api"}[5m]))
+            > 0.01
+          for: 3m
+          labels:
+            severity: critical
+            slo: sre-demo-api-error-rate
+            overlay: prod
+          annotations:
+            summary: "sre-demo-api error rate fast burn (prod)"
+            description: "sre-demo-api 5xx error rate above 1% over 5 minutes in prod."
+            runbook: docs/runbooks/sre-demo-api-errors.md
+
+    - name: slo.burn-rate.prod.argocd
+      rules:
+        - alert: ArgoCdSyncFailureRate
+          expr: |
+            sum(rate(argocd_app_info{sync_status="OutOfSync"}[15m]))
+            /
+            sum(rate(argocd_app_info[15m]))
+            > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            slo: argocd-sync-success
+            overlay: prod
+          annotations:
+            summary: "Argo CD sync failure rate (prod)"
+            description: "More than 10% of Argo CD applications are OutOfSync over 15 minutes in prod."
+            runbook: docs/runbooks/argocd-sync.md

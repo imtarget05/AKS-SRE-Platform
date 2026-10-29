@@ -1,0 +1,12 @@
+# P2.11 — Coverage gate: 75% backend.
+#
+# pytest with pytest-cov enforces a coverage floor on the gate/test code.
+# Run:  python3 -m pytest   (fails when coverage < 75%)
+#
+# NOTE: pytest-cov must be added to requirements.lock via
+#       `uv pip compile requirements.in --generate-hashes` before CI installs
+#       with --require-hashes (see requirements.in).
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--cov=tests", "--cov-report=term-missing", "--cov-fail-under=75", "-q"]

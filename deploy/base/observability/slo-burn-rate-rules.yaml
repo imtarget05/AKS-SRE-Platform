@@ -4,6 +4,9 @@
 # based on the SLO definitions in docs/slo.md.
 #
 # Thresholds are PROPOSED and require 30-day observation calibration.
+#
+# Burn-rate coverage matches the SLIs in deploy/sli/ (availability,
+# latency_p95, error_rate).
 
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -71,6 +74,44 @@ spec:
               sre-demo-api has consumed 10% of its monthly error budget in the last 3 days.
               This is a 0.5x burn rate for the 99.9% availability SLO.
             runbook: docs/runbooks/sre-demo-api-availability.md
+
+        # Latency p95 burn: p95 above 500ms for 5 minutes (matches deploy/slo/latency_p95.md target)
+        - alert: SreDemoApiLatencyP95Burn
+          expr: |
+            histogram_quantile(0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket{job="sre-demo-api"}[5m])))
+            > 0.5
+          for: 5m
+          labels:
+            severity: warning
+            slo: sre-demo-api-latency-p95
+            burn_rate: "slow"
+          annotations:
+            summary: "sre-demo-api latency p95 burn (>500ms)"
+            description: |
+              sre-demo-api p95 latency exceeds 500ms for 5 minutes.
+              Latency SLO target is p95 < 500ms (deploy/slo/latency_p95.md).
+            runbook: docs/runbooks/sre-demo-api-latency.md
+
+        # Error rate fast burn: 5xx error rate above 1% over 1 hour
+        # (matches deploy/slo/error_rate.md target < 1%)
+        - alert: SreDemoApiErrorRateFastBurn
+          expr: |
+            sum(rate(http_requests_total{job="sre-demo-api",code=~"5.."}[1h]))
+            /
+            sum(rate(http_requests_total{job="sre-demo-api"}[1h]))
+            > 0.01
+          for: 5m
+          labels:
+            severity: critical
+            slo: sre-demo-api-error-rate
+            burn_rate: "fast"
+          annotations:
+            summary: "sre-demo-api error rate fast burn (>1%)"
+            description: |
+              sre-demo-api 5xx error rate above 1% over 1 hour.
+              Error rate SLO target is < 1% (deploy/slo/error_rate.md).
+            runbook: docs/runbooks/sre-demo-api-errors.md
 
     - name: slo.burn-rate.argocd
       rules:

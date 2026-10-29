@@ -24,9 +24,7 @@ helm upgrade --install kps prometheus-community/kube-prometheus-stack \
   --version 91.5.0 -n monitoring \
   -f platform/observability/kube-prometheus-stack-values.yaml
 
-kubectl apply -f deploy/base/observability/argocd-servicemonitor.yaml \
-  -f deploy/base/observability/local-platform-prometheusrule.yaml \
-  -f platform/observability/dashboards/
+kubectl apply -k deploy/base/observability/
 ```
 
 ## Files
@@ -35,6 +33,7 @@ kubectl apply -f deploy/base/observability/argocd-servicemonitor.yaml \
 |---|---|
 | `kube-prometheus-stack-values.yaml` | pinned, laptop-sized chart values; Alertmanager off, control-plane scrapes off, selectors select-all |
 | `deploy/base/observability/argocd-servicemonitor.yaml` | scrapes every Argo CD component with a `metrics` port via the shared `part-of: argocd` label |
+| `deploy/base/observability/dashboards.yaml` + `local-platform-dashboard.yaml` | Grafana dashboard ConfigMaps, rendered by `deploy/base/observability/kustomization.yaml` |
 | `deploy/base/observability/local-platform-prometheusrule.yaml` | the one proven local alert, `LocalPlatformMetricSourceDown` |
 | `dashboards/` | three ConfigMaps (`grafana_dashboard: "1"`): Local Platform · GitOps/Argo CD · FlashSale |
 

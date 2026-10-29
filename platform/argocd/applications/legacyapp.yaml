@@ -1,8 +1,8 @@
-# L9 — Productionized-LegacyApp (P02) under GitOps.
+# L9 — Productionized-LegacyApp (P02) under GitOps — EXTERNAL workload.
 #
-# Same contract as the flashsale Application: the imported application subtree
-# is the desired state, Argo reconciles it, and no credential is stored for the
-# public repository. The former standalone repo remains migration provenance.
+# Source of truth is the external Productionized-LegacyApp repository; this
+# platform holds only a GitOps reference (ADR-015). No credential is stored
+# for the public repository.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -14,9 +14,9 @@ spec:
   project: portfolio
 
   source:
-    repoURL: https://github.com/imtarget05/AKS-SRE-Platform.git
-    targetRevision: main
-    path: apps/legacy-inventory/infrastructure/kubernetes/overlays/prod
+    repoURL: https://github.com/imtarget05/Productionized-LegacyApp.git
+    targetRevision: 885d2ec3a2672416404082e3736de80855052928
+    path: infrastructure/kubernetes/overlays/prod
 
   destination:
     server: https://kubernetes.default.svc

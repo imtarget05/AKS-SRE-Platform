@@ -2,4 +2,5 @@
 # Used by validate-gitops.py to perform full cross-repository kustomize render assertions.
 FlashSale-Backend: ../OpsBridge
 QuanLyKho: ../QuanLyKho
+Productionized-LegacyApp: ../Productionized-LegacyApp
 AKS-SRE-Platform: .

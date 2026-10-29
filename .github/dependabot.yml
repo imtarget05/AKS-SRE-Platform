@@ -1,0 +1,17 @@
+# P2.13 — Dependabot configuration.
+#
+# Patch and minor dependency updates are opened as automatic PRs.
+# Dependabot security updates (one PR per CVE / vulnerable dependency) run
+# automatically on a separate schedule and do not need to be listed here.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels: ["dependencies", "automerge"]
+    # Allow patch and minor updates; Dependabot opens a separate PR per
+    # dependency. Security fixes for CVEs are opened automatically as
+    # Dependabot security updates.

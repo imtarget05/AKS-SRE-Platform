@@ -1,0 +1,1 @@
+../local-platform/l9-gitops-PASS.md

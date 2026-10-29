@@ -1,0 +1,1 @@
+../live-aks-2026-10-20/terraform-plan.txt

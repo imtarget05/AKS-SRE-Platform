@@ -54,10 +54,10 @@ fails CI.** There are no silent orphans.
 
 | File | Status | Reason |
 |---|---|---|
-| `platform/observability/dashboards.yaml` | `REFERENCE_NOT_RENDERED` | Two Grafana dashboard ConfigMaps (`grafana-dashboard-argocd`, `grafana-dashboard-workloads`), applied out-of-band. It **used to** define `grafana-dashboard-local-platform` as well; that third object was removed on 2026-10-20 because `dashboards/local-platform-dashboard.yaml` defined the same object name with different content (last-writer-wins: one dashboard was silently lost — proven on the live cluster). |
-| `platform/observability/dashboards/*.yaml` | `REFERENCE_NOT_RENDERED` | Grafana dashboards applied out-of-band. `dashboards/local-platform-dashboard.yaml` is now the **sole owner** of the `grafana-dashboard-local-platform` ConfigMap and carries BOTH dashboard definitions under two distinct keys (`local-platform.json`, `local-platform-overview.json`), so neither dashboard is lost. CRD/ConfigMap kinds are not rendered by CI. |
-| `platform/observability/*servicemonitor*.yaml` | `REFERENCE_NOT_RENDERED` | ServiceMonitors for Argo CD and Envoy Gateway (`monitoring.coreos.com/v1`, CRD). |
-| `platform/observability/local-platform-prometheusrule.yaml` | `REFERENCE_NOT_RENDERED` | The one alert rule with real firing/resolving evidence (`docs/evidence/local-platform/l10-observability-PASS.md`). Evidence exists; CI schema coverage does not. |
+| `platform/observability/dashboards.yaml` | `RENDERED` | Two Grafana dashboard ConfigMaps (`grafana-dashboard-argocd`, `grafana-dashboard-workloads`), now copied into `deploy/base/observability/dashboards.yaml` and rendered by `deploy/base/observability/kustomization.yaml`. Source remains `platform/observability/dashboards.yaml`. |
+| `platform/observability/dashboards/local-platform-dashboard.yaml` | `RENDERED` | Sole owner of `grafana-dashboard-local-platform`, now copied into `deploy/base/observability/local-platform-dashboard.yaml` and rendered by `deploy/base/observability/kustomization.yaml`. |
+| `platform/observability/*servicemonitor*.yaml` | `RENDERED` | ServiceMonitors for Argo CD and Envoy Gateway, rendered by `deploy/base/observability/kustomization.yaml`. |
+| `platform/observability/local-platform-prometheusrule.yaml` | `RENDERED` | Alert rule with real firing/resolving evidence, rendered by `deploy/base/observability/kustomization.yaml`. |
 | `platform/observability/kube-prometheus-stack-values.yaml` | `LEGACY_NOT_DEPLOYED` | Helm values retained for the local stack; not applied by any CI path. |
 
 ## `app/` and `deploy/`

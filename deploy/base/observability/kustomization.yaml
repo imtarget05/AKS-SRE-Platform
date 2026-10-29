@@ -12,4 +12,13 @@ resources:
   - slo-burn-rate-rules.yaml
   - loki-deployment.yaml
   - promtail-daemonset.yaml
+  - otel-collector-daemonset.yaml
   - loki-servicemonitor.yaml
+  - dashboards.yaml
+  - local-platform-dashboard.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: aks-sre-platform
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false

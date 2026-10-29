@@ -1,0 +1,140 @@
+# P2.3 — OpenTelemetry Collector DaemonSet.
+#
+# Scrapes Prometheus metrics (from the cluster Prometheus) and re-exports them
+# to Prometheus: the `prometheus` exporter exposes :9464/metrics (scraped by
+# Prometheus) and `prometheusremotewrite` forwards via the remote-write API.
+# OTLP receiver (4318) also accepts metrics/logs/traces from instrumented
+# workloads. Runs as DaemonSet so every node has a local collector.
+#
+# Image version: pin to the collector release in use before prod apply.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: aks-sre-platform
+    app.kubernetes.io/managed-by: kustomize
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: monitoring
+  labels:
+    app: otel-collector
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: aks-sre-platform
+    app.kubernetes.io/managed-by: kustomize
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: otel-collector-scrape-prometheus
+              honor_labels: true
+              scrape_interval: 30s
+              static_configs:
+                - targets:
+                    - prometheus-operated.monitoring.svc.cluster.local:9090
+      otlp:
+        protocols:
+          http:
+            endpoint: 0.0.0.0:4318
+    processors:
+      memory_limiter:
+        limit_mib: 512
+        spike_limit_mib: 128
+        check_interval: 1s
+      batch:
+        timeout: 5s
+        send_batch_max_size: 1024
+    exporters:
+      prometheus:
+        # Exported back to Prometheus: Prometheus scrapes :9464/metrics.
+        endpoint: 0.0.0.0:9464
+      prometheusremotewrite:
+        # Remote-write into the cluster Prometheus.
+        endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
+      logging:
+        loglevel: debug
+    service:
+      pipelines:
+        metrics:
+          receivers: [prometheus, otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheus, prometheusremotewrite, logging]
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: aks-sre-platform
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+        app.kubernetes.io/name: otel-collector
+        app.kubernetes.io/part-of: aks-sre-platform
+    spec:
+      serviceAccountName: otel-collector
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.102.0
+          command: ["/otelcol-contrib"]
+          args:
+            - --config=/etc/otel-collector/otel-collector-config.yaml
+          ports:
+            - name: otlp-http
+              containerPort: 4318
+              protocol: TCP
+            - name: prometheus
+              containerPort: 9464
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/part-of: aks-sre-platform
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: prometheus
+      port: 9464
+      targetPort: 9464
+  type: ClusterIP
