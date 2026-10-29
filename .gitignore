@@ -41,3 +41,6 @@ __pycache__/
 *.log
 .wrangler/
 .DS_Store
+
+# Build artifacts (static site output) — never commit; regenerate via scripts/build-distribution-site.sh
+docs-site/site/

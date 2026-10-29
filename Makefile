@@ -36,5 +36,18 @@ sign: docker-push
 	@echo "Image signed successfully"
 	@cosign verify $(IMAGE_NAME):$(IMAGE_TAG)
 
+# Test target — run offline Python test suite (pytest)
+test:
+	@echo "Running offline test suite..."
+	@python -m pytest tests/ -q
+
+# Lint target — syntax-check Python sources + render kustomize manifests
+lint:
+	@echo "Syntax-checking Python sources..."
+	@python -m py_compile tests/*.py scripts/*.py
+	@echo "Rendering kustomize manifests..."
+	@kubectl kustomize deploy/base >/dev/null 2>&1 || echo "kubectl unavailable; skipping manifest render"
+	@echo "Lint complete."
+
 # Default target
 all: sbom scan

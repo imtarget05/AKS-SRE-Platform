@@ -6,11 +6,10 @@ resources:
   - deployment.yaml     # sre-demo-api Deployment
   - autoscaling.yaml    # HPA + PodDisruptionBudget
   - networkpolicy.yaml  # default-deny + explicit allows
-  - observability/servicemonitor-argocd.yaml          # Argo CD metrics scrape
   - observability/servicemonitor-envoy-gateway.yaml   # Envoy Gateway metrics scrape
   - observability/flashsale-workload-prometheusrule.yaml  # FlashSale workload alerts
   - observability/local-platform-prometheusrule.yaml   # Platform alerts
-  - observability/argocd-servicemonitor.yaml          # Argo CD server metrics scrape
+  - observability/argocd-servicemonitor.yaml          # Argo CD metrics scrape (canonical, part-of selector)
 
 labels:
   - pairs:

@@ -1,0 +1,136 @@
+
+      <!-- Chaos & Traffic Control Toolbar -->
+      <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-cyan-400" aria-hidden="true"></i>
+            <span>Interactive Chaos &amp; Traffic Simulation Model</span>
+          </h2>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Mô phỏng hành vi microservice (circuit breaker, HPA burst, probe isolation) trên trình duyệt theo quy luật thực nghiệm đo lường được từ kịch bản local &amp; AKS.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="injectBurstTraffic()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-cyan-300">
+            <i class="fa-solid fa-bolt" aria-hidden="true"></i>
+            <span>Simulate Burst (5,000 QPS)</span>
+          </button>
+          <button id="btn-chaos-toggle" onclick="toggleDependencyFailure()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-rose-300">
+            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+            <span id="chaos-btn-text">Simulate Dependency Outage (503)</span>
+          </button>
+          <button onclick="resetSimulationBaseline()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-1.5 transition focus:outline-none focus:ring-2 focus:ring-gray-400">
+            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+            <span>Reset Simulation Baseline</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-Time Charts Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart 1: Live RED Requests & Errors -->
+        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-cyan-400" aria-hidden="true"></i>
+                <span>Throughput &amp; Error Rate (RED Method)</span>
+              </h3>
+              <p class="text-xs text-gray-400">Simulated requests/sec (blue) vs HTTP 5xx errors/sec (red) &bull; illustrative synthetic model</p>
+            </div>
+            <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Simulation (1s tick)</span>
+          </div>
+          <div class="h-56 w-full">
+            <canvas id="chart-traffic" role="img" aria-label="Line chart showing simulated throughput QPS and HTTP 5xx error rate over the last 20 seconds">
+              <p class="sr-only">Line chart showing simulated throughput around 1,240 QPS and HTTP 5xx error rate at 0% under normal baseline.</p>
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Latency Distribution P50 / P90 / P99 -->
+        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-stopwatch text-emerald-400" aria-hidden="true"></i>
+                <span>Duration &amp; Latency Percentiles (P50, P90, P99)</span>
+              </h3>
+              <p class="text-xs text-gray-400">Service response time model &bull; Illustrative target P99 &lt; 50ms &bull; synthetic histogram</p>
+            </div>
+            <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Histogram Model</span>
+          </div>
+          <div class="h-56 w-full">
+            <canvas id="chart-latency" role="img" aria-label="Line chart showing simulated latency percentiles P50, P90, and P99 over the last 20 seconds">
+              <p class="sr-only">Line chart showing simulated latency percentiles with P99 at approximately 11.8 milliseconds and P50 at 6 milliseconds.</p>
+            </canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Edge Ping & Node Saturation Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Live Node Resource Saturation -->
+        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-server text-blue-400" aria-hidden="true"></i>
+                <span>Node &amp; Pod Resource Saturation (USE Method)</span>
+              </h3>
+              <p class="text-xs text-gray-400">Historical profile: aks-sys-13411604-vmss000000 &bull; Ubuntu 24.04 &bull; 4 vCPU / 16GB</p>
+            </div>
+            <span class="text-xs font-mono text-gray-400">Model Sampling: 1000ms</span>
+          </div>
+          <div class="h-44 w-full">
+            <canvas id="chart-resources" role="img" aria-label="Line chart showing simulated node CPU utilization and memory saturation over the last 20 seconds">
+              <p class="sr-only">Line chart showing simulated node CPU around 28% and memory around 42%.</p>
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Edge Network & SLA Health Box -->
+        <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+              <i class="fa-solid fa-satellite-dish text-cyan-400" aria-hidden="true"></i>
+              <span>Live Edge Probing</span>
+            </h3>
+            <p class="text-xs text-gray-400">Direct client HTTP/2 probe to Cloudflare Edge PoP</p>
+
+            <div class="mt-4 space-y-3 font-mono text-xs">
+              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950 border border-gray-800">
+                <span class="text-gray-400">Client Edge RTT:</span>
+                <span id="stat-rtt" class="text-emerald-400 font-bold">18.4 ms</span>
+              </div>
+              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950 border border-gray-800">
+                <span class="text-gray-400">Downstream Model:</span>
+                <span class="text-cyan-400 font-bold">sre-demo-api:3000</span>
+              </div>
+              <div class="flex items-center justify-between p-2.5 rounded bg-gray-950 border border-gray-800">
+                <span class="text-gray-400">Target Region:</span>
+                <span class="text-emerald-400 font-bold">EastAsia (Historical)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-gray-800 text-[11px] text-gray-500 font-mono flex items-center justify-between">
+            <span>Circuit Breaker State:</span>
+            <span id="circuit-breaker-label" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">CLOSED (HEALTHY)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Scrolling Kubernetes Event Stream -->
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-cyan-400 pulse-live" aria-hidden="true"></span>
+            <h3 class="text-sm font-bold text-white font-mono">Simulated Cluster Event Stream (Empirical Event Pool)</h3>
+          </div>
+          <button onclick="clearEventLog()" class="text-xs font-mono text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">Clear Feed</button>
+        </div>
+        <div id="live-event-stream" class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs overflow-y-auto max-h-48 space-y-1.5 terminal-scroll">
+          <!-- Dynamically populated by event streamer -->
+        </div>
+      </div>
+    

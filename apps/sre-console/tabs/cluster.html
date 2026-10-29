@@ -1,0 +1,77 @@
+
+      <!-- Node Status Card -->
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-server text-cyan-400" aria-hidden="true"></i>
+              <span>System Node Pool: aks-sys-vmss (Historical Snapshot)</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Snapshot recorded during Azure AKS v1.36.4 validation run &bull; Teardown Verified</p>
+          </div>
+          <span class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+            NodeReady: 100%
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs">
+            <thead>
+              <tr class="border-b border-gray-800 text-gray-400">
+                <th class="py-2">NODE NAME</th>
+                <th class="py-2">STATUS</th>
+                <th class="py-2">ROLES</th>
+                <th class="py-2">VERSION</th>
+                <th class="py-2">OS IMAGE</th>
+                <th class="py-2">KERNEL</th>
+                <th class="py-2">CONTAINER RUNTIME</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-800/60 text-gray-300">
+              <tr>
+                <td class="py-2.5 text-white font-semibold">aks-sys-13411604-vmss000000</td>
+                <td class="py-2.5 text-emerald-400 font-bold">Ready</td>
+                <td class="py-2.5 text-gray-500">&lt;none&gt;</td>
+                <td class="py-2.5 text-cyan-400">v1.36.4</td>
+                <td class="py-2.5">Ubuntu 24.04.5 LTS</td>
+                <td class="py-2.5">6.8.0-1071-azure</td>
+                <td class="py-2.5 text-gray-400">containerd://2.3.3-3</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- System Pods Inventory Table -->
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-network-wired text-blue-400" aria-hidden="true"></i>
+              <span>Core System &amp; Security Pods (kube-system Inventory)</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-0.5">Azure CNI, Network Policy Manager, CoreDNS &amp; Workload Identity Webhook</p>
+          </div>
+          <span class="text-xs font-mono text-gray-400">11/11 Running &bull; 0 Restarts</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left font-mono text-xs">
+            <thead>
+              <tr class="border-b border-gray-800 text-gray-400">
+                <th class="py-2">POD NAME</th>
+                <th class="py-2">READY</th>
+                <th class="py-2">STATUS</th>
+                <th class="py-2">RESTARTS</th>
+                <th class="py-2">CPU (BASE)</th>
+                <th class="py-2">MEMORY (BASE)</th>
+                <th class="py-2">ROLE / SUBSYSTEM</th>
+              </tr>
+            </thead>
+            <tbody id="cluster-pods-body" class="divide-y divide-gray-800/60 text-gray-300">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    

@@ -1,0 +1,67 @@
+
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-code-compare text-cyan-400" aria-hidden="true"></i>
+              <span>ArgoCD GitOps Architecture &amp; AppProjects</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">Multi-application isolation pattern with Automated Prune &amp; Self-Heal SLA &le; 21s &bull; Tested on kind profile</p>
+          </div>
+          <span class="px-2.5 py-1 text-xs font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">v2.13.0 Pinned</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-lg bg-gray-950 border border-gray-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white font-mono">AppProject: portfolio</span>
+              <span class="text-xs text-emerald-400 font-mono font-semibold">Strict Boundary</span>
+            </div>
+            <p class="text-xs text-gray-400">
+              Giới hạn source repo nghiêm ngặt, không dùng wildcard (*). Cụm đích được cấp phép: <code class="text-gray-300">https://kubernetes.default.svc</code>.
+            </p>
+            <div class="text-[11px] font-mono text-gray-500 pt-1">
+              File: platform/argocd/appproject.yaml &bull; 0 Wildcard rules
+            </div>
+          </div>
+
+          <div class="p-4 rounded-lg bg-gray-950 border border-gray-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white font-mono">Application: flashsale</span>
+              <span class="text-xs text-emerald-400 font-mono font-semibold">Self-Heal Active</span>
+            </div>
+            <p class="text-xs text-gray-400">
+              Đồng bộ vi dịch vụ FlashSale. Kích hoạt chính sách tự động prune và self-heal khi phát hiện lệch cấu hình (drift). Target namespace: <code class="text-gray-300">flashsale</code>.
+            </p>
+            <div class="text-[11px] font-mono text-gray-500 pt-1">
+              File: platform/argocd/applications/flashsale.yaml &bull; main
+            </div>
+          </div>
+        </div>
+
+        <!-- GitOps Verification Output -->
+        <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 font-mono text-xs text-gray-200">
+          <p class="text-cyan-400 font-bold mb-2">python scripts/validate-gitops.py output:</p>
+          <pre class="terminal-scroll overflow-x-auto text-gray-300">
+  PASS                         appproject-sourceRepos     platform/argocd/appproject.yaml#portfolio  (2 repo(s), no wildcard)
+  PASS                         appproject-destinations    platform/argocd/appproject.yaml#portfolio  (2 destination(s))
+  PASS                         app-project                platform/argocd/applications/flashsale.yaml#flashsale  (project portfolio)
+  PASS                         app-repoURL                platform/argocd/applications/flashsale.yaml#flashsale  (FlashSale-Backend)
+  PASS                         app-targetRevision         platform/argocd/applications/flashsale.yaml#flashsale  (main)
+  PASS                         app-path                   platform/argocd/applications/flashsale.yaml#flashsale  (infrastructure/kubernetes/overlays/local)
+  PASS                         app-namespace              platform/argocd/applications/flashsale.yaml#flashsale  (flashsale allowed by portfolio)
+  PASS                         app-automated-sync         platform/argocd/applications/flashsale.yaml#flashsale  (automated sync enabled)
+  PASS                         app-sourceRepo-allowed     platform/argocd/applications/flashsale.yaml#flashsale  (allowed by project)
+  PASS                         app-project                platform/argocd/applications/legacyapp.yaml#legacyapp  (project portfolio)
+  PASS                         app-repoURL                platform/argocd/applications/legacyapp.yaml#legacyapp  (AKS-SRE-Platform)
+  PASS                         app-targetRevision         platform/argocd/applications/legacyapp.yaml#legacyapp  (main)
+  PASS                         app-path                   platform/argocd/applications/legacyapp.yaml#legacyapp  (apps/legacy-inventory/infrastructure/kubernetes/overlays/prod)
+  PASS                         app-namespace              platform/argocd/applications/legacyapp.yaml#legacyapp  (legacyapp allowed by portfolio)
+  PASS                         app-automated-sync         platform/argocd/applications/legacyapp.yaml#legacyapp  (automated sync enabled)
+  PASS                         app-sourceRepo-allowed     platform/argocd/applications/legacyapp.yaml#legacyapp  (allowed by project)
+
+GITOPS: 16 passed, 0 failed, 2 external advisory (1 AppProject file, 2 distinct applications)
+          </pre>
+        </div>
+      </div>
+    

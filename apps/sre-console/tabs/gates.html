@@ -1,0 +1,131 @@
+
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-emerald-400" aria-hidden="true"></i>
+              <span>Automated GitOps &amp; Platform Invariant Gates (G1 &ndash; G14)</span>
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">Verified architectural invariants across Terraform, GitOps Validator, and Workload Regressions (tests/test_gates.py)</p>
+          </div>
+          <a href="/evidence/test-results/" class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition flex items-center gap-1.5">
+            <span>47/47 Clean Verification Tests</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]" aria-hidden="true"></i>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs">
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G1:</span> Valid repo-owned resources
+              <p class="text-gray-500 text-[11px] mt-0.5">rc == 0, zero FAIL rows in canonical validator run</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G2:</span> Required resource removal guard
+              <p class="text-gray-500 text-[11px] mt-0.5">rc != 0 when required platform resource is deleted</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G3:</span> Absolute machine path prevention
+              <p class="text-gray-500 text-[11px] mt-0.5">rc == 2 usage error if developer-specific path leaked</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G4:</span> External repo availability check
+              <p class="text-gray-500 text-[11px] mt-0.5">EXTERNAL_REPO_NOT_PRESENT logged as clean advisory</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G5:</span> Mapping wrong path guard
+              <p class="text-gray-500 text-[11px] mt-0.5">rc != 0 if repo mapping points to non-existent directory</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G6:</span> Canonical restoration guard
+              <p class="text-gray-500 text-[11px] mt-0.5">Validator returns rc == 0 after canonical restore</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G7:</span> Fail-safe non-zero exit code
+              <p class="text-gray-500 text-[11px] mt-0.5">A FAIL row strictly forces process exit code != 0</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G8:</span> Orphan manifest detection
+              <p class="text-gray-500 text-[11px] mt-0.5">rc != 0 and orphan manifest explicitly identified</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G9:</span> Destination namespace allowlist
+              <p class="text-gray-500 text-[11px] mt-0.5">rc != 0 if cross-repo manifest targets disallowed namespace</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G10:</span> CI verification breadth &amp; lint
+              <p class="text-gray-500 text-[11px] mt-0.5">Tflint absolute config + all terraform roots tested</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G11:</span> AppProject deduplication guard
+              <p class="text-gray-500 text-[11px] mt-0.5">Two files declaring same AppProject FAIL with paths</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G12:</span> Argo CD version pinned in ONE place
+              <p class="text-gray-500 text-[11px] mt-0.5">platform/argocd/VERSION pinned tag; no floating refs</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G13:</span> Server-side apply &amp; deduplication
+              <p class="text-gray-500 text-[11px] mt-0.5">No two YAML files declare same object (kind/name)</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+
+          <a href="/evidence/test-results/" class="p-3 bg-gray-950/70 border border-gray-800 rounded flex items-center justify-between hover:border-gray-700 transition group">
+            <div>
+              <span class="text-emerald-400 font-bold group-hover:text-cyan-400 transition">G14:</span> Workload entrypoint regression guard
+              <p class="text-gray-500 text-[11px] mt-0.5">Demo workload npm start runs real node server entrypoint</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400">PASS</span>
+          </a>
+        </div>
+      </div>
+    

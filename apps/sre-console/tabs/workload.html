@@ -1,0 +1,55 @@
+
+      <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-heart-pulse text-rose-400" aria-hidden="true"></i>
+            <span>Kubernetes Probe Split Pattern (Anti-Cascading Restarts)</span>
+          </h3>
+          <p class="text-xs text-gray-400 mt-1">
+            Minh chứng quy chuẩn kiến trúc SRE: Phân lập tuyệt đối giữa <code>/health/live</code> (kiểm tra event loop) và <code>/health/ready</code> (phụ thuộc downstream). Khi dependency chết, Service cô lập traffic với <strong>0 lần restart pod</strong>.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 rounded-lg bg-gray-950/80 border border-gray-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-cyan-400 font-mono">GET /health/live</span>
+              <span class="px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded">HTTP 200 OK</span>
+            </div>
+            <p class="text-xs text-gray-300">
+              Trả lời câu hỏi "Event loop Node.js có còn sống không?". KHÔNG BAO GIỜ chạm database hay dependency. Nếu dependency chậm hoặc sập, probe này vẫn khỏe mạnh, chặn đứng vòng xoáy CrashLoopBackOff!
+            </p>
+            <div class="p-2.5 bg-gray-900 rounded font-mono text-[11px] text-gray-400">
+              { "status": "live", "uptime_s": 1420.8 }
+            </div>
+          </div>
+
+          <div class="p-4 rounded-lg bg-gray-950/80 border border-gray-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-400 font-mono">GET /health/ready</span>
+              <span id="ready-status-badge" class="px-2 py-0.5 text-xs font-mono bg-emerald-500/10 text-emerald-400 rounded">HTTP 200 READY</span>
+            </div>
+            <p class="text-xs text-gray-300">
+              Trả lời câu hỏi "Pod này có nên nhận traffic không?". CÓ phụ thuộc downstream. Khi dependency chết, Service gỡ endpoint khỏi kube-proxy với <strong>0 LẦN RESTART</strong>.
+            </p>
+            <div id="ready-json-box" class="p-2.5 bg-gray-900 rounded font-mono text-[11px] text-emerald-400">
+              { "status": "ready", "dependency": true }
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Probe Sandbox -->
+        <div class="pt-4 border-t border-gray-800 space-y-3">
+          <p class="text-xs font-semibold text-white">Thao tác mô phỏng Probe Sandbox (Đồng bộ toàn hệ thống):</p>
+          <div class="flex flex-wrap items-center gap-3">
+            <button onclick="toggleReadiness(true)" class="px-3 py-1.5 text-xs font-mono rounded bg-emerald-600 hover:bg-emerald-500 text-white transition focus:outline-none focus:ring-2 focus:ring-emerald-300">Restore Dependency (Ready = true)</button>
+            <button onclick="toggleReadiness(false)" class="px-3 py-1.5 text-xs font-mono rounded bg-amber-600 hover:bg-amber-500 text-white transition focus:outline-none focus:ring-2 focus:ring-amber-300">Sever Dependency (Ready = false)</button>
+            <button onclick="triggerWorkload(5000)" class="px-3 py-1.5 text-xs font-mono rounded bg-cyan-600 hover:bg-cyan-500 text-white transition focus:outline-none focus:ring-2 focus:ring-cyan-300">Execute /api/work (n=5000)</button>
+            <button onclick="resetSimulationBaseline()" class="px-3 py-1.5 text-xs font-mono rounded bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition focus:outline-none focus:ring-2 focus:ring-gray-400">Reset Baseline</button>
+          </div>
+          <div class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs text-gray-300 min-h-[48px] flex items-center">
+            <span id="live-console-log" class="text-emerald-400">HTTP/1.1 200 OK &bull; {"route":"/internal/readiness","ready":true} &bull; Endpoint active in kube-proxy</span>
+          </div>
+        </div>
+      </div>
+    
