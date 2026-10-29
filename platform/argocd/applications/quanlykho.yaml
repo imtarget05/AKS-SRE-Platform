@@ -14,7 +14,7 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/QuanLyKho.git
-    targetRevision: 846810dc98d4b8053ea04c94c385adaa131c5704
+targetRevision: 350fc13
     path: infra/k8s/overlays/production
 
   destination:
