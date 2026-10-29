@@ -44,7 +44,7 @@ jobs:
         terraform/modules/acr_attachment
         terraform/modules/aks_cluster
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
         with:
@@ -217,7 +217,7 @@ jobs:
     name: kubernetes (render, schema, inventory, policy)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # -f so a 404 or an HTML error page is a hard failure instead of a
       # tarball-shaped file that fails two lines later with a confusing message.
@@ -279,7 +279,7 @@ jobs:
     name: security (trivy config + filesystem)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # The action bundled an install script that fetched trivy v0.65.0 from its
       # own source and failed on the runner three runs in a row before any scan
@@ -338,7 +338,7 @@ jobs:
     name: python gates (validator test matrix)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       # Explicit interpreter and explicit dependency install. The workflow never
       # inherits a developer's virtualenv: on the authoring machine `python3`
@@ -372,7 +372,7 @@ jobs:
     name: agent-hub (evals, schemas, hitl execution)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
