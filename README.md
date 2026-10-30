@@ -136,3 +136,5 @@ evidence, evals, and standalone Retail Finance service are preserved in
 historical snapshot, not a release input. The current Agent Hub lives in
 [`apps/agent-hub/`](apps/agent-hub/README.md).
 
+(Trivial smoke-test commit to trigger `pr-gate` CI on push to main.)
+
