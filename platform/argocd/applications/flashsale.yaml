@@ -16,7 +16,7 @@ spec:
 
   source:
     repoURL: https://github.com/imtarget05/OpsBridge.git
-    targetRevision: 0de5f4759c97922aec9134dd091eac03c5cac5be
+    targetRevision: 2b0c5a6833f6240dd423583b20476d8f551c065f
     path: infrastructure/kubernetes/overlays/azure-cloud
 
   destination:
