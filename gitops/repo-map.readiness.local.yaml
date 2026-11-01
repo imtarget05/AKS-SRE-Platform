@@ -1,0 +1,4 @@
+OpsBridge: ../OpsBridge
+QuanLyKho: ../QuanLyKho
+AKS-SRE-Platform: .
+Productionized-LegacyApp: /tmp/aks-legacy-validation-20261030

@@ -12,7 +12,7 @@ spec:
   project: portfolio
   source:
     repoURL: https://github.com/imtarget05/AKS-SRE-Platform.git
-    targetRevision: main
+    targetRevision: 417df74c60b2fcb742c98c5129baf95e7f49637a
     path: kubernetes/apps/agent-hub
   destination:
     server: https://aksportfoliodev-vqv8uki1.hcp.eastasia.azmk8s.io:443

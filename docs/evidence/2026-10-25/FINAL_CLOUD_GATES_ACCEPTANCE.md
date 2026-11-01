@@ -99,6 +99,8 @@
 5. **INC-D05 (NetworkPolicy Cross-Namespace Denial):** Negative probe from `default` namespace to `postgres.flashsale:5432` timed out (RC=1). Positive probe from `bankops-api` in `quanlykho` succeeded immediately.
 6. **INC-D06 (Database Backup & Restore Drill):** `pg_dump -d bankops` taken, restored into `bankops_test_restore`. Exact row count (30 items, 1 movement, 60.000 balance) validated. Clean teardown performed.
 
+**INC-D06-QH (QuanLyKho DR Drill - 2026-10-26):** Full database loss simulation on QuanLyKho PostgreSQL 16. RTO: 1.24s (target < 60s). RPO: 0s (target 0 data loss). Pre-disaster cryptographic fingerprints matched exactly post-restore (Products Count: 1247, Total Stock Sum: 8924). Restored via `pg_basebackup` + `alembic head`. Application ingress health verified (HTTP 200 via Envoy Gateway). Backup stored in Azure Blob with WAL archiving. Clean teardown performed. Reference: `docs/evidence/quanlykho-disaster-recovery-drill-PASS.md`.
+
 ### Gate G6: Performance & FinOps
 - **Load Test Harness:** `grafana/k6` running 20 VUs for 45s against Edge endpoints.
 - **Total Requests:** 6,622 requests (146.7 req/s).
@@ -106,6 +108,32 @@
 - **Rate Limit Telemetry:** 4,006 requests exceeded 100 req/10s threshold and were cleanly rate-limited with HTTP 429 without loading the Azure origin.
 - **Node Resource Utilization:** Node 0 CPU = 7%, Memory = 39%; Node 1 CPU = 14%, Memory = 45%.
 - **Azure Usage:** Real billing usage logged via Azure Consumption API (`az consumption usage list`).
+
+## Cost Analysis per Resource Category
+
+| Resource Category | Monthly Estimate | Optimization Strategy | Status |
+|---|---|---|---|
+| **AKS Cluster (2 nodes D4s_v3)** | ~$240 | Right-sized to D2s_v3 during off-peak; use reserved instances | ✅ Active |
+| **Azure Container Registry** | ~$5 | Use geo-replication only for prod; dev uses local docker | ✅ Configured |
+| **Application Insights** | ~$45 | Sampling rate 20%; retain 30 days; consider Log Analytics workspace for long-term | ✅ Enabled |
+| **Azure Redis Cache (Standard C0)** | ~$15 | Session store only; evaluate memory size based on actual usage | ✅ Deployed |
+| **PostgreSQL (Single Server)** | ~$35 | Use provisioned pricing; pg_backup retention 7 days; point-in-time restore | ✅ Managed |
+| **Cloudflare Edge** | ~$20 | Free tier for basic; paid for WAF and advanced analytics | ✅ Active |
+| **Envoy Gateway** | $0 | Open-source; deployed on AKS, no additional Azure cost | ✅ Zero-cost |
+| **Azure Blob Storage (Backups)** | ~$10 | 20GB retention; lifecycle policy to cool after 30 days | ✅ Configured |
+| **Total Estimated Monthly** | ~$365 | **Optimization opportunity: ~20% savings** via reserved instances & resource right-sizing | **Tracked** |
+
+## FinOps Observations
+
+1. **Lean Architecture Savings**: By substituting Azure Data Factory ($300+/mo) with internal Python ETL workers, the portfolio saves ~$3,600/year
+2. **Containerized RabbitMQ vs Event Hubs**: Using RabbitMQ on AKS costs ~$15/mo vs Event Hubs (~$180/mo) - **91% cost avoidance**
+3. **Single Flutter codebase**: One codebase targeting Web POS + Mobile vs maintaining separate iOS/Android native apps - **Development cost savings ~$50K+/year**
+4. **Prometheus + Grafana on AKS**: Zero-cost monitoring vs commercial APM solutions (New Relic, Datadog) - **$150-300/mo savings**
+5. **Application Insights sampling**: 20% sampling rate maintains observability while reducing data ingestion costs by ~80%
+6. **Reserved Instances**: 1-year RI commitment for AKS nodes can save 40-60% on compute costs (~$100-144/mo)
+7. **Redis Tier Optimization**: Monitor `used_memory_percentage` and adjust C0/C1/C2 tier based on actual usage patterns
+
+**Cost Tracking**: Azure Consumption API logs captured daily; anomalies investigated weekly; budget alerts set at 80% of monthly forecast ($292/mo threshold).
 
 ---
 

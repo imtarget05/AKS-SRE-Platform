@@ -29,7 +29,7 @@ variable "data_collection_rule_name" {
 }
 
 variable "cluster_id" {
-  type    = string
+  type = string
 }
 
 variable "otel_collector_namespace" {

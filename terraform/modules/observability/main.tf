@@ -31,9 +31,9 @@ resource "azurerm_monitor_data_collection_rule" "dcr" {
   }
 
   data_flow {
-    destinations    = [azurerm_log_analytics_workspace.workspace.name]
-    streams         = ["Microsoft-InsightsMetrics"]
-    output_stream   = "Microsoft-InsightsMetrics"
+    destinations  = [azurerm_log_analytics_workspace.workspace.name]
+    streams       = ["Microsoft-InsightsMetrics"]
+    output_stream = "Microsoft-InsightsMetrics"
   }
 
   destination {

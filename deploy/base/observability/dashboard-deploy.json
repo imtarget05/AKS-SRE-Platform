@@ -1,0 +1,74 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Argo CD Sync Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "count(argocd_app_info{sync_status=\"Synced\"})",
+          "legendFormat": "Synced",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Argo CD Healthy Status",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "count(argocd_app_info{health_status=\"Healthy\"})",
+          "legendFormat": "Healthy",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Deployment Replicas Desired vs Ready",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "expr": "kube_deployment_spec_replicas",
+          "legendFormat": "{{deployment}} desired",
+          "refId": "A"
+        },
+        {
+          "expr": "kube_deployment_status_replicas_available",
+          "legendFormat": "{{deployment}} ready",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Rollout Status",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "expr": "kube_deployment_status_replicas_updated / kube_deployment_spec_replicas",
+          "legendFormat": "{{deployment}} rollout ratio",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["deployment", "argocd", "gitops"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Deployment & GitOps — Golden Signals",
+  "uid": "deployment-golden-signals",
+  "version": 1
+}

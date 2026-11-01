@@ -16,6 +16,10 @@ resources:
   - loki-servicemonitor.yaml
   - dashboards.yaml
   - local-platform-dashboard.yaml
+  - dashboard-quanlykho-api.yaml
+  - dashboard-k8s-golden-signals.yaml
+  - dashboard-postgresql.yaml
+  - dashboard-deployment-gitops.yaml
 
 labels:
   - pairs:

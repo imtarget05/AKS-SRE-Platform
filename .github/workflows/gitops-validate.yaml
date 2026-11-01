@@ -85,11 +85,11 @@ jobs:
       - name: M-B1 break a GitOps invariant
         run: |
           set -euo pipefail
-          APP=platform/argocd/applications/flashsale.yaml
+          APP=platform/argocd/applications/quanlykho.yaml
           cp "$APP" "$APP.orig"
           # destination.namespace must be allowed by the AppProject. Moving it
           # to kube-system breaks both the allowlist and the namespace rule.
-          sed -i.bak 's/^    namespace: flashsale$/    namespace: kube-system/' "$APP"
+          sed -i.bak 's/^    namespace: quanlykho$/    namespace: kube-system/' "$APP"
 
           set +e
           python3 gitops/validate-gitops.py
@@ -112,5 +112,5 @@ jobs:
       - name: restore is byte-identical
         run: |
           set -euo pipefail
-          git diff --exit-code -- platform/argocd/applications/flashsale.yaml
+          git diff --exit-code -- platform/argocd/applications/quanlykho.yaml
           echo "Mutation fully reverted; working tree clean for the mutated file."
