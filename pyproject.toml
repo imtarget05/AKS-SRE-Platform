@@ -1,6 +1,6 @@
-# P2.11 — Coverage gate: 75% backend.
+# P2.11 — Coverage gate: 75% for the platform-owned SRE agent.
 #
-# pytest with pytest-cov enforces a coverage floor on the gate/test code.
+# pytest with pytest-cov enforces a coverage floor on production SRE code.
 # Run:  python3 -m pytest   (fails when coverage < 75%)
 #
 # NOTE: pytest-cov must be added to requirements.lock via
@@ -9,4 +9,4 @@
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["--cov=tests", "--cov-report=term-missing", "--cov-fail-under=75", "-q"]
+addopts = ["--cov=app.sre_incident_agent", "--cov-report=term-missing", "--cov-fail-under=75", "-q"]

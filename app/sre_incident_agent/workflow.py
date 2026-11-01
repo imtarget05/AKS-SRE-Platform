@@ -13,6 +13,7 @@ import hashlib
 import json
 import os
 import subprocess
+from typing import Any
 
 from .adapters import (
     AlertmanagerAdapter,
@@ -29,7 +30,6 @@ from .models import (
     IncidentBrief,
     RunbookRef,
     TriageVerdict,
-    WorkloadStatus,
     utc_now,
 )
 
@@ -62,7 +62,7 @@ RUNBOOK_REF = RunbookRef(
 
 
 def _is_feature_enabled() -> bool:
-    return os.environ.get(FEATURE_FLAG_ENV, "1") == "1"
+    return os.environ.get(FEATURE_FLAG_ENV, "0") == "1"
 
 
 def _git_sha() -> str:
@@ -75,13 +75,13 @@ def _git_sha() -> str:
         return "unknown"
 
 
-def _evidence_hash(payload: Any) -> str:  # noqa: ANN401
+def _evidence_hash(payload: Any) -> str:
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True).encode("utf-8")
     ).hexdigest()
 
 
-def _short_hash(*parts: Any) -> str:  # noqa: ANN401
+def _short_hash(*parts: Any) -> str:
     return _evidence_hash(parts)[:12]
 
 
@@ -138,16 +138,18 @@ class SREIncidentWorkflow:
             critic_brief=critic_brief,
             read_only_checks=checks,
             is_read_only=True,
-            completed_at=started_at,
+            completed_at=utc_now(),
         )
 
     def _triage(
         self, alert_id: str, context: str, started_at: str
     ) -> tuple[AlertEvidence, TriageVerdict]:
+        alerts_unavailable = False
         try:
             alerts = self.alertmanager.active_alerts()
         except ReadOnlyAdapterError:
             alerts = []
+            alerts_unavailable = True
 
         alert = next(
             (
@@ -158,7 +160,7 @@ class SREIncidentWorkflow:
             None,
         )
 
-        def _build_evidence(**overrides: Any) -> AlertEvidence:  # noqa: ANN401
+        def _build_evidence(**overrides: Any) -> AlertEvidence:
             base = {
                 "alert_name": alert_id,
                 "severity": "",
@@ -175,6 +177,9 @@ class SREIncidentWorkflow:
             }
             base.update(overrides)
             return AlertEvidence(**base)
+
+        if alerts_unavailable:
+            return _build_evidence(state="unavailable"), TriageVerdict.ABSTAIN
 
         # Missing evidence -> abstain (fail closed).
         if alert is None:
@@ -218,6 +223,21 @@ class SREIncidentWorkflow:
         return evidence, verdict
 
     def _diagnose(self, evidence: AlertEvidence, context: str) -> DiagnosisResult:
+        if evidence.state in {"missing", "unavailable"}:
+            return DiagnosisResult(
+                summary=(
+                    f"Cannot diagnose alert {evidence.alert_name}: "
+                    f"Alertmanager evidence is {evidence.state}."
+                ),
+                recent_deployment_correlation=None,
+                plausible_causes=[
+                    "No cause assigned without active alert evidence"
+                ],
+                uncertainty=f"alertmanager_evidence_{evidence.state}",
+                missing_signals=["alertmanager_active_alerts"],
+                correlation_is_not_causation=True,
+            )
+
         missing_signals: list[str] = []
         plausible_causes: list[str] = []
         correlation: str | None = None
@@ -339,9 +359,9 @@ class SREIncidentWorkflow:
         )
 
         checks = [
-            "read_only: no kubectl apply/scale/delete/rollout/patch/create",
-            "read_only: no argo cd sync/rollback",
-            "read_only: no terraform apply/destroy/plan",
+            "read_only: cluster mutation commands unavailable",
+            "read_only: GitOps changes unavailable",
+            "read_only: infrastructure deployment unavailable",
             "read_only: no secret access",
             "read_only: no write credential or shell execution path",
             f"citations_required={citations_required}",
@@ -400,5 +420,5 @@ class SREIncidentWorkflow:
             critic_brief=brief,
             read_only_checks=["feature_flag_disabled"],
             is_read_only=True,
-            completed_at=started_at,
+            completed_at=utc_now(),
         )

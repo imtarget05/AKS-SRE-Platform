@@ -1,6 +1,7 @@
 # Three Independent Agentic Systems — Portfolio Production Master Plan
 
-**Status:** Proposed execution plan. No application code, cloud resource, or identity has been changed by authoring this document.
+**Status:** Approved for staged local/CI execution. Production promotion remains
+review-gated; no cloud resource or identity has been changed by this execution.
 **Purpose:** build and prove one independently owned agentic workflow in each of the three projects, then promote each project separately through evidence-based production gates.
 **Projects:** FlashSale/OpsBridge (`/Users/mainguyenbinhtan/Downloads/OpsBridge`), QuanLyKho (`/Users/mainguyenbinhtan/Downloads/QuanLyKho`), and AKS-SRE-Platform (`/Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform`).
 

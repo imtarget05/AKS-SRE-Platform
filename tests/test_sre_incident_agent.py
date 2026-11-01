@@ -91,7 +91,7 @@ def _make_alert(labels, receivers=None, state="firing", active_at="2026-10-30T00
     }
 
 
-class TriageTests:
+class TestTriage:
     def setup_method(self):
         os.environ[FEATURE_FLAG_ENV] = "1"
 
@@ -178,8 +178,22 @@ class TriageTests:
         assert brief.triage_verdict is TriageVerdict.ABSTAIN
         assert brief.is_read_only is True
 
+    def test_abstains_and_marks_alertmanager_unavailable(self):
+        wf = SREIncidentWorkflow(
+            context="kind-local-platform",
+            alertmanager=_FakeAlertmanager(fail=True),
+            prometheus=_FakePrometheus(),
+            kubectl=_FakeKubectl(),
+            argo=_FakeArgo(),
+            runbook=_FakeRunbook(),
+        )
+        brief = wf.investigate("UnavailableAlert")
+        assert brief.triage_verdict is TriageVerdict.ABSTAIN
+        assert brief.alert_evidence.state == "unavailable"
+        assert "alertmanager_active_alerts" in brief.diagnosis.missing_signals
 
-class DiagnosisTests:
+
+class TestDiagnosis:
     def setup_method(self):
         os.environ[FEATURE_FLAG_ENV] = "1"
 
@@ -208,7 +222,7 @@ class DiagnosisTests:
         assert brief.is_read_only is True
 
 
-class CriticTests:
+class TestCritic:
     def setup_method(self):
         os.environ[FEATURE_FLAG_ENV] = "1"
 
@@ -238,7 +252,7 @@ class CriticTests:
         assert brief.is_read_only is True
 
 
-class ReadOnlyTests:
+class TestReadOnly:
     def test_is_read_only_true_for_all_results(self):
         os.environ[FEATURE_FLAG_ENV] = "1"
         am = _FakeAlertmanager(
@@ -286,7 +300,31 @@ class ReadOnlyTests:
                 )
 
 
-class FeatureFlagTests:
+class TestFeatureFlag:
+    def test_disabled_by_default(self):
+        alerts = [
+            _make_alert(
+                {
+                    "alertname": "X",
+                    "severity": "critical",
+                    "service": "sre-demo-api",
+                    "namespace": "monitoring",
+                }
+            )
+        ]
+        with patch.dict(os.environ, {}, clear=True):
+            wf = SREIncidentWorkflow(
+                alertmanager=_FakeAlertmanager(alerts),
+                prometheus=_FakePrometheus(),
+                kubectl=_FakeKubectl(),
+                argo=_FakeArgo(),
+                runbook=_FakeRunbook(),
+            )
+            brief = wf.investigate("X")
+            assert _is_feature_enabled() is False
+            assert brief.alert_evidence.state == "disabled"
+            assert brief.triage_verdict is TriageVerdict.ABSTAIN
+
     def test_disabled_returns_disabled_result(self):
         with patch.dict(os.environ, {FEATURE_FLAG_ENV: "0"}, clear=False):
             am = _FakeAlertmanager(
@@ -309,7 +347,7 @@ class FeatureFlagTests:
             assert "disabled" in brief.critic_brief.lower()
 
 
-class CliTests:
+class TestCli:
     def test_cli_writes_json_evidence_file(self, tmp_path):
         os.environ[FEATURE_FLAG_ENV] = "1"
         am = _FakeAlertmanager(
@@ -328,19 +366,29 @@ class CliTests:
         out = tmp_path / "evidence.json"
         from app.sre_incident_agent.cli import main
 
+        workflow = SREIncidentWorkflow(
+            context="kind-local-platform",
+            assessed_by="sre",
+            alertmanager=am,
+            prometheus=_FakePrometheus(),
+            kubectl=_FakeKubectl(),
+            argo=_FakeArgo(),
+            runbook=_FakeRunbook(),
+        )
         argv = [
             "--alert", "CrashLoop",
             "--context", "kind-local-platform",
             "--output", str(out),
             "--assessed-by", "sre",
         ]
-        rc = main(argv)
+        rc = main(argv, workflow=workflow)
         assert rc == 0
         assert out.is_file()
         data = json.loads(out.read_text())
         assert data["is_read_only"] is True
         assert data["triage_verdict"] == "SEV1_CRITICAL"
-        assert data["notification_delivery_verified"] is True
+        assert data["notification_receivers"] == ["sre-oncall"]
+        assert data["notification_delivery_verified"] is False
         assert data["critic_verdict"]["actions_blocked"] is True
         assert data["critic_verdict"]["citations_required"] is True
 
@@ -362,12 +410,21 @@ class CliTests:
         out = tmp_path / "evidence2.json"
         from app.sre_incident_agent.cli import main
 
+        workflow = SREIncidentWorkflow(
+            context="kind-local-platform",
+            alertmanager=am,
+            prometheus=_FakePrometheus(),
+            kubectl=_FakeKubectl(),
+            argo=_FakeArgo(),
+            runbook=_FakeRunbook(),
+        )
         rc = main(
             [
                 "--alert", "X",
                 "--context", "kind-local-platform",
                 "--output", str(out),
-            ]
+            ],
+            workflow=workflow,
         )
         assert rc == 0
         data = json.loads(out.read_text())

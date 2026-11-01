@@ -1,5 +1,11 @@
 # CURRENT_STATE — Engineering Checkpoint
 
+> **Local verification update (2026-11-01):** Code/test results and local
+> blockers are tracked in [`../../tasks/current.md`](../../tasks/current.md).
+> No live Azure inventory was performed in this checkpoint; the cluster and
+> quota statements below remain historical point-in-time evidence, not current
+> cloud state or production-release approval.
+
 - **Updated:** 2026-10-21 (later) — **Azure teardown EXECUTED**: the AKS cluster
   `aks-portfolio-dev`, RG `rg-aks-platform-dev` and the `MC_…` resource group are
   **DELETED**; **0 Azure dev resources remain → no Azure cost**. The local kind
@@ -272,4 +278,3 @@ Do not start Phase D's module split before Phase C, and do not run any
   policy, load-test and supply-chain phases.
 - No `runbooks/`, `alerts/` or `dashboards/` directory exists yet. They are not
   created until a capability needs them.
-

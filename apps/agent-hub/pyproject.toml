@@ -1,0 +1,22 @@
+# Agent Hub — pytest + pytest-cov coverage gate (75%).
+# Run from this directory:  python3 -m pytest   (fails when coverage < 75%)
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "tests/evals"]
+addopts = [
+    "--cov=app",
+    "--cov=adapters",
+    "--cov=core",
+    "--cov=schemas",
+    "--cov-report=term-missing",
+    "--cov-fail-under=75",
+    "-q",
+]
+
+[tool.coverage.run]
+source = ["app", "adapters", "core", "schemas"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+]

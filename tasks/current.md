@@ -1,11 +1,29 @@
 # AKS-SRE-Platform — Current Tasks
 
+> **Execution checkpoint (2026-11-01; local/CI validation only):** The
+> platform-owned SRE agent is implemented and its Python suite passes (52
+> tests; 87.54% package coverage), the gate matrix passes 52/52 assertions,
+> and all five Terraform test roots pass (16 runs). Recursive Terraform format
+> and the HIGH/CRITICAL Trivy config gate pass. `apps/agent-hub` still has
+> 565 repo-wide Ruff findings and remains legacy/reference, not the SRE runtime.
+> Docker is unavailable, so local kind/Compose were not verified. No live cloud
+> inventory, apply, deployment, push, or production release was performed;
+> production remains blocked on current cloud evidence and explicit SHA/image
+> review.
+
+> The phase plans below are historical snapshots unless explicitly updated in
+> this checkpoint. Passing local tests does not close cloud-inventory,
+> production-like drill, quota, or production-promotion phases.
+
 > **Latest cloud recheck (2026-10-25 13:27 UTC):** The earlier G0–G7 acceptance
 > below is historical. Live Argo now reports FlashSale and QuanLyKho Healthy
 > but OutOfSync, and the public OpsBridge path returns 404. Exact revisions,
 > probes and limits: [cloud-recheck-1327-utc.md](../docs/evidence/2026-10-25/cloud-recheck-1327-utc.md).
 
-> **Updated: 2026-10-25** — **All Cloud Gates (G0 — G7) 100% Closed & Independently VERIFIED.**
+> **Historical claim (2026-10-25, superseded):** the **All Cloud Gates (G0 —
+> G7) 100% Closed & Independently VERIFIED** statement below is not current
+> release evidence; use the cloud recheck above and obtain a fresh read-only
+> cloud inventory before promotion.
 > Monorepo Scope: `FlashSale-Backend`, `QuanLyKho`, `AKS-SRE-Platform`.
 > Live Cluster: `aks-portfolio-dev` (Azure East Asia) + Cloudflare Edge (`portfolio-api-edge.tanmainguyenbinh.workers.dev`).
 > Evidence Index: `docs/evidence/2026-10-25/FINAL_CLOUD_GATES_ACCEPTANCE.md`.

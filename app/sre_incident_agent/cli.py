@@ -13,7 +13,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 from .workflow import (
-    FEATURE_FLAG_ENV,
     SREIncidentWorkflow,
     _is_feature_enabled,
 )
@@ -45,14 +44,20 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv=None) -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    workflow: SREIncidentWorkflow | None = None,
+) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    workflow = SREIncidentWorkflow(
-        context=args.context, assessed_by=args.assessed_by
-    )
-    brief = workflow.investigate(
+    active_workflow = workflow
+    if active_workflow is None:
+        active_workflow = SREIncidentWorkflow(
+            context=args.context, assessed_by=args.assessed_by
+        )
+    brief = active_workflow.investigate(
         args.alert, context=args.context, assessed_by=args.assessed_by
     )
 
@@ -69,7 +74,8 @@ def main(argv=None) -> int:
         "read_only_checks": brief.read_only_checks,
         "is_read_only": brief.is_read_only,
         "completed_at": brief.completed_at,
-        "notification_delivery_verified": bool(brief.alert_evidence.receivers),
+        "notification_receivers": brief.alert_evidence.receivers,
+        "notification_delivery_verified": False,
     }
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

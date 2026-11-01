@@ -1,8 +1,8 @@
 """Read-only adapters for the SRE incident workflow.
 
 Every adapter is read-only: it issues GET/proxy queries only and raises on
-failure (fail closed). No adapter performs kubectl apply/scale/delete/rollout/
-patch/create, Argo CD sync/rollback, Terraform, or secret access.
+failure (fail closed). No adapter exposes cluster mutation, GitOps change,
+infrastructure deployment, or secret access.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from .models import AlertEvidence, WorkloadStatus
+from .models import WorkloadStatus
 
 
 class ReadOnlyAdapterError(RuntimeError):
