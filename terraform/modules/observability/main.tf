@@ -18,6 +18,8 @@ resource "azurerm_log_analytics_workspace" "workspace" {
 
   tags = {
     environment = var.environment
+    owner       = "student"
+    purpose     = "platform-observability"
   }
 }
 
@@ -26,17 +28,19 @@ resource "azurerm_monitor_data_collection_rule" "dcr" {
   location            = azurerm_resource_group.observability.location
   resource_group_name = azurerm_resource_group.observability.name
 
-  data_source {
-    kind = "InsightsMetrics"
+  data_sources {
+    platform_telemetry {
+      name    = "aks-platform-telemetry"
+      streams = ["Microsoft-InsightsMetrics"]
+    }
   }
 
   data_flow {
-    destinations  = [azurerm_log_analytics_workspace.workspace.name]
-    streams       = ["Microsoft-InsightsMetrics"]
-    output_stream = "Microsoft-InsightsMetrics"
+    destinations = ["la-destination"]
+    streams      = ["Microsoft-InsightsMetrics"]
   }
 
-  destination {
+  destinations {
     log_analytics {
       workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
       name                  = "la-destination"
@@ -45,7 +49,15 @@ resource "azurerm_monitor_data_collection_rule" "dcr" {
 
   tags = {
     environment = var.environment
+    owner       = "student"
+    purpose     = "platform-observability"
   }
+}
+
+resource "azurerm_monitor_data_collection_rule_association" "aks_cluster" {
+  name                    = "dcr-aks-platform-association"
+  target_resource_id      = var.cluster_id
+  data_collection_rule_id = azurerm_monitor_data_collection_rule.dcr.id
 }
 
 resource "kubernetes_manifest" "otel_collector_namespace" {
@@ -63,7 +75,7 @@ resource "helm_release" "otel_collector" {
   repository = var.otel_collector_repository
   chart      = var.otel_collector_chart
   version    = var.otel_collector_version
-  namespace  = kubernetes_manifest.otel_collector_namespace.metadata[0].name
+  namespace  = var.otel_collector_namespace
 
   set {
     name  = "logs.endpoint"
