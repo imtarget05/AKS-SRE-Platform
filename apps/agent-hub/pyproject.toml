@@ -14,7 +14,7 @@ addopts = [
 ]
 
 [tool.coverage.run]
-source = ["app", "adapters", "core", "schemas"]
+source = ["adapters", "core", "schemas"]
 
 [tool.coverage.report]
 exclude_lines = [
