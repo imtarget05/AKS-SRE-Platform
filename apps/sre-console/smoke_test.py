@@ -11,6 +11,7 @@ Reports PASS/FAIL per check and overall result.
 """
 
 import os
+import re
 import sys
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -102,6 +103,8 @@ def check_pages_artifact():
         html = file.read()
     if 'href="assets/styles.css"' not in html or 'src="datafeed.js"' not in html:
         return "FAIL", "Pages entry page does not reference compiled CSS and data feed"
+    if not re.search(r'<meta name="release-sha" content="[0-9a-f]{40}">', html):
+        return "FAIL", "Pages entry page lacks immutable source SHA"
     if "'unsafe-inline'" in html:
         return "FAIL", "Pages CSP permits inline style/script"
     return "PASS", ""

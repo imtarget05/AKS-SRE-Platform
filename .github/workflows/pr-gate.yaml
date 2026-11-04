@@ -286,6 +286,8 @@ jobs:
       - name: build Pages artifact
         run: npm ci && npm run build
         working-directory: apps/sre-console
+        env:
+          RELEASE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: run sre-console smoke test
         run: python3 apps/sre-console/smoke_test.py
         working-directory: .
