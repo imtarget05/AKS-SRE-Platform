@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import time
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -57,6 +58,8 @@ class OpsBridgeReadAdapter:
     ) -> EvidenceEnvelope:
         if scope_id != "ops-cluster-01":
             raise PermissionError("Cross-scope OpsBridge read denied")
+        if not isinstance(order_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", order_id):
+            raise ValueError("order_id must be a single URL-safe identifier")
         endpoint_url = f"{self.base_url}/api/orders/{order_id}"
         saga_url = f"{self.base_url}/api/saga/{order_id}"
 

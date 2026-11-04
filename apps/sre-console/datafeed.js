@@ -311,8 +311,14 @@
     var self = this;
     if (this._started) return;
     this._started = true;
-    this.tick();
-    this._timer = setInterval(function () { self.tick(); }, this.pollIntervalMs);
+    function poll() {
+      self.tick().catch(function (err) {
+        self.stale = true;
+        self._logEvent("warn", "warn", "DataFeed poll failed: " + String(err));
+      });
+    }
+    poll();
+    this._timer = setInterval(poll, this.pollIntervalMs);
   };
 
   DataFeed.prototype.stop = function () {

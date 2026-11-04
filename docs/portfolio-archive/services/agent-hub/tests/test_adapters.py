@@ -184,6 +184,13 @@ def test_ops_adapter_real_http_calls_and_evidence(monkeypatch):
     assert ev_order.verify_integrity() is True
 
 
+@pytest.mark.parametrize("order_id", ["../admin", "abc/def", "a?b", "", "x" * 129])
+def test_ops_adapter_rejects_invalid_order_path(order_id):
+    adapter = OpsBridgeReadAdapter(base_url="http://order-api.local", read_token="demo")
+    with pytest.raises(ValueError):
+        adapter.fetch_order_timeline(order_id=order_id)
+
+
 def test_quan_adapter_branch_isolation(monkeypatch):
     def mock_handler(request: httpx.Request):
         auth = request.headers.get("Authorization")

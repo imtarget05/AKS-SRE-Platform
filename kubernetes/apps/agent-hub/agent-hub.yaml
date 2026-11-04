@@ -52,6 +52,7 @@ spec:
       labels:
         app.kubernetes.io/name: agent-hub
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -110,9 +111,11 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
+              ephemeral-storage: 100Mi
             limits:
               cpu: 500m
               memory: 512Mi
+              ephemeral-storage: 1Gi
           livenessProbe:
             httpGet:
               path: /healthz
