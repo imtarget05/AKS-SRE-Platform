@@ -105,6 +105,12 @@ def check_pages_artifact():
         return "FAIL", "Pages entry page does not reference compiled CSS and data feed"
     if not re.search(r'<meta name="release-sha" content="[0-9a-f]{40}">', html):
         return "FAIL", "Pages entry page lacks immutable source SHA"
+    if "<!-- loaded via fetch in app.js -->" in html:
+        return "FAIL", "Pages entry page still has empty tab placeholders"
+    if "onclick=" in html or "onkeydown=" in html:
+        return "FAIL", "Pages entry page has inline handlers blocked by CSP"
+    if any(f'<script type="module" src="{name}"' not in html for name in JS_FILES):
+        return "FAIL", "Pages scripts are not isolated modules"
     if "'unsafe-inline'" in html:
         return "FAIL", "Pages CSP permits inline style/script"
     return "PASS", ""

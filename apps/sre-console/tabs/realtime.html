@@ -11,15 +11,15 @@
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
-          <button onclick="injectBurstTraffic()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-cyan-300">
+          <button data-action="burst" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-cyan-300">
             <i class="fa-solid fa-bolt" aria-hidden="true"></i>
             <span>Simulate Burst (5,000 QPS)</span>
           </button>
-          <button id="btn-chaos-toggle" onclick="toggleDependencyFailure()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-rose-300">
+          <button id="btn-chaos-toggle" data-action="outage" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center gap-1.5 transition shadow focus:outline-none focus:ring-2 focus:ring-rose-300">
             <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
             <span id="chaos-btn-text">Simulate Dependency Outage (503)</span>
           </button>
-          <button onclick="resetSimulationBaseline()" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-1.5 transition focus:outline-none focus:ring-2 focus:ring-gray-400">
+          <button data-action="reset" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 flex items-center gap-1.5 transition focus:outline-none focus:ring-2 focus:ring-gray-400">
             <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
             <span>Reset Simulation Baseline</span>
           </button>
@@ -127,7 +127,7 @@
             <span class="h-2 w-2 rounded-full bg-cyan-400 pulse-live" aria-hidden="true"></span>
             <h3 class="text-sm font-bold text-white font-mono">Simulated Cluster Event Stream (Empirical Event Pool)</h3>
           </div>
-          <button onclick="clearEventLog()" class="text-xs font-mono text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">Clear Feed</button>
+          <button data-action="clear-events" class="text-xs font-mono text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">Clear Feed</button>
         </div>
         <div id="live-event-stream" class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs overflow-y-auto max-h-48 space-y-1.5 terminal-scroll">
           <!-- Dynamically populated by event streamer -->

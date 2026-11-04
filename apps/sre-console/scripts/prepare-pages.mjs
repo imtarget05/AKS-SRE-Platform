@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const output = join(root, 'dist');
-const sourceHtml = readFileSync(join(root, 'index.html'), 'utf8');
+let sourceHtml = readFileSync(join(root, 'index.html'), 'utf8');
 const releaseSha = process.env.RELEASE_SHA || '';
 if (!/^[0-9a-f]{40}$/.test(releaseSha)) {
   throw new Error('RELEASE_SHA must be a full Git commit hash');
@@ -15,6 +15,14 @@ if (!sourceHtml.includes(stylesheet)) {
 }
 
 mkdirSync(output, { recursive: true });
+for (const tab of ['realtime', 'cluster', 'workload', 'gitops', 'gates']) {
+  const placeholder = '<!-- loaded via fetch in app.js -->';
+  if (!sourceHtml.includes(placeholder)) {
+    throw new Error(`Missing placeholder for ${tab} tab`);
+  }
+  const content = readFileSync(join(root, 'tabs', `${tab}.html`), 'utf8');
+  sourceHtml = sourceHtml.replace(placeholder, () => content);
+}
 writeFileSync(
   join(output, 'index.html'),
   sourceHtml.replace(stylesheet, 'href="assets/styles.css"').replace('__RELEASE_SHA__', releaseSha),

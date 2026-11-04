@@ -42,7 +42,7 @@ renderClusterPods();
 
 // Tab Navigation & WAI-ARIA Keyboard Support
 const tabIds = ['realtime', 'cluster', 'workload', 'gitops', 'gates'];
-const loadedTabs = new Set();
+const loadedTabs = new Set(tabIds.filter(id => document.getElementById('view-' + id)?.children.length));
 
 // Lazy-load tab content from tabs/<tabId>.html
 function loadTabContent(tabId) {
@@ -59,6 +59,7 @@ function loadTabContent(tabId) {
       const doc = parser.parseFromString(html, 'text/html');
       Array.from(doc.body.children).forEach((child) => targetView.appendChild(child));
       loadedTabs.add(tabId);
+      if (tabId === 'cluster') renderClusterPods();
     })
     .catch((err) => {
       console.warn('[sre-console] Tab load error:', err);
@@ -84,6 +85,27 @@ function switchTab(tabId) {
     activeBtn.focus();
   }
 }
+
+document.addEventListener('click', (event) => {
+  const trigger = event.target.closest?.('[data-action]');
+  if (!trigger) return;
+  switch (trigger.dataset.action) {
+    case 'switch-tab': switchTab(trigger.dataset.tab); break;
+    case 'burst': window.injectBurstTraffic?.(); break;
+    case 'outage': window.toggleDependencyFailure?.(); break;
+    case 'reset': window.resetSimulationBaseline?.(); break;
+    case 'clear-events': window.Simulation?.clearEventLog?.(); break;
+    case 'restore-readiness': window.toggleReadiness?.(true); break;
+    case 'sever-readiness': window.toggleReadiness?.(false); break;
+    case 'workload': window.triggerWorkload?.(5000); break;
+    case 'runbook-toggle': window.toggleSreCopilot?.(); break;
+    case 'runbook-send': window.sendSreCopilotMessage?.(trigger.dataset.prompt); break;
+  }
+});
+
+document.getElementById('sre-copilot-input')?.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') window.sendSreCopilotMessage?.();
+});
 
 // Keyboard navigation (ArrowLeft / ArrowRight / Home / End)
 const tablist = document.querySelector('[role="tablist"]');
@@ -118,15 +140,15 @@ async function measureRealEdgePing() {
     const start = performance.now();
     await fetch(window.location.href, { method: 'HEAD', cache: 'no-store' });
     const rtt = (performance.now() - start).toFixed(1);
-    document.getElementById('val-edge-ping').innerText = `${rtt} ms`;
-    document.getElementById('stat-rtt').innerText = `${rtt} ms`;
+    const headerPing = document.getElementById('val-edge-ping');
+    const statPing = document.getElementById('stat-rtt');
+    if (headerPing) headerPing.innerText = `${rtt} ms`;
+    if (statPing) statPing.innerText = `${rtt} ms`;
   } catch {
-    document.getElementById('val-edge-ping').textContent = 'n/a';
-    document.getElementById('stat-rtt').textContent = 'n/a';
     const pingEl = document.getElementById('val-edge-ping');
-    if (pingEl) pingEl.classList.add('stale');
+    if (pingEl) { pingEl.textContent = 'n/a'; pingEl.classList.add('stale'); }
     const statEl = document.getElementById('stat-rtt');
-    if (statEl) statEl.classList.add('stale');
+    if (statEl) { statEl.textContent = 'n/a'; statEl.classList.add('stale'); }
   }
 }
 setInterval(measureRealEdgePing, 3000);
@@ -134,7 +156,7 @@ measureRealEdgePing();
 
 // Initialize cross-tab sync on load
 document.addEventListener('DOMContentLoaded', () => {
-  if (typeof syncAllUI === 'function') syncAllUI();
+  window.Simulation?.syncAllUI?.();
   if (typeof window.startDataFeed === 'function') window.startDataFeed();
   const active = document.querySelector('.tab-btn[aria-selected="true"]');
   if (active) {

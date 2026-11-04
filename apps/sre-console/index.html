@@ -95,7 +95,7 @@
         <div>
           <p class="font-bold text-white text-sm">Interactive Architectural Simulation &amp; Telemetry Replay</p>
           <p class="text-cyan-300/80 mt-0.5 leading-relaxed">
-            Số liệu telemetry trên console là mô hình mô phỏng kiến trúc client-side (Synthetic Architectural Model) nhằm minh họa hành vi SLO (mục tiêu 1.000+ QPS, P99 &lt; 15ms). Toàn bộ cụm AKS thử nghiệm đã được teardown để tối ưu chi phí theo quy chuẩn FinOps; các biểu đồ phản ánh số liệu mô phỏng, không phải đo trực tiếp từ cụm live.
+            Số liệu telemetry trên console là mô hình mô phỏng kiến trúc client-side (Synthetic Architectural Model) nhằm minh họa hành vi SLO (mục tiêu 1.000+ QPS, P99 &lt; 15ms). Trạng thái workload AKS hiện tại chưa được xác minh từ console này; các biểu đồ chỉ là số liệu mô phỏng, không phải đo trực tiếp từ cụm live.
           </p>
         </div>
       </div>
@@ -107,7 +107,7 @@
         <div>
           <p class="text-xs text-gray-400 font-medium">Control Plane</p>
           <p class="text-lg font-bold text-white mt-1">Azure AKS</p>
-          <p class="text-xs text-cyan-400 font-mono mt-0.5">v1.36.4 (teardown verified)</p>
+          <p class="text-xs text-cyan-400 font-mono mt-0.5">Runtime chưa xác minh</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg" aria-hidden="true">
           <i class="fa-solid fa-dharmachakra"></i>
@@ -139,8 +139,8 @@
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
         <div>
           <p class="text-xs text-gray-400 font-medium">Local Regression Gates</p>
-          <p class="text-lg font-bold text-emerald-400 mt-1">14/14 groups PASS</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">47/47 Invariant Tests</p>
+          <p class="text-lg font-bold text-emerald-400 mt-1">Local historical checks</p>
+          <p class="text-xs text-gray-400 font-mono mt-0.5">Xem evidence theo release SHA</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg" aria-hidden="true">
           <i class="fa-solid fa-shield-halved"></i>
@@ -150,23 +150,23 @@
 
     <!-- Navigation Tabs (WAI-ARIA Accessible) -->
     <div role="tablist" aria-label="SRE Console Sections" class="border-b border-gray-800 flex flex-wrap gap-2">
-      <button role="tab" id="tab-realtime" aria-selected="true" aria-controls="view-realtime" tabindex="0" onclick="switchTab('realtime')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-cyan-400 text-cyan-400 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
+      <button role="tab" id="tab-realtime" aria-selected="true" aria-controls="view-realtime" tabindex="0" data-action="switch-tab" data-tab="realtime" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-cyan-400 text-cyan-400 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
         <span>Telemetry &amp; RED Model</span>
       </button>
-      <button role="tab" id="tab-cluster" aria-selected="false" aria-controls="view-cluster" tabindex="-1" onclick="switchTab('cluster')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
+      <button role="tab" id="tab-cluster" aria-selected="false" aria-controls="view-cluster" tabindex="-1" data-action="switch-tab" data-tab="cluster" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-cubes" aria-hidden="true"></i>
         <span>Cluster Pod Snapshot</span>
       </button>
-      <button role="tab" id="tab-workload" aria-selected="false" aria-controls="view-workload" tabindex="-1" onclick="switchTab('workload')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
+      <button role="tab" id="tab-workload" aria-selected="false" aria-controls="view-workload" tabindex="-1" data-action="switch-tab" data-tab="workload" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
         <span>Probe Split &amp; Chaos Sandbox</span>
       </button>
-      <button role="tab" id="tab-gitops" aria-selected="false" aria-controls="view-gitops" tabindex="-1" onclick="switchTab('gitops')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
+      <button role="tab" id="tab-gitops" aria-selected="false" aria-controls="view-gitops" tabindex="-1" data-action="switch-tab" data-tab="gitops" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
         <span>ArgoCD GitOps Sync</span>
       </button>
-      <button role="tab" id="tab-gates" aria-selected="false" aria-controls="view-gates" tabindex="-1" onclick="switchTab('gates')" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
+      <button role="tab" id="tab-gates" aria-selected="false" aria-controls="view-gates" tabindex="-1" data-action="switch-tab" data-tab="gates" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-list-check" aria-hidden="true"></i>
         <span>Local Gate Matrix (G1-G14)</span>
       </button>
@@ -212,15 +212,15 @@
   </footer>
 
   <!-- SRE Console Scripts -->
-  <script src="app.js" defer crossorigin="anonymous"></script>
-  <script src="charts.js" defer crossorigin="anonymous"></script>
-  <script src="simulation.js" defer crossorigin="anonymous"></script>
-  <script src="actions.js" defer crossorigin="anonymous"></script>
-  <script src="runbook.js" defer crossorigin="anonymous"></script>
+  <script type="module" src="app.js" crossorigin="anonymous"></script>
+  <script type="module" src="charts.js" crossorigin="anonymous"></script>
+  <script type="module" src="simulation.js" crossorigin="anonymous"></script>
+  <script type="module" src="actions.js" crossorigin="anonymous"></script>
+  <script type="module" src="runbook.js" crossorigin="anonymous"></script>
 <script src="datafeed.js" defer crossorigin="anonymous"></script>
 
   <!-- Floating runbook helper -->
-  <button id="sre-copilot-btn" aria-label="Mở trợ lý runbook SRE" onclick="toggleSreCopilot()" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-600 via-amber-600 to-cyan-600 text-white p-3.5 rounded-full shadow-2xl hover:scale-105 transition-all flex items-center gap-2 border border-white/20 cursor-pointer">
+  <button id="sre-copilot-btn" aria-label="Mở trợ lý runbook SRE" data-action="runbook-toggle" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-600 via-amber-600 to-cyan-600 text-white p-3.5 rounded-full shadow-2xl hover:scale-105 transition-all flex items-center gap-2 border border-white/20 cursor-pointer">
     <i class="fa-solid fa-robot text-base text-amber-200"></i>
     <span class="text-xs font-bold pr-1">SRE Runbook Assistant</span>
   </button>
@@ -242,7 +242,7 @@
           <p class="text-[10px] text-gray-400 m-0">Tra cứu runbook; không kết nối telemetry hay AI backend</p>
         </div>
       </div>
-      <button aria-label="Đóng trợ lý runbook SRE" onclick="toggleSreCopilot()" class="p-1.5 text-gray-400 hover:text-white rounded-lg transition">
+      <button aria-label="Đóng trợ lý runbook SRE" data-action="runbook-toggle" class="p-1.5 text-gray-400 hover:text-white rounded-lg transition">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
     </div>
@@ -276,21 +276,21 @@
 
     <!-- Quick Prompts -->
     <div class="px-3 py-2 bg-gray-900 border-t border-gray-800 flex gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
-      <button onclick="sendSreCopilotMessage('Làm thế nào PDB đảm bảo zero downtime khi drain node?')" class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
+      <button data-action="runbook-send" data-prompt="Làm thế nào PDB đảm bảo zero downtime khi drain node?" class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
         PDB & Node Drain hoạt động ra sao?
       </button>
-      <button onclick="sendSreCopilotMessage('NetworkPolicy trong cụm có thực sự drop gói tin không?')" class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
+      <button data-action="runbook-send" data-prompt="NetworkPolicy trong cụm có thực sự drop gói tin không?" class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
         NetworkPolicy có chặn thật không?
       </button>
-      <button onclick="sendSreCopilotMessage('Giải thích công thức tính Fast Burn Rate 14.4x theo Google SRE.')" class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
+      <button data-action="runbook-send" data-prompt="Giải thích công thức tính Fast Burn Rate 14.4x theo Google SRE." class="whitespace-nowrap bg-gray-800 border border-gray-700 text-gray-300 hover:text-cyan-400 px-2.5 py-1 rounded-full transition cursor-pointer shrink-0">
         Tính Error Budget Burn Rate?
       </button>
     </div>
 
     <!-- Input Box -->
     <div class="p-2.5 bg-gray-900 border-t border-gray-800 flex items-center gap-2">
-      <input id="sre-copilot-input" aria-label="Nhập chủ đề runbook SRE" type="text" onkeydown="if(event.key==='Enter') sendSreCopilotMessage()" placeholder="Hỏi về PDB, NetworkPolicy, SLI..." class="flex-1 text-xs px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500 transition" />
-      <button aria-label="Tra cứu runbook" onclick="sendSreCopilotMessage()" class="bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 h-9 w-9 p-0 flex items-center justify-center rounded-xl text-white cursor-pointer shrink-0 shadow">
+      <input id="sre-copilot-input" aria-label="Nhập chủ đề runbook SRE" type="text"  placeholder="Hỏi về PDB, NetworkPolicy, SLI..." class="flex-1 text-xs px-3 py-2 bg-gray-950 border border-gray-800 rounded-xl text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500 transition" />
+      <button aria-label="Tra cứu runbook" data-action="runbook-send" class="bg-gradient-to-r from-orange-600 to-cyan-600 hover:from-orange-500 hover:to-cyan-500 h-9 w-9 p-0 flex items-center justify-center rounded-xl text-white cursor-pointer shrink-0 shadow">
         <i class="fa-solid fa-paper-plane text-xs"></i>
       </button>
     </div>
