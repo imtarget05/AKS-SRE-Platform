@@ -35,10 +35,13 @@ system's owners; a portfolio score above 90% alone does not authorize go-live.
 | CreditFlow | Azure Container App environment variable names include OIDC fields but do not include `CREDITFLOW_ENV`. At inventory time, the published CD and documentation still named an older `blackisland` FQDN; the local workflow and docs have since been corrected but are not deployed. | Production mode, current frontend/API alignment and bank integration acceptance remain OPEN. Do not send real applicant data. |
 | CreditFlow | GitHub repository secrets list includes `AZURE_CREDENTIALS` and `CREDITFLOW_API_KEY`, but no `CREDITFLOW_OIDC_ISSUER`, `CREDITFLOW_OIDC_AUDIENCE`, `CREDITFLOW_OIDC_JWKS_URL` or `CREDITFLOW_OIDC_ROLE_MAP_JSON`. Only secret names were inspected. | The production deploy script's required IdP gate cannot pass yet; do not substitute fictional IdP values in production. |
 
-The latest remote CI observed on 2026-11-04 is also not a release verdict:
-AKS `pr-gate` and SBOM failed on SHA `0dac76e`; QuanLyKho CI and S11 E2E
-failed on SHA `7b602e3`; CreditFlow's successful `verify-azure` job on SHA
-`c5a1893` was read-only. Local fixes after these runs need their own CI evidence.
+The earlier AKS `pr-gate` and SBOM runs failed on SHA `0dac76e`. Draft
+[AKS PR #18](https://github.com/imtarget05/AKS-SRE-Platform/pull/18) now has
+green PR-gate, source SBOM, SonarCloud, Terraform, Kubernetes, security and
+Python jobs on its committed branch; this is CI evidence, not Azure workload
+acceptance. QuanLyKho CI and S11 E2E failed on SHA `7b602e3`; CreditFlow's
+successful `verify-azure` job on SHA `c5a1893` was read-only. Their local fixes
+still need CI evidence on immutable release candidates.
 CreditFlow already has 14 fictional `/predict` cases in `data/demo/app_cases.json`;
 the fixture validator and its test passed locally. These cases are synthetic
 contract evidence only and cannot close bank-owned acceptance gates.
