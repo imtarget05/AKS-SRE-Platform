@@ -14,6 +14,8 @@
 
 This repository is the central infrastructure blueprint for a shared Azure Kubernetes platform designed to run multiple portfolio workloads (like the Flash-Sale backend). It demonstrates **Platform Engineering**, **GitOps**, and **SRE** principles applied to Azure.
 
+For the live portfolio path that must remain accessible from a non-VNet machine, the web and app workloads are also designed to be deployable on Cloudflare for public edge delivery, Render for application runtime, and Azure for managed hosting or ID/operations. The concrete deployment targets are defined in [`render.yaml`](render.yaml), [`azure.yaml`](azure.yaml), and [`apps/sre-console/wrangler.toml`](apps/sre-console/wrangler.toml), with the architecture summary in [`docs/architecture/cloud-deploy-targets.md`](docs/architecture/cloud-deploy-targets.md).
+
 *Note: This project is currently in the "Blueprint" phase, following an evidence-gated roadmap towards live provisioning.*
 
 > ### Read this before anything else

@@ -1,0 +1,7 @@
+name = "sre-console"
+compatibility_date = "2026-11-04"
+pages_build_output_dir = "dist"
+
+[vars]
+APP_ENV = "production"
+API_BASE_URL = "https://sre-demo-api.onrender.com"

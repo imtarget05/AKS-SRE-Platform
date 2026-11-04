@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           repository: imtarget05/CreditFlow
-          ref: 8071c7c5b4d990bfc56dd91a92d6facfe743771b
+          ref: c74d61ef2991a4055fd6c3f2d706b4bbb210492a
           path: external/CreditFlow
 
       - name: checkout QuanLyKho at the pinned Application revision

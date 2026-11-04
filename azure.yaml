@@ -1,0 +1,12 @@
+name: portfolio-cloud
+metadata:
+  template: portfolio-cloud@0.0.1
+services:
+  demo-api:
+    project: ./app/sre-demo-api
+    language: js
+    host: appservice
+  sre-console:
+    project: ./apps/sre-console
+    language: js
+    host: staticwebapp
