@@ -1,4 +1,4 @@
-name: SBOM & Provenance Scan
+name: Source SBOM and Dependency Scan
 
 on:
   push:
@@ -7,102 +7,52 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sbom-scan:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # No legacy-app image exists in either portfolio ACR (acrflashsalep6 /
-      # crportfolioa3deec), so this workflow builds the image from source and
-      # scans the local tag — same contract as legacyapp-ci docker-build-scan.
-      - name: Build legacy-app image (local, no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: ./apps/legacy-inventory
-          file: ./apps/legacy-inventory/Dockerfile
-          push: false
-          load: true
-          tags: legacy-app:ci-${{ github.sha }}
-
-      - name: Scan image with Syft for SBOM (SPDX JSON)
+      # This repository has no maintained application image build context.
+      # The deployed image SBOM is produced by aks-deploy.yml at apply time.
+      - name: Generate source SBOM
         uses: anchore/sbom-action@v0
         with:
-          image: legacy-app:ci-${{ github.sha }}
+          path: .
           format: spdx-json
-          output-file: sbom.spdx.json
-          upload-artifact: false
+          output-file: source-sbom.spdx.json
+          artifact-name: source-sbom-${{ github.sha }}
 
-      - name: Generate SBOM Provenance
+      - name: Require nonempty SBOM
+        run: test -s source-sbom.spdx.json
+
+      - name: Install Trivy (pinned and checksummed)
+        env:
+          TRIVY_VERSION: "0.74.0"
+          TRIVY_SHA256: "2ae6fe3ee734b7fdf11335663e18c75ea12dccc76062f09f164a3b0f8be4371a"
         run: |
           set -euo pipefail
-          test -s sbom.spdx.json || { echo "SBOM file missing/empty" >&2; exit 1; }
-          echo "SBOM generated at $(date)" >> sbom-provenance.txt
-          jq '.packages | length' sbom.spdx.json > component-count.txt
+          asset="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+          curl -sfL --proto '=https' --tlsv1.2 -o "$asset" \
+            "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/${asset}"
+          echo "${TRIVY_SHA256}  ${asset}" | sha256sum -c -
+          tar xzf "$asset" trivy
+          sudo mv trivy /usr/local/bin/trivy
+          sudo chmod +x /usr/local/bin/trivy
 
-      - name: Run Trivy Vulnerability Scan
-        uses: aquasecurity/trivy-action@v0.36.0
-        with:
-          scan-type: image
-          image-ref: legacy-app:ci-${{ github.sha }}
-          format: sarif
-          output: trivy-results.sarif
-          ignore-unfixed: true
-          severity: CRITICAL
-          exit-code: '0'
-          limit-severities-for-sarif: true
-
-      - name: Upload Trivy SARIF results
-        if: ${{ always() && hashFiles('trivy-results.sarif') != '' }}
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: trivy-results.sarif
-          category: trivy-legacy-app-scan
-
-      - name: Install Cosign (Sigstore)
-        uses: sigstore/cosign-installer@v3.8.1
-
-      # COSIGN_PRIVATE_KEY is not configured on this repo yet; sign/verify is
-      # skipped with an explicit message (same never-faked contract as Sonar).
-      - name: Cosign Sign SBOM
-        if: github.event_name != 'pull_request'
-        env:
-          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+      - name: Scan source dependencies for critical vulnerabilities
         run: |
-          if [ -z "${COSIGN_PRIVATE_KEY}" ]; then
-            echo "COSIGN_PRIVATE_KEY not configured — cosign sign/verify SKIPPED (not faked)"
-            exit 0
-          fi
-          cosign sign --key env://COSIGN_PRIVATE_KEY sbom.spdx.json
-          cosign verify --key env://COSIGN_PRIVATE_KEY sbom.spdx.json
-
-      - name: Fail on Critical CVEs
-        run: |
-          critical_count=$(jq '[.runs[].results[]?] | length' trivy-results.sarif)
-          echo "Critical (unfixed) CVEs reported by Trivy: ${critical_count}"
-          if [ "${critical_count}" -gt 0 ]; then
-            echo "::error::Critical CVEs found in image scan (${critical_count})" >&2
-            exit 1
-          fi
-
-      - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sbom
-          path: |
-            sbom.spdx.json
-            sbom-provenance.txt
-            component-count.txt
-          retention-days: 30
+          set -euo pipefail
+          trivy fs \
+            --scanners vuln \
+            --severity CRITICAL \
+            --exit-code 1 \
+            --skip-version-check \
+            --ignore-unfixed \
+            --skip-dirs .git,.terraform,node_modules,docs/portfolio-archive \
+            --ignorefile .trivyignore \
+            .
