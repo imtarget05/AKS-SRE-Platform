@@ -13,7 +13,7 @@ spec:
   project: portfolio
   source:
     repoURL: https://github.com/imtarget05/CreditFlow.git
-    targetRevision: 6fffe4f9aff97062f28d9567a2aaa7707b7fd1b7
+    targetRevision: 404e2ab8995f6c490a2051d2fdd21a92cc0eb096
     path: k8s
   destination:
     server: https://kubernetes.default.svc
