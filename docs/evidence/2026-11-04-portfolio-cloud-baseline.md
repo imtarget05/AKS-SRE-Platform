@@ -28,14 +28,19 @@ system's owners; a portfolio score above 90% alone does not authorize go-live.
 | --- | --- | --- |
 | AKS | Azure CLI reports `aks-portfolio-dev` Running, Kubernetes 1.36, Free control-plane tier, one 3-node `Standard_D2s_v6` pool. `kubectl --context aks-portfolio-dev-admin get nodes -o wide` returned 3/3 Ready at v1.36.5. | A live cluster exists, but application runtime and policy enforcement remain OPEN. Free tier does not make the nodes free. |
 | AKS | `kubectl --context aks-portfolio-dev-admin get deploy -A` showed system deployments only; `get applications.argoproj.io -A` reported that the resource type does not exist. The normal `aks-portfolio-dev` context cannot authenticate on this host because `kubelogin` is missing. | No Argo CD or maintained application is verified on Azure. The admin context was used for read-only inventory only. |
+| AKS | The remote blob `stakssre/tfstate/aks-sre/validation.terraform.tfstate` exists (34,429 bytes, last modified 2026-11-03 15:08 UTC, unlocked). | State ownership and reconciliation with the local backend remain OPEN; existence alone does not establish which state is authoritative. |
 | QuanLyKho | `GET` to the documented Modal API `/api/v1/health/live` returned HTTP 200; the documented Cloudflare web root returned HTTP 200. | Reachability only. The 21 MVP journeys, migration, release identity, device UAT and rollback remain OPEN. |
 | CreditFlow | Azure CLI reports Container App `creditflow-api` revision `creditflow-api--mbcr9yc`, created 2026-11-03 08:56 UTC, with FQDN `creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io`. `/health/live` returned HTTP 200. | Reachability only. The live image is `crportfolioa3deec.azurecr.io/creditflow-api:latest`, so it cannot be traced to an immutable source SHA. |
-| CreditFlow | Azure Container App environment variable names include OIDC fields but do not include `CREDITFLOW_ENV`. The published CD and documentation still name an older `blackisland` FQDN. | Production mode, current frontend/API alignment and bank integration acceptance remain OPEN. Do not send real applicant data. |
+| CreditFlow | Azure Container App environment variable names include OIDC fields but do not include `CREDITFLOW_ENV`. At inventory time, the published CD and documentation still named an older `blackisland` FQDN; the local workflow and docs have since been corrected but are not deployed. | Production mode, current frontend/API alignment and bank integration acceptance remain OPEN. Do not send real applicant data. |
+| CreditFlow | GitHub repository secrets list includes `AZURE_CREDENTIALS` and `CREDITFLOW_API_KEY`, but no `CREDITFLOW_OIDC_ISSUER`, `CREDITFLOW_OIDC_AUDIENCE`, `CREDITFLOW_OIDC_JWKS_URL` or `CREDITFLOW_OIDC_ROLE_MAP_JSON`. Only secret names were inspected. | The production deploy script's required IdP gate cannot pass yet; do not substitute fictional IdP values in production. |
 
 The latest remote CI observed on 2026-11-04 is also not a release verdict:
 AKS `pr-gate` and SBOM failed on SHA `0dac76e`; QuanLyKho CI and S11 E2E
 failed on SHA `7b602e3`; CreditFlow's successful `verify-azure` job on SHA
 `c5a1893` was read-only. Local fixes after these runs need their own CI evidence.
+CreditFlow already has 14 fictional `/predict` cases in `data/demo/app_cases.json`;
+the fixture validator and its test passed locally. These cases are synthetic
+contract evidence only and cannot close bank-owned acceptance gates.
 
 ## Release evidence required next
 
