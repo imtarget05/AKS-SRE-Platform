@@ -284,7 +284,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - name: build Pages artifact
-        run: npm ci && npm run build
+        run: npm ci --ignore-scripts && npm run build
         working-directory: apps/sre-console
         env:
           RELEASE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
