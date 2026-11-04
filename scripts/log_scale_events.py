@@ -10,7 +10,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -32,7 +32,7 @@ def capture(context: str, namespace: str, hpa_name: str, node_pool: str) -> dict
     hpa_status = hpa.get("status") or {}
 
     return {
-        "captured_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "captured_at_utc": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "context": context,
         "namespace": namespace,
         "hpa": {

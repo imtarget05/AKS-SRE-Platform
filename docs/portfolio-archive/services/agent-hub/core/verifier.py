@@ -1,4 +1,3 @@
-from typing import Any, Dict, List, Tuple
 from schemas.evidence_envelope import EvidenceEnvelope
 
 
@@ -10,7 +9,7 @@ class DeterministicVerifier:
     """
 
     @staticmethod
-    def verify_retail_reconciliation(envelope: EvidenceEnvelope) -> Tuple[str, str, List[str]]:
+    def verify_retail_reconciliation(envelope: EvidenceEnvelope) -> tuple[str, str, list[str]]:
         """
         Returns (verdict, severity, hypotheses)
         """
@@ -44,7 +43,7 @@ class DeterministicVerifier:
         )
 
     @staticmethod
-    def verify_ops_order_and_outbox(envelope: EvidenceEnvelope) -> Tuple[str, str, List[str]]:
+    def verify_ops_order_and_outbox(envelope: EvidenceEnvelope) -> tuple[str, str, list[str]]:
         facts = envelope.facts
         outbox_status = facts.get("outbox_status")
         age_seconds = facts.get("age_seconds", 0)
@@ -81,7 +80,7 @@ class DeterministicVerifier:
         return ("OPS_NORMAL", "LOW", ["Order lifecycle events consistent."])
 
     @staticmethod
-    def verify_quanlykho_voucher(envelope: EvidenceEnvelope, user_id: str = "") -> Tuple[str, str, List[str]]:
+    def verify_quanlykho_voucher(envelope: EvidenceEnvelope, user_id: str = "") -> tuple[str, str, list[str]]:
         facts = envelope.facts
         maker_id = facts.get("maker_id")
         canonical_version = facts.get("canonical_version")
@@ -109,7 +108,7 @@ class DeterministicVerifier:
         return ("VOUCHER_VERIFIED", "LOW", ["Voucher complies with inventory rules and FEFO."])
 
     @staticmethod
-    def verify_platform_incident(envelope: EvidenceEnvelope) -> Tuple[str, str, List[str]]:
+    def verify_platform_incident(envelope: EvidenceEnvelope) -> tuple[str, str, list[str]]:
         facts = envelope.facts
         alertname = facts.get("alertname", "")
         worker_restart_count = facts.get("worker_restart_count", 0)

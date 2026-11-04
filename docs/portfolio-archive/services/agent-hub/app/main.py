@@ -8,16 +8,21 @@ parent_dir = os.path.dirname(current_dir)
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from fastapi import FastAPI, HTTPException, Depends, Header
-from pydantic import BaseModel, Field
-from typing import Any, Dict, Optional
-from core.run_manager import RunManager
+from typing import Annotated, Any
+
+from app.auth import (
+    UserCredential,
+    authenticate_bearer_token,
+    authorize_scope_access,
+    get_jwt_secret,
+)
 from core.action_executor import ActionExecutor
 from core.pii_masker import PIIMasker
-from schemas.investigation_proposal import InvestigationProposal
+from core.run_manager import RunManager
+from fastapi import Depends, FastAPI, Header, HTTPException
+from pydantic import BaseModel, Field
 from schemas.action_intent import ActionIntent, ApproveActionRequest, ExecutionReceipt
-from app.auth import authenticate_bearer_token, authorize_scope_access, UserCredential, get_jwt_secret
-
+from schemas.investigation_proposal import InvestigationProposal
 
 run_manager = RunManager()
 action_executor = ActionExecutor(storage=run_manager.storage)
@@ -61,8 +66,8 @@ class StartInvestigationRequest(BaseModel):
     case_type: str = Field(..., description="recon | order_failure | voucher_check | incident")
     entity_ref: str = Field(..., description="Target business reference: tx_ref, order_id, voucher_id, alert_fp")
     scope_id: str = Field(..., description="Mandatory tenant/outlet/branch scope ID")
-    idempotency_key: Optional[str] = Field(default=None, description="Optional client idempotency key for replay safety")
-    synthetic_payload: Optional[Dict[str, Any]] = Field(default=None, description="Only permitted in TEST environment")
+    idempotency_key: str | None = Field(default=None, description="Optional client idempotency key for replay safety")
+    synthetic_payload: dict[str, Any] | None = Field(default=None, description="Only permitted in TEST environment")
 
 
 class RecordDecisionRequest(BaseModel):
@@ -77,7 +82,7 @@ class CreateIntentRequest(BaseModel):
     scope_id: str = Field(..., description="Scope boundary (e.g. ops-cluster-01)")
     entity_ref: str = Field(..., description="Target entity ref")
     idempotency_key: str = Field(..., description="Client idempotency key")
-    parameters: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    parameters: dict[str, Any] | None = Field(default_factory=dict)
 
 
 @app.get("/healthz")
@@ -88,9 +93,9 @@ def health_check():
 @app.post("/api/v1/investigations/start", response_model=InvestigationProposal)
 def start_investigation(
     req: StartInvestigationRequest,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    mgr: RunManager = Depends(get_run_manager),
-    x_idempotency_key: Optional[str] = Header(default=None)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    mgr: Annotated[RunManager, Depends(get_run_manager)],
+    x_idempotency_key: Annotated[str | None, Header()] = None,
 ):
     # Enforce Server-Side Scope Authorization
     authorize_scope_access(user, req.scope_id)
@@ -121,15 +126,13 @@ def start_investigation(
         raise
     except PermissionError as pe:
         raise HTTPException(status_code=403, detail=str(pe))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/v1/investigations/{run_id}")
 def get_investigation(
     run_id: str,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    mgr: RunManager = Depends(get_run_manager)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    mgr: Annotated[RunManager, Depends(get_run_manager)],
 ):
     run = mgr.storage.get_run(run_id)
     if not run:
@@ -144,8 +147,8 @@ def get_investigation(
 def record_decision(
     run_id: str,
     req: RecordDecisionRequest,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    mgr: RunManager = Depends(get_run_manager)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    mgr: Annotated[RunManager, Depends(get_run_manager)],
 ):
     run = mgr.storage.get_run(run_id)
     if not run:
@@ -175,8 +178,8 @@ def record_decision(
 @app.post("/api/v1/actions/intent", response_model=ActionIntent)
 def create_action_intent(
     req: CreateIntentRequest,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    executor: ActionExecutor = Depends(get_action_executor)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    executor: Annotated[ActionExecutor, Depends(get_action_executor)],
 ):
     authorize_scope_access(user, req.scope_id)
     return executor.create_intent(
@@ -195,8 +198,8 @@ def create_action_intent(
 def approve_action_intent(
     intent_id: str,
     req: ApproveActionRequest,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    executor: ActionExecutor = Depends(get_action_executor)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    executor: Annotated[ActionExecutor, Depends(get_action_executor)],
 ):
     return executor.approve_intent(
         intent_id=intent_id,
@@ -210,8 +213,8 @@ def approve_action_intent(
 @app.post("/api/v1/actions/{intent_id}/execute", response_model=ExecutionReceipt)
 def execute_action_intent(
     intent_id: str,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    executor: ActionExecutor = Depends(get_action_executor)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    executor: Annotated[ActionExecutor, Depends(get_action_executor)],
 ):
     return executor.execute_intent(
         intent_id=intent_id,
@@ -224,8 +227,8 @@ def execute_action_intent(
 @app.get("/api/v1/actions/{intent_id}/receipt", response_model=ExecutionReceipt)
 def get_execution_receipt(
     intent_id: str,
-    user: UserCredential = Depends(authenticate_bearer_token),
-    executor: ActionExecutor = Depends(get_action_executor)
+    user: Annotated[UserCredential, Depends(authenticate_bearer_token)],
+    executor: Annotated[ActionExecutor, Depends(get_action_executor)],
 ):
     receipt = executor.storage.get_execution_receipt(intent_id)
     if not receipt:

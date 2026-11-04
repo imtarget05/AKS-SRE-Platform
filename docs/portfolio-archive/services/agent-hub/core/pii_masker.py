@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, List, Union
+from typing import Any
 
 
 class PIIMasker:
@@ -41,7 +41,7 @@ class PIIMasker:
         return text
 
     @classmethod
-    def sanitize(cls, data: Union[Dict[str, Any], List[Any], str, Any]) -> Any:
+    def sanitize(cls, data: dict[str, Any] | list[Any] | str | Any) -> Any:
         if isinstance(data, dict):
             return {k: cls.sanitize(v) for k, v in data.items()}
         elif isinstance(data, list):

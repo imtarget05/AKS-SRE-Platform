@@ -1,0 +1,112 @@
+# NetworkPolicy for the agent-hub workload (FastAPI, port 8080).
+# Enforced only where the CNI enforces it: Azure CNI Overlay + Cilium on AKS;
+# under kindnet these objects are accepted by the API server and silently ignored.
+#
+# Default deny, then explicit allow. There is no allow-all fallback: an
+# allow-all policy would make every deny below unverifiable.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-agent-hub
+  labels:
+    app.kubernetes.io/name: agent-hub
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-hub
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Ingress: the gateway/envoy pod in envoy-gateway-system on port 8080, plus
+# Prometheus /metrics scraping from the monitoring namespace (read-only, still
+# an information leak if exposed cluster-wide).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-agent-hub-ingress
+  labels:
+    app.kubernetes.io/name: agent-hub
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-hub
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy-gateway
+      ports:
+        - protocol: TCP
+          port: 8080
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+# Egress: backend owner services and DNS only. No 0.0.0.0/0 fallback.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-agent-hub-egress
+  labels:
+    app.kubernetes.io/name: agent-hub
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: agent-hub
+  policyTypes:
+    - Egress
+  egress:
+    # order-api in the flashsale namespace: namespace + pod label known.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flashsale
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: order-api
+      ports:
+        - protocol: TCP
+          port: 80
+    # retail-finance: pod labels not known in this repo, namespace-level egress.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: retail-finance
+      ports:
+        - protocol: TCP
+          port: 8080
+    # quanlykho: pod labels not known in this repo, namespace-level egress.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: quanlykho
+      ports:
+        - protocol: TCP
+          port: 8000
+    # DNS: kube-dns in kube-system, TCP and UDP.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

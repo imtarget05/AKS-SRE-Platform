@@ -9,10 +9,17 @@ from __future__ import annotations
 
 import json
 import subprocess
+import urllib.parse
 from pathlib import Path
 from typing import Any
 
 from .models import WorkloadStatus
+from .validation import (
+    validate_dns_label,
+    validate_namespace,
+    ensure_double_dash,
+    encode_promql,
+)
 
 
 class ReadOnlyAdapterError(RuntimeError):
@@ -53,7 +60,7 @@ class PrometheusAdapter:
     def query(self, metric: str) -> dict[str, Any]:
         proxy_path = (
             f"/api/v1/namespaces/{NAMESPACE}/services/{PROMETHEUS_SERVICE}/proxy/"
-            f"api/v1/query?query={metric}"
+            f"api/v1/query?query={encode_promql(metric)}"
         )
         return _kubectl_raw(self.context, proxy_path)
 
@@ -91,9 +98,12 @@ class KubectlAdapter:
         self.context = context
 
     def workload_status(self, name: str, namespace: str) -> WorkloadStatus:
+        validate_dns_label(name)
+        validate_namespace(namespace)
         result = subprocess.run(
             [
-                "kubectl", "--context", self.context, "get", "deployment", name,
+                "kubectl", "--context", self.context, "--",
+                "get", "deployment", name,
                 "-n", namespace, "-o", "json",
             ],
             capture_output=True,
@@ -139,6 +149,7 @@ class ArgoAdapter:
         self.context = context
 
     def current_revision(self, app_name: str) -> str:
+        validate_dns_label(app_name)
         result = subprocess.run(
             [
                 "kubectl", "--context", self.context, "get", "application",

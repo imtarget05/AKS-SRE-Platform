@@ -1,7 +1,6 @@
-import pytest
-import sys
 import os
-from datetime import datetime, timezone, timedelta
+import sys
+from datetime import UTC, datetime, timedelta
 
 # Ensure agent-hub is on sys.path
 AGENT_HUB_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../services/agent-hub"))
@@ -21,7 +20,7 @@ def test_evidence_envelope_hash_generation_and_integrity():
         source_sha="433447f",
         scope_id="outlet-hn-01",
         record_version=1,
-        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+        expires_at=datetime.now(UTC) + timedelta(minutes=15),
         facts=facts,
         source_refs=["http://127.0.0.1:8088/api/v1/retail/reconcile/batches/b-101/discrepancies"]
     )
@@ -39,7 +38,7 @@ def test_evidence_envelope_hash_generation_and_integrity():
 
 
 def test_evidence_envelope_expiration():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     expired_envelope = EvidenceEnvelope(
         case_type="order_failure",
         entity_ref="ord-8801",

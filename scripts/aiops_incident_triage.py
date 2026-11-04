@@ -9,13 +9,13 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class IncidentTriageEngine:
     def __init__(self, runbooks_dir: Path):
         self.runbooks_dir = runbooks_dir
-        self.runbooks: List[Dict[str, Any]] = []
+        self.runbooks: list[dict[str, Any]] = []
         self._load_runbooks()
 
     def _load_runbooks(self):
@@ -46,7 +46,7 @@ class IncidentTriageEngine:
                 "raw_content": content,
             })
 
-    def triage(self, alert_query: str) -> Optional[Dict[str, Any]]:
+    def triage(self, alert_query: str) -> dict[str, Any] | None:
         expanded_query = re.sub(r"([a-z])([A-Z])", r"\1 \2", alert_query)
         tokens = [t.lower() for t in re.findall(r"\b\w{3,}\b", expanded_query)]
         if not tokens:
@@ -129,7 +129,7 @@ def main():
                 print(f"    Assigned Owner  : {res['owner']}")
                 print(f"    Impact Summary  : {res['impact']}")
                 print(f"    Verification    : {res['verification_target']}")
-                print(f"    Immediate Remediation Commands:")
+                print("    Immediate Remediation Commands:")
                 for cmd in res["recommended_actions"]:
                     print(f"      $ {cmd}")
                 print("-" * 55)
@@ -153,7 +153,7 @@ def main():
         print(f"   Runbook  : {result['runbook_path']}")
         print(f"   Impact   : {result['impact']}")
         print(f"   Target   : {result['verification_target']}")
-        print(f"\n🛠️ Automated Remediation Commands:")
+        print("\n🛠️ Automated Remediation Commands:")
         for cmd in result["recommended_actions"]:
             print(f"   $ {cmd}")
         print()

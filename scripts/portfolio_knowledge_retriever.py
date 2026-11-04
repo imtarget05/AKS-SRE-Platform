@@ -14,10 +14,9 @@ import json
 import math
 import re
 from pathlib import Path
-from typing import Dict, List, Tuple
 
 
-def tokenize(text: str) -> List[str]:
+def tokenize(text: str) -> list[str]:
     return [w.lower() for w in re.findall(r"\b\w{2,}\b", text)]
 
 
@@ -32,15 +31,15 @@ class KnowledgeDocument:
 
 
 class PortfolioKnowledgeRetriever:
-    def __init__(self, base_dirs: List[Path]):
+    def __init__(self, base_dirs: list[Path]):
         self.base_dirs = base_dirs
-        self.docs: List[KnowledgeDocument] = []
-        self.doc_freq: Dict[str, int] = {}
+        self.docs: list[KnowledgeDocument] = []
+        self.doc_freq: dict[str, int] = {}
         self.avg_dl: float = 0.0
 
     def index(self):
         self.docs.clear()
-        target_files: List[Path] = []
+        target_files: list[Path] = []
 
         # 1. Download-level portfolio audit & registers
         downloads_dir = Path("/Users/mainguyenbinhtan/Downloads")
@@ -98,13 +97,13 @@ class PortfolioKnowledgeRetriever:
     def _chunk_and_add(self, file_path: Path):
         try:
             text = file_path.read_text(encoding="utf-8", errors="replace")
-        except Exception:
+        except OSError:
             return
 
         lines = text.split("\n")
         current_title = file_path.name
         current_section = "Header"
-        current_chunk: List[str] = []
+        current_chunk: list[str] = []
         chunk_start = 1
 
         for idx, line in enumerate(lines, start=1):
@@ -131,12 +130,12 @@ class PortfolioKnowledgeRetriever:
                     )
                 )
 
-    def search(self, query: str, top_k: int = 5) -> List[Tuple[KnowledgeDocument, float]]:
+    def search(self, query: str, top_k: int = 5) -> list[tuple[KnowledgeDocument, float]]:
         q_tokens = tokenize(query)
         if not q_tokens:
             return []
 
-        scores: List[Tuple[KnowledgeDocument, float]] = []
+        scores: list[tuple[KnowledgeDocument, float]] = []
         k1 = 1.5
         b = 0.75
         N = len(self.docs)
@@ -144,7 +143,7 @@ class PortfolioKnowledgeRetriever:
         for doc in self.docs:
             score = 0.0
             doc_len = len(doc.tokens)
-            tf_dict: Dict[str, int] = {}
+            tf_dict: dict[str, int] = {}
             for t in doc.tokens:
                 tf_dict[t] = tf_dict.get(t, 0) + 1
 

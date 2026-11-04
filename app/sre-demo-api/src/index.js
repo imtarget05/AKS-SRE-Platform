@@ -40,3 +40,8 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 process.on('unhandledRejection', (err) => {
   logger.error({ err: String(err) }, 'unhandled rejection');
 });
+
+process.on('uncaughtException', (err) => {
+  logger.error({ err: String(err) }, 'uncaught exception');
+  process.exit(1);
+});

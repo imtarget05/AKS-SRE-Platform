@@ -7,7 +7,7 @@ value crosses the service boundary without any rounding decision.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 
@@ -89,7 +89,7 @@ class ReconciliationReport:
     that only care about problems should filter on ``status``.
     """
 
-    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     core_count: int = 0
     partner_count: int = 0
     items: list[Discrepancy] = field(default_factory=list)

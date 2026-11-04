@@ -1,15 +1,16 @@
+import hashlib
 import json
 import uuid
-import hashlib
-from typing import Any, Dict, List, Optional
-from fastapi import HTTPException
+from typing import Any
+
+from adapters.ops_adapter import OpsBridgeReadAdapter
+from adapters.platform_adapter import PlatformIncidentAdapter
+from adapters.quan_adapter import QuanLyKhoReadAdapter
+from adapters.retail_adapter import RetailReadAdapter
+from core.critic import ProposalCritic
 from core.storage import StorageManager
 from core.verifier import DeterministicVerifier
-from core.critic import ProposalCritic
-from adapters.retail_adapter import RetailReadAdapter
-from adapters.ops_adapter import OpsBridgeReadAdapter
-from adapters.quan_adapter import QuanLyKhoReadAdapter
-from adapters.platform_adapter import PlatformIncidentAdapter
+from fastapi import HTTPException
 from schemas.evidence_envelope import EvidenceEnvelope
 from schemas.investigation_proposal import InvestigationProposal
 
@@ -20,7 +21,7 @@ class RunManager:
     Enforces strict transitions:
     received -> authorized -> evidence_collected -> policy_checked -> proposed/abstained -> closed
     """
-    def __init__(self, storage: Optional[StorageManager] = None):
+    def __init__(self, storage: StorageManager | None = None):
         self.storage = storage or StorageManager()
         self.retail_adapter = RetailReadAdapter()
         self.ops_adapter = OpsBridgeReadAdapter()
@@ -33,9 +34,9 @@ class RunManager:
         entity_ref: str,
         scope_id: str,
         user_id: str = "analyst-01",
-        idempotency_key: Optional[str] = None,
-        synthetic_payload: Optional[Dict[str, Any]] = None,
-        target_scope_override: Optional[str] = None
+        idempotency_key: str | None = None,
+        synthetic_payload: dict[str, Any] | None = None,
+        target_scope_override: str | None = None
     ) -> InvestigationProposal:
         # Idempotency deduplication check & strict cross-scope/caller/payload binding
         effective_idempotency_key = idempotency_key or f"{case_type}:{entity_ref}:{scope_id}:{user_id}"
@@ -141,7 +142,7 @@ class RunManager:
         self.storage.update_run_state(run_id, state="authorized")
 
         # Step 2: Evidence Collection via scoped Read Adapters
-        evidences: List[EvidenceEnvelope] = []
+        evidences: list[EvidenceEnvelope] = []
         try:
             if case_type == "recon":
                 ev = self.retail_adapter.fetch_discrepancy_evidence(
@@ -263,6 +264,6 @@ class RunManager:
 
         return verified_proposal
 
-    def record_decision(self, run_id: str, decision: str, reviewer_id: str, reason: str) -> Dict[str, Any]:
+    def record_decision(self, run_id: str, decision: str, reviewer_id: str, reason: str) -> dict[str, Any]:
         self.storage.record_human_decision(run_id, decision, reviewer_id, reason)
         return self.storage.get_run(run_id)

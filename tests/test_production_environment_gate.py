@@ -11,7 +11,6 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 CHECK = ROOT / "scripts" / "check-production-environment.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "aks-deploy.yml"
-LEGACY_WORKFLOW = ROOT / ".github" / "workflows" / "legacyapp-ci.yml"
 
 
 def environment(*, self_review=False, bypass=False, reviewers=2):
@@ -68,29 +67,6 @@ class ProductionEnvironmentGateTests(unittest.TestCase):
                 guard = next(i for i, step in enumerate(steps) if "check-production-environment.py" in step.get("run", ""))
                 azure = next(i for i, step in enumerate(steps) if step.get("uses", "").startswith("azure/login@"))
                 self.assertLess(guard, azure)
-
-    def test_legacy_gitops_update_checks_environment_before_push(self):
-        jobs = yaml.safe_load(LEGACY_WORKFLOW.read_text())["jobs"]
-        job = jobs["gitops-update"]
-        self.assertEqual(job["environment"], "production")
-        self.assertEqual(set(job["needs"]), {"release-push", "sbom-scan"})
-        steps = job["steps"]
-        guard = next(i for i, step in enumerate(steps) if "check-production-environment.py" in step.get("run", ""))
-        push = next(i for i, step in enumerate(steps) if "git push" in step.get("run", ""))
-        self.assertLess(guard, push)
-
-    def test_legacy_image_scan_uses_release_digest_and_uploads_only_sbom(self):
-        jobs = yaml.safe_load(LEGACY_WORKFLOW.read_text())["jobs"]
-        scan = jobs["sbom-scan"]
-        self.assertEqual(scan["needs"], "release-push")
-        commands = "\n".join(step.get("run", "") for step in scan["steps"])
-        self.assertIn("needs.release-push.outputs.digest", commands)
-        self.assertIn("legacy-app@", commands)
-        self.assertNotIn("legacy-app:${GITHUB_SHA}", commands)
-        uploads = [step for step in scan["steps"] if step.get("uses", "").startswith("actions/upload-artifact@")]
-        self.assertEqual(len(uploads), 1)
-        self.assertEqual(uploads[0]["with"]["path"], "sbom.spdx.json")
-
 
 if __name__ == "__main__":
     unittest.main()

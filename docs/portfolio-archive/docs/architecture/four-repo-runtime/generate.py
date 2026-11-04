@@ -6,11 +6,10 @@ Run from any directory: python3 docs/architecture/four-repo-runtime/generate.py
 import sys
 from pathlib import Path
 
-
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "four-repo-deep-dive"))
-import generate as base  # noqa: E402
-from generate import AI, BG, INK, LINE, MUTED, OPS, PLATFORM, QUAN, RED, RETAIL, Svg  # noqa: E402
+import generate as base
+from generate import AI, INK, MUTED, OPS, PLATFORM, QUAN, RED, RETAIL, Svg
 
 base.OUT = HERE
 

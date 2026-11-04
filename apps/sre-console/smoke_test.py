@@ -54,7 +54,7 @@ def check_index_references():
     if 'href="styles.css"' not in html:
         missing.append("styles.css")
     for js in JS_FILES:
-        if 'src="%s"' % js not in html:
+        if f'src="{js}"' not in html:
             missing.append(js)
     status = "PASS" if not missing else "FAIL"
     detail = "" if not missing else "missing references: " + ", ".join(missing)
@@ -69,7 +69,7 @@ def check_tab_panels():
         html = f.read()
     missing = []
     for tab in TAB_PANEL_IDS:
-        if 'id="view-%s"' % tab not in html:
+        if f'id="view-{tab}"' not in html:
             missing.append(tab)
     status = "PASS" if not missing else "FAIL"
     detail = "" if not missing else "missing tab-panels: " + ", ".join(missing)
@@ -99,10 +99,11 @@ def main():
     for name, fn in checks:
         status, detail = fn()
         results.append((name, status, detail))
-        print("[%s] %s%s" % (status, name, (" - " + detail) if detail else ""))
+        suffix = f" - {detail}" if detail else ""
+        print(f"[{status}] {name}{suffix}")
 
     overall = "PASS" if all(s == "PASS" for _, s, _ in results) else "FAIL"
-    print("\nOverall: %s" % overall)
+    print(f"\nOverall: {overall}")
     return 0 if overall == "PASS" else 1
 
 

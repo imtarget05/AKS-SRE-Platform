@@ -1,6 +1,7 @@
 import os
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional, List
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import httpx
 from schemas.evidence_envelope import EvidenceEnvelope
 
@@ -15,7 +16,7 @@ class RetailReadAdapter:
     - Auto-paginated retrieval across all transaction windows.
     - Zero write operations (never posts to ledger).
     """
-    def __init__(self, base_url: Optional[str] = None, token: Optional[str] = None):
+    def __init__(self, base_url: str | None = None, token: str | None = None):
         self.base_url = base_url or os.getenv("RETAIL_SERVICE_URL", "http://127.0.0.1:8080")
         self.token = token or os.getenv("RETAIL_API_TOKEN")
         self.username = os.getenv("RETAIL_SERVICE_USER", "ops")
@@ -38,19 +39,19 @@ class RetailReadAdapter:
     def _as_instant(self, dt: datetime) -> str:
         """Render a datetime as ISO-8601 Instant ending with Z (e.g. 2026-10-24T00:00:00Z)."""
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+            dt = dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
     def fetch_discrepancy_evidence(
         self,
         batch_id: str,
         caller_outlet_scope: str,
-        target_outlet_id: Optional[str] = None,
-        synthetic_payload: Optional[Dict[str, Any]] = None,
-        window_start: Optional[datetime] = None,
-        window_end: Optional[datetime] = None,
-        expected_tx_refs: Optional[List[str]] = None,
-        expected_amounts: Optional[Dict[str, float]] = None
+        target_outlet_id: str | None = None,
+        synthetic_payload: dict[str, Any] | None = None,
+        window_start: datetime | None = None,
+        window_end: datetime | None = None,
+        expected_tx_refs: list[str] | None = None,
+        expected_amounts: dict[str, float] | None = None
     ) -> EvidenceEnvelope:
         target_outlet = target_outlet_id or caller_outlet_scope
 
@@ -60,7 +61,7 @@ class RetailReadAdapter:
                 f"Cross-scope access denied: Caller is authorized only for outlet '{caller_outlet_scope}', attempted access to '{target_outlet}'"
             )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         start_time = window_start or (now - timedelta(days=1))
         end_time = window_end or now
 
@@ -164,8 +165,8 @@ class RetailReadAdapter:
             source_sha=source_sha,
             scope_id=caller_outlet_scope,
             record_version=record_version,
-            observed_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+            observed_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
             facts=facts,
             source_refs=[endpoint_url],
             classification="INTERNAL_CONFIDENTIAL",

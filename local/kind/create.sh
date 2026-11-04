@@ -47,4 +47,4 @@ kubectl --context "kind-${CLUSTER_NAME}" get pods -A
 
 echo "==> 4/4 Done."
 echo "    context: kind-${CLUSTER_NAME}"
-echo "    host ports (inert until L3 Gateway): 127.0.0.1:8080->30080, 127.0.0.1:8443->30443"
+echo "    host ports (inert until L3 Gateway): 127.0.0.1:18080->30080, 127.0.0.1:8443->30443"

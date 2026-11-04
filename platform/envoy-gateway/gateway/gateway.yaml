@@ -21,3 +21,19 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
+    - name: https
+      protocol: TLS
+      port: 443
+      tls:
+        - mode: Terminate
+          certificateRef:
+            kind: Secret
+            group: ""
+            name: portfolio-mtls-ca
+      # L8: routes now live IN each application namespace (flashsale/legacyapp)
+      # so every repo owns its own HTTPRoute and backendRefs stay same-namespace
+      # (no ReferenceGrants needed). Cross-namespace parent attachment is allowed
+      # by the Gateway; backendRefs never cross a namespace boundary.
+      allowedRoutes:
+        namespaces:
+          from: All

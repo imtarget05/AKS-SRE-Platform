@@ -1,10 +1,12 @@
-import os
+import base64
+import binascii
+import hashlib
 import hmac
 import json
+import os
 import time
-import base64
-import hashlib
-from typing import List, Optional, Dict, Any
+from typing import Any
+
 from fastapi import Header, HTTPException
 from pydantic import BaseModel
 
@@ -12,7 +14,7 @@ from pydantic import BaseModel
 class UserCredential(BaseModel):
     user_id: str
     role: str
-    allowed_scopes: List[str]
+    allowed_scopes: list[str]
     issuer: str
     expires_at: int
 
@@ -49,13 +51,13 @@ def _b64url_encode(data: bytes) -> str:
 def create_signed_token(
     user_id: str,
     role: str,
-    allowed_scopes: List[str],
+    allowed_scopes: list[str],
     ttl_seconds: int = 3600,
-    secret_key: Optional[str] = None,
-    issuer: Optional[str] = None,
-    audience: Optional[str] = None,
-    nbf_offset: Optional[int] = None,
-    custom_header: Optional[Dict[str, Any]] = None
+    secret_key: str | None = None,
+    issuer: str | None = None,
+    audience: str | None = None,
+    nbf_offset: int | None = None,
+    custom_header: dict[str, Any] | None = None
 ) -> str:
     """
     Generates a cryptographically signed HMAC-SHA256 (HS256) JWT.
@@ -77,7 +79,7 @@ def create_signed_token(
 
     header_b64 = _b64url_encode(json.dumps(header, separators=(",", ":")).encode("utf-8"))
     payload_b64 = _b64url_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
-    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+    signing_input = f"{header_b64}.{payload_b64}".encode()
 
     if header.get("alg") == "none":
         signature_b64 = ""
@@ -88,7 +90,7 @@ def create_signed_token(
     return f"{header_b64}.{payload_b64}.{signature_b64}"
 
 
-def authenticate_bearer_token(authorization: Optional[str] = Header(default=None)) -> UserCredential:
+def authenticate_bearer_token(authorization: str | None = Header(default=None)) -> UserCredential:
     """
     Cryptographic Server-Side Authentication Guard.
     Strictly verifies algorithm (HS256 only), HMAC-SHA256 signature, issuer, audience, nbf, and expiration.
@@ -114,7 +116,10 @@ def authenticate_bearer_token(authorization: Optional[str] = Header(default=None
     # 1. Parse and verify header algorithm
     try:
         header_data = json.loads(_b64url_decode(header_b64).decode("utf-8"))
-    except Exception:
+    except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError):
+        raise HTTPException(status_code=401, detail="Authentication failed: Malformed token header")
+
+    if not isinstance(header_data, dict):
         raise HTTPException(status_code=401, detail="Authentication failed: Malformed token header")
 
     if header_data.get("alg") != "HS256":
@@ -125,12 +130,12 @@ def authenticate_bearer_token(authorization: Optional[str] = Header(default=None
 
     # 2. Cryptographic Signature Verification
     secret = get_jwt_secret()
-    signing_input = f"{header_b64}.{payload_b64}".encode("utf-8")
+    signing_input = f"{header_b64}.{payload_b64}".encode()
     expected_sig = hmac.new(secret.encode("utf-8"), signing_input, hashlib.sha256).digest()
 
     try:
         provided_sig = _b64url_decode(signature_b64)
-    except Exception:
+    except binascii.Error:
         raise HTTPException(status_code=401, detail="Authentication failed: Invalid signature encoding")
 
     if not hmac.compare_digest(expected_sig, provided_sig):
@@ -142,7 +147,10 @@ def authenticate_bearer_token(authorization: Optional[str] = Header(default=None
     # 3. Parse & Verify Payload Claims
     try:
         payload_data = json.loads(_b64url_decode(payload_b64).decode("utf-8"))
-    except Exception:
+    except (binascii.Error, UnicodeDecodeError, json.JSONDecodeError):
+        raise HTTPException(status_code=401, detail="Authentication failed: Malformed token payload")
+
+    if not isinstance(payload_data, dict):
         raise HTTPException(status_code=401, detail="Authentication failed: Malformed token payload")
 
     # Issuer check

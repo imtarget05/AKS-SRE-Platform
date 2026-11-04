@@ -1,0 +1,5 @@
+# CI checkout mapping for the maintained three-repository portfolio.
+# Paths are populated by the gitops-validate workflow before validation.
+CreditFlow: external/CreditFlow
+QuanLyKho: external/QuanLyKho
+AKS-SRE-Platform: .

@@ -1,0 +1,94 @@
+# NetworkPolicy for the langfuse-server workload (namespace langfuse, port 3000).
+# Enforced only where the CNI enforces it: Azure CNI Overlay + Cilium on AKS;
+# under kindnet these objects are accepted by the API server and silently ignored.
+#
+# Default deny, then explicit allow. There is no allow-all fallback: an
+# allow-all policy would make every deny below unverifiable.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: langfuse
+  labels:
+    app.kubernetes.io/name: langfuse-server
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse-server
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Ingress: the gateway/envoy pod in envoy-gateway-system on port 3000.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-langfuse-ingress
+  namespace: langfuse
+  labels:
+    app.kubernetes.io/name: langfuse-server
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse-server
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: envoy-gateway-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: envoy-gateway
+      ports:
+        - protocol: TCP
+          port: 3000
+---
+# Egress: PostgreSQL (5432) and Redis (6379) in the data namespace, plus DNS.
+# The data namespace label is supplied by the environment overlay that owns the
+# DATABASE_URL secret; DNS is kube-dns in kube-system.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-langfuse-egress
+  namespace: langfuse
+  labels:
+    app.kubernetes.io/name: langfuse-server
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: langfuse-server
+  policyTypes:
+    - Egress
+  egress:
+    # PostgreSQL: namespaceSelector matching the data namespace, port 5432.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Redis: namespaceSelector matching the data namespace, port 6379.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+      ports:
+        - protocol: TCP
+          port: 6379
+    # DNS: kube-dns in kube-system, TCP and UDP.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

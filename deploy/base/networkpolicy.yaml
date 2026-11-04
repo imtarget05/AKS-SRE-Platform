@@ -1,7 +1,10 @@
-# NetworkPolicy. Enforced only where the CNI enforces it: Azure CNI Overlay +
-# Cilium on AKS (Phase E/H). Under local kindnet these objects are accepted by
-# the API server and silently ignored, which is exactly why the negative control
-# must run on AKS and not locally — see ADR-014.
+# NetworkPolicy documentation vs enforcement boundary:
+#   - kind-local-platform (kindnet CNI): NetworkPolicy objects are accepted by the
+#     API server but silently NOT enforced at runtime — documentation control only.
+#   - AKS (Azure CNI Overlay + Cilium): NetworkPolicy is enforced — default-deny
+#     plus explicit allow applies at runtime.
+#   - Negative control (an unauthorized pod gets a connection timeout, not 200)
+#     must be verified on AKS; it proves nothing locally under kindnet — see ADR-014.
 #
 # Default deny, then explicit allow. There is no allow-all fallback: an
 # allow-all policy would make every deny below unverifiable.

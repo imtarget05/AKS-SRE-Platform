@@ -6,16 +6,14 @@ import json
 import os
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 import httpx
-from fastapi import HTTPException
-
 from adapters.ops_adapter import OpsBridgeReadAdapter
 from core.storage import StorageManager
+from fastapi import HTTPException
 from schemas.action_intent import ActionIntent, ApproveActionRequest, ExecutionReceipt
-
 
 COMMAND = "REPLAY_STUCK_OUTBOX"
 OWNER = "opsbridge-flashsale"
@@ -29,8 +27,8 @@ class ActionExecutor:
 
     def __init__(
         self,
-        storage: Optional[StorageManager] = None,
-        ops_adapter: Optional[OpsBridgeReadAdapter] = None,
+        storage: StorageManager | None = None,
+        ops_adapter: OpsBridgeReadAdapter | None = None,
     ):
         self.storage = storage or StorageManager()
         # The executor does not mint an owner JWT. The owner authenticates a
@@ -49,7 +47,7 @@ class ActionExecutor:
         scope_id: str,
         entity_ref: str,
         idempotency_key: str,
-        parameters: Optional[Dict[str, Any]] = None,
+        parameters: dict[str, Any] | None = None,
     ) -> ActionIntent:
         if command_type != COMMAND or owner_service != OWNER or scope_id != SCOPE:
             raise HTTPException(400, "Recovery command, owner, or scope is not allowlisted")
@@ -68,7 +66,7 @@ class ActionExecutor:
                 raise ValueError("timezone required")
         except (TypeError, ValueError) as exc:
             raise HTTPException(400, "Invalid dead-letter version") from exc
-        expected = expected.astimezone(timezone.utc).isoformat()
+        expected = expected.astimezone(UTC).isoformat()
 
         run = self.storage.get_run(run_id)
         if not run or run["user_id"] != requester_id or run["scope_id"] != scope_id:
@@ -85,7 +83,7 @@ class ActionExecutor:
                     continue
                 try:
                     event_id = str(uuid.UUID(str(event.get("messageId", ""))))
-                    event_version = datetime.fromisoformat(str(event.get("deadLetteredAt"))).astimezone(timezone.utc)
+                    event_version = datetime.fromisoformat(str(event.get("deadLetteredAt"))).astimezone(UTC)
                 except (ValueError, TypeError):
                     continue
                 if event_id == message_id and event_version == datetime.fromisoformat(expected):
@@ -126,7 +124,7 @@ class ActionExecutor:
         intent_id: str,
         approver_id: str,
         approver_role: str,
-        approver_scopes: List[str],
+        approver_scopes: list[str],
         req: ApproveActionRequest,
     ) -> ActionIntent:
         intent = self.storage.get_intent(intent_id)
@@ -158,7 +156,7 @@ class ActionExecutor:
         intent_id: str,
         caller_id: str,
         caller_role: str,
-        caller_scopes: List[str],
+        caller_scopes: list[str],
     ) -> ExecutionReceipt:
         intent = self.storage.get_intent(intent_id)
         if not intent:
@@ -203,7 +201,7 @@ class ActionExecutor:
             raise HTTPException(503, "Agent recovery credential is not configured")
         timestamp = str(int(time.time()))
         body_hash = hashlib.sha256(body).hexdigest()
-        payload = f"{method}\n{path}\n{timestamp}\n{body_hash}".encode("utf-8")
+        payload = f"{method}\n{path}\n{timestamp}\n{body_hash}".encode()
         signature = hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
         return {"X-Agent-Timestamp": timestamp, "X-Agent-Signature": signature}
 
@@ -217,7 +215,7 @@ class ActionExecutor:
         return response.json()
 
     def _execute_requeue(
-        self, intent: ActionIntent, approval: Dict[str, Any], caller_id: str,
+        self, intent: ActionIntent, approval: dict[str, Any], caller_id: str,
         was_unknown: bool,
     ) -> ExecutionReceipt:
         message_id = intent.entity_ref
@@ -242,7 +240,7 @@ class ActionExecutor:
                     raise HTTPException(409, "Event is no longer dead-lettered")
             else:
                 try:
-                    observed = datetime.fromisoformat(observed_version).astimezone(timezone.utc)
+                    observed = datetime.fromisoformat(observed_version).astimezone(UTC)
                 except (TypeError, ValueError) as exc:
                     raise HTTPException(502, "Owner returned an invalid event version") from exc
                 if observed != expected:

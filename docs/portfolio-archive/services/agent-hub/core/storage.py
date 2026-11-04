@@ -1,11 +1,12 @@
 import json
 import os
 import sqlite3
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
+
 from fastapi import HTTPException
-from schemas.evidence_envelope import EvidenceEnvelope
 from schemas.action_intent import ActionIntent, ExecutionReceipt
+from schemas.evidence_envelope import EvidenceEnvelope
 
 
 class StorageManager:
@@ -13,7 +14,7 @@ class StorageManager:
     Lightweight, reliable SQLite storage for Agent Hub investigation state and evidence.
     Supports both file-based persistent database and in-memory test mode.
     """
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = db_path or os.environ.get("AGENT_HUB_DB_PATH", "agent_hub.db")
         self._init_db()
 
@@ -154,9 +155,9 @@ class StorageManager:
         scope_id: str,
         user_id: str,
         state: str,
-        request_hash: Optional[str] = None
+        request_hash: str | None = None
     ) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute("""
                 INSERT INTO investigation_runs
@@ -164,7 +165,7 @@ class StorageManager:
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (run_id, idempotency_key, case_type, entity_ref, scope_id, user_id, request_hash, state, now, now))
 
-    def get_run_by_idempotency_key(self, idempotency_key: str) -> Optional[Dict[str, Any]]:
+    def get_run_by_idempotency_key(self, idempotency_key: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM investigation_runs WHERE idempotency_key = ?", (idempotency_key,))
             row = cur.fetchone()
@@ -175,8 +176,8 @@ class StorageManager:
                 res["proposal"] = json.loads(res["proposal_json"])
             return res
 
-    def update_run_state(self, run_id: str, state: str, proposal_json: Optional[str] = None) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+    def update_run_state(self, run_id: str, state: str, proposal_json: str | None = None) -> None:
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             if proposal_json is not None:
                 conn.execute("""
@@ -191,7 +192,7 @@ class StorageManager:
                     WHERE run_id = ?
                 """, (state, now, run_id))
 
-    def get_run(self, run_id: str) -> Optional[Dict[str, Any]]:
+    def get_run(self, run_id: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM investigation_runs WHERE run_id = ?", (run_id,))
             row = cur.fetchone()
@@ -216,7 +217,7 @@ class StorageManager:
         ON CONFLICT(evidence_hash) DO NOTHING preserves the original snapshot.
         Each run still gets its own association with that snapshot.
         """
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute("""
                 INSERT INTO evidence_records (
@@ -247,7 +248,7 @@ class StorageManager:
                 VALUES (?, ?)
             """, (run_id, envelope.evidence_hash))
 
-    def get_evidences_for_run(self, run_id: str) -> List[EvidenceEnvelope]:
+    def get_evidences_for_run(self, run_id: str) -> list[EvidenceEnvelope]:
         with self._get_connection() as conn:
             cur = conn.execute("""
                 SELECT e.* FROM evidence_records e
@@ -279,7 +280,7 @@ class StorageManager:
         Records human decision with single-decision invariant.
         A run that is already closed will reject duplicate decisions with HTTP 409 Conflict.
         """
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             cur = conn.execute("SELECT state FROM investigation_runs WHERE run_id = ?", (run_id,))
             row = cur.fetchone()
@@ -320,7 +321,7 @@ class StorageManager:
         Self-healing guard: Scan for runs stuck in intermediate states (received, authorized)
         older than timeout_minutes and transition them to 'abstained' to prevent orphaned runs.
         """
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             cur = conn.execute("""
                 UPDATE investigation_runs
@@ -356,7 +357,7 @@ class StorageManager:
                 intent.expires_at.isoformat()
             ))
 
-    def get_intent(self, intent_id: str) -> Optional[ActionIntent]:
+    def get_intent(self, intent_id: str) -> ActionIntent | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM action_intents WHERE intent_id = ?", (intent_id,))
             row = cur.fetchone()
@@ -380,7 +381,7 @@ class StorageManager:
                 expires_at=datetime.fromisoformat(row["expires_at"])
             )
 
-    def get_intent_by_idempotency_key(self, idempotency_key: str) -> Optional[ActionIntent]:
+    def get_intent_by_idempotency_key(self, idempotency_key: str) -> ActionIntent | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM action_intents WHERE idempotency_key = ?", (idempotency_key,))
             row = cur.fetchone()
@@ -427,7 +428,7 @@ class StorageManager:
         reason: str,
         intent_hash: str
     ) -> None:
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         with self._get_connection() as conn:
             conn.execute("""
                 INSERT INTO action_approvals (
@@ -435,7 +436,7 @@ class StorageManager:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """, (intent_id, decision, approver_id, approver_role, reason, intent_hash, now))
 
-    def get_action_approval(self, intent_id: str) -> Optional[Dict[str, Any]]:
+    def get_action_approval(self, intent_id: str) -> dict[str, Any] | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM action_approvals WHERE intent_id = ?", (intent_id,))
             row = cur.fetchone()
@@ -467,7 +468,7 @@ class StorageManager:
                 receipt.result_summary
             ))
 
-    def get_execution_receipt(self, intent_id: str) -> Optional[ExecutionReceipt]:
+    def get_execution_receipt(self, intent_id: str) -> ExecutionReceipt | None:
         with self._get_connection() as conn:
             cur = conn.execute("SELECT * FROM execution_receipts WHERE intent_id = ?", (intent_id,))
             row = cur.fetchone()

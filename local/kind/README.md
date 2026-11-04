@@ -62,13 +62,16 @@ kind cluster: local-platform          (context: kind-local-platform)
   path is `kubectl port-forward`; MetalLB is added only if a real LoadBalancer
   IP becomes materially useful.
 - **Host port mappings are pre-wired but inert:**
-  `127.0.0.1:8080 -> control-plane:30080`, `127.0.0.1:8443 -> :30443`. They cost
+  `127.0.0.1:18080 -> control-plane:30080`, `127.0.0.1:8443 -> :30443`. They cost
   nothing, are bound to loopback (never the LAN), and let L3 expose the shared
   Gateway as a NodePort **without recreating the cluster**.
 
-Host ports already occupied by the FlashSale compose stack (avoid collisions):
-`5432` (Postgres), `6379` (Redis), `5672`/`15672` (RabbitMQ), `5000` (API).
-Verified free before creation: `6443`, `8080`, `8443`, `30080`, `30443`.
+Host ports used by existing local services must not be taken over. The
+QuanLyKho frontend uses `8080`; the FlashSale compose stack has historically
+used `5432` (Postgres), `6379` (Redis), `5672`/`15672` (RabbitMQ), and `5000`
+(API). The kind config therefore maps HTTP to `18080`, not `8080`. Its
+API-server and mapped ports were verified free before initial cluster creation:
+`6443`, `18080`, and `8443`.
 
 ## 3. Reproducibility
 
@@ -180,4 +183,3 @@ loaded with `kind load docker-image` — no registry credentials involved.
 no LoadBalancer IP, no high availability, no cloud-managed data tier — this is a
 parity environment for deployment/GitOps/observability behaviour, not a claim of
 production equivalence.
-

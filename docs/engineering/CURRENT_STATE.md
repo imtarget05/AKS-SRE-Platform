@@ -1,18 +1,25 @@
 # CURRENT_STATE — Engineering Checkpoint
 
-> **Local verification update (2026-11-01):** Code/test results and local
-> blockers are tracked in [`../../tasks/current.md`](../../tasks/current.md).
-> No live Azure inventory was performed in this checkpoint; the cluster and
-> quota statements below remain historical point-in-time evidence, not current
-> cloud state or production-release approval.
+> **Verification update (2026-11-01):** Code/test results and blockers are
+> tracked in [`../../tasks/current.md`](../../tasks/current.md). The local
+> `local-platform` kind cluster has 3/3 Ready nodes. Argo CD v3.5.5 and all
+> seven components are Ready; the `portfolio` AppProject and pinned `quanlykho`
+> Application are installed. The app remains manually promoted and
+> `OutOfSync`/`Missing`; no application workloads are synced. A read-only
+> Azure recheck found the AKS cluster running with three ready nodes but only
+> system workloads; Argo CD and application deployments were absent. The
+> teardown and quota statements below are historical, not current cloud state
+> or production-release approval. `main` and `origin/main` point to
+> `0dac76eb2b341e68c80ed3548eb57008383ad38d`; a read-only ACR check found no
+> `bankops-api:sha-0dac76e` tag for this commit, and no deployment was
+> performed.
 
-- **Updated:** 2026-10-21 (later) — **Azure teardown EXECUTED**: the AKS cluster
-  `aks-portfolio-dev`, RG `rg-aks-platform-dev` and the `MC_…` resource group are
-  **DELETED**; **0 Azure dev resources remain → no Azure cost**. The local kind
-  platform was **restored** and its **self-heal re-measured**. Previous update:
-  2026-10-21 ~14:0x (Azure end state corrected: the AKS cluster was then **still
-  running and billable**). Previous update: 2026-10-20 (after the LegacyApp
-  subtree import and A0.1 honesty pass)
+- **Historical update (2026-10-21):** Azure teardown was reported complete for
+  `aks-portfolio-dev`, RG `rg-aks-platform-dev` and its `MC_…` resource group;
+  the 2026-11-01 read-only recheck now finds the AKS cluster running. The local
+  kind platform was restored and its self-heal re-measured at that earlier
+  checkpoint. Previous update: 2026-10-20 (after the LegacyApp subtree import
+  and A0.1 honesty pass).
 - **Wave:** Execution Wave 1 = Phase A + B + C
 - **Branch:** `aks-sre/phase-b-ci` → PR #1. Phase A is merged on `main` at `7ca873e`.
 - **Strategy:** Azure-first. AKS is the proof surface; local kind is the OSS /
@@ -30,18 +37,20 @@
 
 | Capability | Environment | State |
 |---|---|---|
-| AKS foundation: system pool, OIDC issuer, Workload Identity, `Manual` node provisioning | `AZURE_VALIDATION` | **PASS** 2026-09-21, then stopped + torn down |
+| AKS foundation: system pool, OIDC issuer, Workload Identity, `Manual` node provisioning | `AZURE_VALIDATION` | Historical **PASS** 2026-09-21; teardown was reported 2026-10-21. The 2026-11-01 read-only recheck finds `aks-portfolio-dev` running with 3/3 Ready nodes, but no Argo CD or application workloads. This is not a new apply or release verification. |
+| Local kind foundation | `LOCAL` | **PASS 2026-11-01:** `local-platform` has 3/3 nodes Ready; Argo CD v3.5.5 has 7/7 components Ready. The previous default context remains `aks-portfolio-dev-admin`. |
+| Local GitOps bootstrap | `LOCAL` | **PASS 2026-11-01:** `portfolio` AppProject and pinned `quanlykho` Application installed. Application is deliberately manual-sync and currently `OutOfSync`/`Missing`; no app workload was synced. |
 | User-pool placement isolation | `AZURE_VALIDATION` | **PASS** 2026-09-21, pool since deleted |
 | Private ACR pull by digest, no `imagePullSecret` | `AZURE_VALIDATION` | **PASS** 2026-09-21 |
 | Workload Identity federated token exchange + scoped read | `AZURE_VALIDATION` | **PASS** 2026-09-21, identities since deleted |
-| Argo CD sync + `git revert` rollback + drift detect/reconcile | `PRE_AZURE_DRY_RUN` | **PASS** on kind — **re-measured 2026-10-21 13:52–13:54 local** on the restored cluster: spec drift reverted in **21 s**, a deleted Deployment re-created and ready in **17 s** (evidence §17) |
+| Argo CD sync + `git revert` rollback + drift detect/reconcile | `PRE_AZURE_DRY_RUN` | **Historical PASS** on kind — re-measured 2026-10-21 13:52–13:54 on the earlier restored cluster: spec drift reverted in **21 s**, a deleted Deployment re-created and ready in **17 s** (evidence §17). Not re-run on the current cluster. |
 | Gateway API + Envoy Gateway shared north-south | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | Prometheus + Grafana + one real alert fire/resolve cycle | `PRE_AZURE_DRY_RUN` | **PASS** on kind |
 | HPA / AKS Cluster Autoscaler | — | **NOT RUN** (HPA manifest validated by kubeconform; no scale event observed) |
-| Enforced NetworkPolicy (default-deny + scoped allow) | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: 6/6 positive & negative probes passed; unauthorized ingress/egress dropped by kernel CNI nftables (RC=28 timeout), authorized gateway/mock egress allowed (200 OK) ([evidence](evidence/network-policy-enforcement-PASS.md)) |
-| PDB / drain / topology spread | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: active node drain on kind 3-node cluster with PDB `minAvailable: 1` enforced; 40/40 in-flight requests succeeded (100% availability, 0 dropped requests) ([evidence](evidence/pdb-drain-drill-PASS.md)) |
-| Disaster Recovery RTO / RPO rehearsal | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: automated DB loss simulation and snapshot restore; RTO = 0.1581s, RPO = 0s ([evidence](evidence/disaster-recovery-drill-PASS.md)) |
-| SLI / SLO empirical baseline & burn rate calibration | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: Prometheus RED metrics, Availability SLI 100%, fast burn rate (14.4x) alert triggered at 5% error injection ([evidence](evidence/sli-slo-baseline-PASS.md)) |
+| Enforced NetworkPolicy (default-deny + scoped allow) | `PRE_AZURE_DRY_RUN` / `LOCAL` | **INCONCLUSIVE** — the 2026-10-21 probes observed 6/6 expected responses, but the configured kindnet CNI does not establish NetworkPolicy enforcement; the timeouts cannot be attributed to policy without a policy-toggle negative control. Re-run on a CNI with NetworkPolicy support or AKS before claiming enforcement ([evidence](../evidence/network-policy-enforcement-PASS.md)). |
+| PDB / drain / topology spread | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: active node drain on kind 3-node cluster with PDB `minAvailable: 1` enforced; 40/40 in-flight requests succeeded (100% availability, 0 dropped requests) ([evidence](../evidence/pdb-drain-drill-PASS.md)) |
+| Disaster Recovery RTO / RPO rehearsal | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: automated DB loss simulation and snapshot restore; RTO = 0.1581s, RPO = 0s ([evidence](../evidence/disaster-recovery-drill-PASS.md)) |
+| SLI / SLO empirical baseline & burn rate calibration | `PRE_AZURE_DRY_RUN` / `LOCAL` | **PASS** — measured 2026-10-21: Prometheus RED metrics, Availability SLI 100%, fast burn rate (14.4x) alert triggered at 5% error injection ([evidence](../evidence/sli-slo-baseline-PASS.md)) |
 | GitOps multi-repository full validation | `LOCAL` / CI | **PASS** — measured 2026-10-21: 18 passed, 0 failed, 0 not-present with `gitops/repo-map.local.yaml` ([evidence](../scripts/verify-gitops-all.sh)) |
 | Continuous CI (`.github/`) | GitHub Actions | **PASS** (Workflows run & pass 100% green on PR #1) |
 | `terraform test` / tflint | Local & CI | **PASS** (Decoupled modules tested offline with semantic assertions) |
@@ -51,9 +60,11 @@
 
 - **Regional vCPU ceiling: 10** in the measured validation period. At
   2026-10-21 ~14:0x, before teardown, usage was **2/10** from the then-running
-  AKS system node (`Standard_D2s_v6`). The later teardown evidence records
-  **0 Azure dev resources remaining**. Neither observation is a live quota
-  check for a future apply. Remeasure with:
+  AKS system node (`Standard_D2s_v6`). The teardown evidence recorded
+  **0 Azure dev resources remaining** at that time, but the 2026-11-01
+  inventory now finds the cluster running; current cost and quota are unknown.
+  Neither historical observation is a live quota check for a future apply.
+  Remeasure with:
   `az vm list-usage --location eastasia -o tsv | head -3`
 - **Validation capacity envelope: 8 vCPU** — system pool `1 × D2s_v6` (2) +
   user pool `max 3 × D2s_v6` (6). Leaves **2 vCPU** for observability and for
@@ -150,7 +161,7 @@ by design; everything else is green.
 | OIDC workflow contract | `IMPLEMENTED_TESTED` | static checks pass |
 | OIDC live login / negative live | `NOT_VERIFIED` | `live` job **skipped**; no identity exists yet (Phase C) |
 | **`terraform test`** | **`IMPLEMENTED_TESTED`** | 5 passing run blocks across 3 roots (`aks-foundation` 2, `acr_attachment` 1, `aks_cluster` 2). CI executes **all three** roots as of 2026-10-20 (it previously ran only `aks-foundation` = 2) |
-| Azure mutation | **by another actor, and NOT reverted** | *This branch's own work created no Azure resource.* Commit `d628250` (author `imtarget05`, 2026-10-20/21) **did** create RG `rg-aks-platform-dev` + AKS `aks-portfolio-dev`. ⚠️ **Corrected 2026-10-21 ~14:0x: the earlier "then destroyed both / end state (nothing running)" line in this table was WRONG** — at that moment the cluster **was running and billable**: `az aks list` → `aks-portfolio-dev` / `rg-aks-platform-dev` / `ProvisioningState: Succeeded` / FQDN `aksportfoliodev-99hyn1lm.hcp.eastasia.azmk8s.io`; `kubectl --context aks-portfolio-dev get nodes` → 1 node `Ready` v1.36.4. ✅ **Update 2026-10-21 (later): the teardown WAS EXECUTED with owner authorisation** — the cluster, `rg-aks-platform-dev` and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` are **deleted** (`az aks show` → `ResourceNotFound`; `az group show` → `ResourceGroupNotFound` for both), the kubeconfig context was removed and the Terraform local state was cleaned. Real output: `docs/runbooks/azure-teardown-runbook.md` §9. **0 Azure dev resources remain → no Azure cost.** The **apply** step still carries **no committed command output** — audited in `docs/evidence/local-platform/2026-10-20-reverify.md` §15.3 / §15.5b / §17.5; the label stays **`AZURE_CLOUD_APPLY_NOT_VERIFIED`**. |
+| Azure mutation | **Current cloud state not attributed to this repo** | Historical evidence says commit `d628250` created RG `rg-aks-platform-dev` and cluster `aks-portfolio-dev`; a teardown was reported complete on 2026-10-21. The 2026-11-01 read-only recheck now finds that cluster Running with 3/3 Ready nodes, but only system workloads and no Argo CD/application deployments. The intervening recreation/owner and current costs are not established by this repo's evidence. No cloud mutation or deployment was performed in this review. |
 
 Five consecutive Actions runs were needed to reach this state, and every one found
 something no local check could: three distinct `trivy-action` failures before it
@@ -216,16 +227,11 @@ Do not start Phase D's module split before Phase C, and do not run any
 
 ### Still open
 
-- ✅ **RESOLVED 2026-10-21 (later) — the cost item is closed:** the AKS cluster
-  `aks-portfolio-dev` (RG `rg-aks-platform-dev`) and the `MC_…` resource group
-  were **DELETED** with owner authorisation via the teardown runbook
-  `docs/runbooks/azure-teardown-runbook.md` (§9 — real command output). The
-  kubeconfig context was removed and the Terraform local state was cleaned
-  (2 resource instances removed → `terraform plan` now proposes **2 to add**).
-  **0 Azure dev resources remain → no Azure compute cost.**
-  *(Was: at 2026-10-21 ~14:0x the cluster was still running and billable — 2 of
-  the 10 regional vCPUs consumed by its system node — and the runbook was
-  prepared but NOT executed. Evidence §15.5b / §17.5.)*
+- **Current cost is unknown.** The 2026-10-21 teardown was reported complete,
+  but the 2026-11-01 read-only inventory finds `aks-portfolio-dev` running
+  with 3/3 Ready nodes. No current billing/quota review or attribution for the
+  cluster recreation was completed here. Do not rely on the historical
+  "0 Azure dev resources remain" claim.
 - **NEW 2026-10-21 ~14:0x — the remote state is orphaned:** the repository's
   terraform backend was switched `azurerm` → `local` by commit `d628250` and
   never switched back, so a future `apply`/`destroy` would not read

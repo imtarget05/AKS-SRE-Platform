@@ -87,5 +87,5 @@ helm uninstall envoy-gateway -n envoy-gateway-system
 
 - Data plane is `ClusterIP` with **no LoadBalancer**: MetalLB is not installed and
   is not required for the local proof.
-- No TLS listener, no rate limiting, no external DNS — none of them is claimed.
+- mTLS listener on port 443 (TLS terminate) configured via Secret portfolio-mtls-ca; no rate limiting, no external DNS — none of them is claimed.
 - `kindnet` does not enforce NetworkPolicy, so no policy enforcement is claimed.

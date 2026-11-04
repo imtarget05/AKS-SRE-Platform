@@ -30,7 +30,8 @@ variable "system_pool_vm_size" {
 
 variable "system_pool_node_count" {
   type    = number
-  default = 1
+  default = 2
+  # Sacombank budget #1 confirmed: prod requires >= 2 nodes across zones for HA
 }
 
 variable "enable_workload_pool" {
@@ -76,4 +77,19 @@ variable "workload_pool_autoscaling" {
 variable "environment" {
   type    = string
   default = "validation"
+}
+
+variable "sku_tier" {
+  type    = string
+  default = "Standard"
+}
+
+variable "private_cluster_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "zones" {
+  type    = list(string)
+  default = ["1", "2", "3"]
 }

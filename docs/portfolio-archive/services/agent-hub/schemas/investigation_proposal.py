@@ -1,4 +1,3 @@
-from typing import List, Optional
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -13,12 +12,12 @@ class InvestigationProposal(BaseModel):
     run_id: str = Field(..., description="Unique investigation run ID")
     case_version: int = Field(..., description="Target case version evaluated")
     summary: str = Field(..., description="Concise investigation overview for the human operator")
-    hypotheses: List[str] = Field(default_factory=list, description="Plausible root cause hypotheses based on facts")
-    citations: List[str] = Field(default_factory=list, description="Explicit source citations from EvidenceEnvelopes")
-    unknowns: List[str] = Field(default_factory=list, description="Missing data, tool timeouts, or ambiguous items")
+    hypotheses: list[str] = Field(default_factory=list, description="Plausible root cause hypotheses based on facts")
+    citations: list[str] = Field(default_factory=list, description="Explicit source citations from EvidenceEnvelopes")
+    unknowns: list[str] = Field(default_factory=list, description="Missing data, tool timeouts, or ambiguous items")
     severity: str = Field(..., description="LOW | MEDIUM | HIGH | CRITICAL")
     suggested_owner: str = Field(..., description="Role responsible for action: SRE | Auditor | Checker | OnCall")
-    suggested_read_only_checks: List[str] = Field(
+    suggested_read_only_checks: list[str] = Field(
         default_factory=list,
         description="Recommended manual read-only checks (URLs, dashboard queries, SOP steps)"
     )

@@ -1,5 +1,7 @@
 # QA Plan — AKS-SRE-Platform
 
+> **Current-count addendum (2026-11-03):** The G1–G14 / 47-assertion and three-root figures below are historical planning baselines. The current checkout has G1–G16 / **62 passing assertions** and **five Terraform test roots / 16 passing runs**. See [the recheck](evidence/2026-11-03-verification-checkpoint.md) before quoting a current result.
+
 **Kho:** `/Users/mainguyenbinhtan/Downloads/AKS-SRE-Platform`  
 **Người viết:** QA lead / test architect  
 **Ngôn ngữ:** tiếng Việt (thuật ngữ kỹ thuật giữ tiếng Anh khi thích hợp)  
@@ -15,7 +17,7 @@
 - Xác minh Terraform IaC (`terraform/aks-foundation`, `modules/aks_cluster`, `modules/acr_attachment`) qua `terraform test` với `mock_provider "azurerm"` — offline, không cần Azure credential.
 - Xác minh sự nhất quán giữa bằng chứng AKS live (`docs-site/docs/evidence/aks-live.md`) và đầu ra `kubectl` thực tế; phân rõ telemetry có nhãn "mô phỏng" và telemetry thực.
 - Khám phá và chặn rò rỉ mật thấu client-side JS (ví dụ hardcoded Cloudflare token trong `apps/sre-console/index.html`).
-- Không làm hỏng 4 cổng CI hiện hành: `pr-gate.yaml`, `gitops-validate.yaml`, `legacyapp-ci.yml`, `oidc-azure.yaml`.
+- Không làm hỏng 3 cổng CI hiện hành: `pr-gate.yaml`, `gitops-validate.yaml`, `oidc-azure.yaml`.
 
 ### 1.2 Phạm vi (in-scope / out-of-scope)
 
@@ -26,12 +28,12 @@
 - `kubernetes/` (kustomize roots, manifests, NetworkPolicy, PDB)
 - `apps/sre-console/index.html` (bảo mật client-side: không hardcoded secret)
 - `scripts/` (validate-gitops, policy-gate, drill scripts)
-- CI gates: `.github/workflows/{pr-gate,gitops-validate,legacyapp-ci,oidc-azure}.{yaml,yml}`
+- CI gates: `.github/workflows/{pr-gate,gitops-validate,oidc-azure}.{yaml,yml}`
 - By chứng: `docs/evidence/`, `docs-site/docs/evidence/aks-live.md`, `MANIFEST-INVENTORY.md`
 
 **Out-of-scope:**
 - Ứng dụng legacy .NET (`01-FlashSale-Backend`) — có kế hoạch QA riêng.
-- Ứng dụng legacy Node.js (`apps/legacy-inventory`) — có `legacyapp-ci.yml` riêng.
+- Productionized-LegacyApp — removed from the maintained three-repository scope.
 - Terraform apply thật trên Azure (Phase C, chưa có OIDC/identity, cluster AKS đã destroy).
 - OIDC live login (`OIDC_LIVE_LOGIN = NOT_VERIFIED` cho đến khi Phase C tạo identity).
 - E2E trên cụm AKS live (chưa có cụm; cần rebuild để verify runtime).
@@ -68,12 +70,11 @@ Từ đáy (rẻ, nhanh) đến đỉnh (đắt, chậm):
 | **Local kind cluster** | Dry-run manifests, probes, Argo CD local profile, drill local | `PRE_AZURE_DRY_RUN` | Có sẵn, có bằng chứng local (`docs/evidence/local-platform/`) |
 | **Real AKS** | Verify runtime (control plane, node pool, ACR digest pull, workload identity) | `AZURE_VALIDATION` | Cluster `aks-portfolio-dev` đã destroy 2026-10-21; cần rebuild để verify runtime |
 | **Isolated test repo** (gitops validator) | Fixture repo tách biệt cho `tests/test_gates.py`, validator chạy dưới dạng subprocess | — | Có sẵn |
-| **CI gates** (GitHub Actions) | `pr-gate.yaml`, `gitops-validate.yaml`, `legacyapp-ci.yml`, `oidc-azure.yaml` | — | Có sẵn, chạy `ubuntu-latest` |
+| **CI gates** (GitHub Actions) | `pr-gate.yaml`, `gitops-validate.yaml`, `oidc-azure.yaml` | — | Có sẵn, chạy `ubuntu-latest` |
 
 Chi tiết từng cổng CI:
-- `pr-gate.yaml`: terraform (fmt/init/validate/test/tflint), kubernetes (kubeconform, kustomize, inventory, policy-gate), security (Trivy config + fs secret), python (test_gates.py G1–G14).
-- `gitops-validate.yaml`: GitOps semantics, assert external repos là `EXTERNAL_REPO_NOT_PRESENT`, negative control M-B1 (mutate → validator phải bịt → restore byte-identical → xanh lại).
-- `legacyapp-ci.yml`: test-and-scan, docker-build-scan, manifest-validation, sonarqube (skip cho đến khi cấu hình), ci-gate tổng hợp.
+- `pr-gate.yaml`: terraform (fmt/init/validate/test/tflint), kubernetes (kubeconform, kustomize, inventory, policy-gate), security (Trivy config + fs secret), python (test_gates.py G1–G16).
+- `gitops-validate.yaml`: GitOps semantics with CreditFlow and QuanLyKho checked out at the exact pinned Application revisions, plus negative control M-B1 (mutate → validator phải bịt → restore byte-identical → xanh lại).
 - `oidc-azure.yaml`: contract (static, không Azure), live (điều kiện `AZURE_CLIENT_ID`, positive + negative control), status (không bao giờ là quiet pass; `NOT_VERIFIED` nếu chưa có identity).
 
 ---
@@ -199,5 +200,5 @@ Một bản được coi là đạt yêu cầu xuất bản khi tất cả đi�
 - `tests/test_gates.py` — ma trận cổng G1–G14.
 - `gitops/validate-gitops.py` — validator GitOps.
 - `app/sre-demo-api/test/server.test.js` — 7 unit tests workload demo.
-- `.github/workflows/pr-gate.yaml`, `gitops-validate.yaml`, `legacyapp-ci.yml`, `oidc-azure.yaml` — 4 cổng CI.
+- `.github/workflows/pr-gate.yaml`, `gitops-validate.yaml`, `oidc-azure.yaml` — 3 cổng CI.
 - `docs-site/docs/evidence/aks-live.md` — bằng chứng AKS lịch sử (cluster đã destroy).

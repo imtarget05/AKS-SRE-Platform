@@ -8,10 +8,11 @@ Kubernetes manifests must be rendered and policy-checked, and operational
 claims must be traceable to the environment where they were measured.
 
 **Solution.** This repository provides an Azure AKS foundation, GitOps source
-validation, manifest/policy gates, and a small Node.js LegacyApp reference
-workload. The workload is intentionally modest: it demonstrates the platform
+validation, manifest/policy gates, a repo-owned SRE demo API, and a manually
+promoted QuanLyKho GitOps reference. The small workloads demonstrate platform
 contracts (health, structured logs, non-root/read-only filesystem, and GitOps
-ownership) without pretending to be a deployed enterprise inventory service.
+ownership) without pretending that the interview environment is a production
+deployment.
 
 **Business outcome.** A platform engineer can show a reviewer which invariants
 are checked before deployment, distinguish local/kind proof from Azure proof,
@@ -26,7 +27,7 @@ flowchart LR
     CI -->|pass| Source[Canonical GitOps source]
     Source --> Argo[Argo CD Application]
     Argo --> AKS[AKS workload namespace]
-    AKS --> App[LegacyApp reference workload]
+    AKS --> App[Reviewed workload revision]
     App --> Obs[Health, metrics, structured logs]
     CI -. rejected render, policy, or ownership .-> Dev
     Argo -. drift or failed sync .-> Source
@@ -43,7 +44,7 @@ sequenceDiagram
     participant CI
     participant GitOps as Canonical GitOps source
     participant Argo as Argo CD
-    participant Workload as LegacyApp
+    participant Workload as Reviewed workload
     Author->>CI: Pull request
     CI->>CI: Terraform tests, render, policy, ownership checks
     alt Gate fails
@@ -51,34 +52,39 @@ sequenceDiagram
     else Gate passes and source switch is approved
         CI->>GitOps: Reviewed source is available
         Argo->>GitOps: Reconcile desired state
-        Argo->>Workload: Apply workload manifest
+        Argo->>Workload: Apply reviewed manifest
         Workload-->>Argo: Readiness/health state
     end
 ```
 
-## Five-minute demo
+## Five-minute local demo
 
-Run these commands from the repository root. They require no Azure mutation:
+Use the read-only, state-accurate walkthrough in
+[`interview-demo/local-platform.md`](interview-demo/local-platform.md). From
+the repository root, run:
 
 ```bash
-.venv/bin/python tests/test_gates.py
-cd apps/legacy-inventory/src && npm test
-cd ../../..
-kubectl kustomize platform/envoy-gateway/gateway >/dev/null
+./scripts/demo-local-platform.sh
 ```
 
-Talk through the results:
+The runner checks the three-node local kind cluster, the Argo CD control plane
+and current GitOps status, the host-based QuanLyKho API/UI, the SRE demo API
+unit tests, platform gate regressions, and Kustomize rendering. It does not
+apply manifests, sync Argo CD, create users, change Kubernetes context, or
+mutate Azure.
 
-1. `test_gates.py` proves both success and negative controls—for example, a
-   missing resource or an AppProject destination violation must fail.
-2. The LegacyApp tests prove health, JSON 404/error behavior, request logging
-   and its current `/sync` reference behavior.
-3. Rendering a kustomize root proves syntactic composition only. It is not an
-   AKS deployment claim. In the gate output, show a **negative fixture** such
-   as `G8 orphan manifest detection`: the fixture must fail validation while
-   the regression assertion passes. This is the failure path of the demo.
-4. Open [`CURRENT_STATE.md`](engineering/CURRENT_STATE.md) and map each claim to
-   `LOCAL`, `KIND`, `CI`, or `AZURE_VALIDATION` evidence.
+Talking points:
+
+1. **Local is not production.** The current kind foundation and Argo CD control
+   plane are local evidence only.
+2. **Promotion is deliberate.** The pinned QuanLyKho Application is
+   `OutOfSync`/`Missing` because it is manual-sync and has not been approved.
+   The namespace has no application workloads.
+3. **Checks have bounded meaning.** Unit tests prove service behavior;
+   Kustomize rendering proves manifest composition. Neither proves a deployed
+   workload.
+4. Open [`CURRENT_STATE.md`](engineering/CURRENT_STATE.md) to distinguish
+   current local state from historical kind drills and Azure evidence.
 
 ## Trade-offs and decisions
 
@@ -88,9 +94,11 @@ Talk through the results:
 - [ADR-015](adr/015-legacyapp-subtree-import.md): LegacyApp lives in this repo
   as a subtree-owned reference workload. Its Argo source switch remains a
   controlled, approval-gated action.
-- `scripts/bootstrap.sh` validates its inputs and applies maintained platform
-  paths only. It refuses `legacyapp.yaml` unless `APPLY_LEGACYAPP=1` is set;
-  that guard does not grant approval to sync a cluster.
+- `scripts/bootstrap.sh` pins all operations to the local kind context by
+  default, validates that context before mutation, and applies maintained
+  platform paths only. It refuses `legacyapp.yaml` unless
+  `APPLY_LEGACYAPP=1` is set; that guard does not grant approval to sync a
+  cluster.
 
 ## Non-claims
 
@@ -101,8 +109,8 @@ Talk through the results:
 - The project does not claim a current deployed Argo source switch, live
   OIDC/Key Vault validation, NetworkPolicy deny probe, HPA/cluster-autoscaler
   proof, production SLO history, or a DR exercise.
-- No Azure apply, Argo sync, destructive migration, or cloud cost was created
-  to produce this interview kit.
+- No Azure apply, Argo sync, or destructive migration was performed to produce
+  this interview kit.
 
 ## Evidence index
 

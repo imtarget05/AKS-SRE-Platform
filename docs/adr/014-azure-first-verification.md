@@ -164,3 +164,9 @@ NetworkPolicy enforcement, PodDisruptionBudget, topology spread, health probes,
 SLO and burn-rate alerting, failure injection, and continuous CI. Every one of
 those is Kubernetes or SRE behaviour, and every one of them can be proven on AKS
 today within 8 of the 10 available vCPU.
+
+## Ranh giới phạm vi (Scope Boundary) —補 sung 2026-11-03
+
+- **kind-local-platform**: Đây là unique target cho demo local. Tất cả `kubectl` command trong `scripts/bootstrap.sh`, `scripts/demo-local-platform.sh`, `scripts/test-aks-fault-drill.sh` mặc định context `kind-local-platform`, fail-closed — không bao giờ target Azure/production. Kind cluster được tạo qua `local/kind/create.sh` (3 node, kindnet CNI). NetworkPolicy được API server chấp nhận nhưng **không enforce** dưới kindnet (cần Azure CNI + Cilium ở AKS).
+- **Terraform AKS** (`terraform/modules/aks_cluster/`): Đây là target architecture, documented và Terraform-managed, nhưng **không phải nơi verify hành vi trong demo scope**. Chỉ được chạy `terraform validate` + `terraform test` offline (`-backend=false`). **Không được apply** lên Azure/Cloudflare/Render theo `constraint.no_azure_production_mutations` và `decision.local_demo_scope`.
+- **Sự mâu thuẫn được giải quyết bằng**: kind-local-platform = demo/local surface (fail-closed, zero cost, không mutate cloud); AKS cloud config = target architecture cho production-readiness claims (NetworkPolicy/Cilium, HPA, Cluster Autoscaler, Workload Identity→Key Vault), chỉ verify qua tĩnh (validate/test), không apply.

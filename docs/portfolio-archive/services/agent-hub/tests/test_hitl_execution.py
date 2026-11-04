@@ -5,7 +5,7 @@ import hmac
 import json
 import os
 import sys
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -15,15 +15,14 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 os.environ["ENVIRONMENT"] = "test"
 
+from adapters.ops_adapter import OpsBridgeReadAdapter
 from app.auth import create_signed_token
 from app.main import app
-from adapters.ops_adapter import OpsBridgeReadAdapter
 from core.action_executor import ActionExecutor
 from core.run_manager import RunManager
 from core.storage import StorageManager
 from schemas.action_intent import ActionIntent
 from schemas.evidence_envelope import EvidenceEnvelope
-
 
 MESSAGE_ID = "c76e4bb5-bcce-4e13-8d32-d8bca6b7b521"
 OTHER_MESSAGE_ID = "67192235-82f4-411b-a2ed-8a7208c9c534"
@@ -54,7 +53,7 @@ def setup(tmp_path, monkeypatch):
             case_type="order_failure", entity_ref="outbox-stuck-events",
             source_service="opsbridge-flashsale", source_sha="test-sha",
             scope_id="ops-cluster-01", record_version=1,
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+            expires_at=datetime.now(UTC) + timedelta(minutes=15),
             facts={"messages": [{"messageId": MESSAGE_ID, "deadLetteredAt": VERSION}]},
             source_refs=["http://order-api.local/api/outbox/stuck"],
         ))
@@ -100,14 +99,18 @@ def assert_signed(request: httpx.Request):
 
 
 def test_intent_hash_binds_run_requester_and_message():
-    base = dict(
-        intent_id="intent-001", run_id="run-01", requested_by="operator-01",
-        command_type="REPLAY_STUCK_OUTBOX", owner_service="opsbridge-flashsale",
-        target_endpoint=f"/internal/agent/outbox/{MESSAGE_ID}/requeue",
-        scope_id="ops-cluster-01", entity_ref=MESSAGE_ID,
-        parameters={"expected_dead_lettered_at": VERSION},
-        idempotency_key="requeue-one-01",
-    )
+    base = {
+        "intent_id": "intent-001",
+        "run_id": "run-01",
+        "requested_by": "operator-01",
+        "command_type": "REPLAY_STUCK_OUTBOX",
+        "owner_service": "opsbridge-flashsale",
+        "target_endpoint": f"/internal/agent/outbox/{MESSAGE_ID}/requeue",
+        "scope_id": "ops-cluster-01",
+        "entity_ref": MESSAGE_ID,
+        "parameters": {"expected_dead_lettered_at": VERSION},
+        "idempotency_key": "requeue-one-01",
+    }
     first = ActionIntent(**base)
     assert first.intent_hash == ActionIntent(**{**base, "intent_id": "intent-002"}).intent_hash
     assert first.intent_hash != ActionIntent(**{**base, "run_id": "run-02"}).intent_hash
@@ -120,7 +123,7 @@ def test_same_canonical_evidence_can_support_two_independent_runs(tmp_path):
         case_type="order_failure", entity_ref="outbox-stuck-events",
         source_service="opsbridge-flashsale", source_sha="owner-sha",
         scope_id="ops-cluster-01", record_version=0,
-        expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+        expires_at=datetime.now(UTC) + timedelta(minutes=15),
         facts={"messages": [{"messageId": MESSAGE_ID, "deadLetteredAt": VERSION}]},
     )
     for run_id in ("shared-run-a", "shared-run-b"):

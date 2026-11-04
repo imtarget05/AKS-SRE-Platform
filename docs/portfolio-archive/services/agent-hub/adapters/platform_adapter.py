@@ -1,6 +1,7 @@
 import os
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import httpx
 from schemas.evidence_envelope import EvidenceEnvelope
 
@@ -13,7 +14,7 @@ class PlatformIncidentAdapter:
     - Citations point only to read-only Prometheus endpoints or verified runbook links.
     - Reads live alerts from Prometheus at /api/v1/alerts.
     """
-    def __init__(self, base_url: Optional[str] = None):
+    def __init__(self, base_url: str | None = None):
         self.base_url = base_url or os.getenv("PROMETHEUS_URL", "http://kps-kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090")
         self.timeout = float(os.getenv("PLATFORM_HTTP_TIMEOUT", "5.0"))
 
@@ -21,7 +22,7 @@ class PlatformIncidentAdapter:
         self,
         alert_fingerprint: str,
         scope_id: str = "cluster-kind-01",
-        synthetic_payload: Optional[Dict[str, Any]] = None
+        synthetic_payload: dict[str, Any] | None = None
     ) -> EvidenceEnvelope:
         endpoint_url = f"{self.base_url}/api/v1/alerts"
 
@@ -85,8 +86,8 @@ class PlatformIncidentAdapter:
             source_sha=source_sha,
             scope_id=scope_id,
             record_version=record_version,
-            observed_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+            observed_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(minutes=15),
             facts=facts,
             source_refs=source_refs,
             classification="INTERNAL_CONFIDENTIAL",

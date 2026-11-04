@@ -86,8 +86,12 @@ kubectl delete -n argocd \
 kubectl delete namespace argocd
 ```
 
-Applications and AppProjects live in `gitops/` (P03-owned desired state), not
-here: this directory only describes how the controller is installed. The
-AppProject itself is the canonical one in `platform/argocd/appproject.yaml`
-(ADR-015) — the former second copy in `gitops/projects/portfolio.yaml` was
-deleted on 2026-10-20.
+The canonical AppProject and maintained Applications live under
+`platform/argocd/` (P03-owned desired state). Run
+`./scripts/bootstrap.sh` from the repository root to install the pinned
+controller and apply the AppProject plus the manually promoted QuanLyKho
+Application to `kind-local-platform`. Bootstrap uses the explicit
+`KUBE_CONTEXT` (default `kind-local-platform`), verifies it before mutation,
+and does not sync the QuanLyKho Application. CreditFlow is registered in the
+same AppProject and pinned to its immutable source revision. KEDA is optional
+(`INSTALL_KEDA=1`) because no matching local workload is installed by default.

@@ -16,19 +16,21 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 def utc_now() -> str:
     """Return current UTC timestamp in ISO 8601 format with Z suffix."""
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def utc_now_epoch() -> int:
     """Return current UTC timestamp as Unix epoch seconds."""
-    return int(datetime.now(timezone.utc).timestamp())
+    return int(datetime.now(UTC).timestamp())
 
 
 def run_kubectl(args: list[str], context: str | None = None) -> subprocess.CompletedProcess:
@@ -44,13 +46,14 @@ def get_alert_state(context: str, alert_name: str) -> dict[str, Any]:
     """Get current state of a Prometheus alert rule."""
     result = run_kubectl([
         "get", "--raw",
-        f"/api/v1/namespaces/monitoring/services/kps-kube-prometheus-stack-prometheus:9090/proxy/api/v1/rules?type=alert"
+        "/api/v1/namespaces/monitoring/services/kps-kube-prometheus-stack-prometheus:9090/proxy/api/v1/rules?type=alert"
     ], context)
     if result.returncode != 0:
         raise RuntimeError(f"Failed to query Prometheus rules: {result.stderr}")
 
-    import yaml
     data = yaml.safe_load(result.stdout)
+    if not isinstance(data, dict):
+        raise TypeError("Prometheus rules API returned an invalid document")
     if data.get("status") != "success":
         raise RuntimeError("Prometheus rules API did not return success")
 
@@ -74,12 +77,11 @@ def get_alertmanager_receivers(context: str, alert_name: str) -> list[str]:
     """Get Alertmanager receivers for a firing alert."""
     result = run_kubectl([
         "get", "--raw",
-        f"/api/v1/namespaces/monitoring/services/kps-kube-prometheus-stack-alertmanager:9093/proxy/api/v2/alerts?active=true"
+        "/api/v1/namespaces/monitoring/services/kps-kube-prometheus-stack-alertmanager:9093/proxy/api/v2/alerts?active=true"
     ], context)
     if result.returncode != 0:
         return []
 
-    import yaml
     data = yaml.safe_load(result.stdout)
     if not isinstance(data, list):
         return []
@@ -109,7 +111,7 @@ def simulate_alert_via_alertmanager(context: str, alert_name: str, labels: dict[
     """Simulate an alert by posting directly to Alertmanager (for testing notification path)."""
     # This would require Alertmanager API access and is more complex
     # For now, we document that this is a placeholder
-    print(f"  [NOTE] Direct Alertmanager injection not implemented. Use metric injection instead.")
+    print("  [NOTE] Direct Alertmanager injection not implemented. Use metric injection instead.")
     return False
 
 
@@ -125,13 +127,13 @@ def run_drill(
     target_replicas: int = 2,
 ) -> int:
     """Run a complete alert fire/resolve drill."""
-    print(f"=== Alert Drill Started ===")
+    print("=== Alert Drill Started ===")
     print(f"Alert: {alert_name}")
     print(f"Context: {context}")
     print(f"Timeout: {timeout_seconds}s")
     print(f"Interval: {interval_seconds}s")
     print(f"Inject method: {inject_method}")
-    print("")
+    print()
 
     # Verify alert starts inactive
     print("Checking baseline alert state...")
@@ -141,12 +143,12 @@ def run_drill(
         if baseline["state"] == "firing":
             print(f"  ERROR: Alert is already firing! Active since: {baseline['active_at']}")
             return 2
-    except Exception as e:
+    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError, yaml.YAMLError) as e:
         print(f"  ERROR: Failed to get baseline state: {e}")
         return 2
 
     print("Baseline healthy. Ready to inject fault.")
-    print("")
+    print()
 
     # Record drill start
     drill_start = utc_now()
@@ -174,7 +176,7 @@ def run_drill(
                 state_info = get_alert_state(context, alert_name)
                 state = state_info["state"]
                 active_at = state_info["active_at"]
-            except Exception as e:
+            except (OSError, RuntimeError, ValueError, subprocess.SubprocessError, yaml.YAMLError) as e:
                 print(f"  [{observation_time}] ERROR getting state: {e}")
                 state = "error"
                 active_at = None
@@ -203,22 +205,22 @@ def run_drill(
                 fault_injected_at = observation_time
                 fault_injected_epoch = observation_epoch
                 print(f"  >>> ALERT FIRED at {fault_injected_at}")
-                print(f"  >>> Waiting for Alertmanager to receive...")
+                print("  >>> Waiting for Alertmanager to receive...")
 
             if phase == "await_alertmanager" and receivers and not alertmanager_notified_at:
                 phase = "await_resolve"
                 alertmanager_notified_at = observation_time
                 alertmanager_notified_epoch = observation_epoch
                 print(f"  >>> ALERTMANAGER NOTIFIED at {alertmanager_notified_at} (receivers: {receiver_str})")
-                print(f"  >>> Restore the metric source now to resolve the alert.")
+                print("  >>> Restore the metric source now to resolve the alert.")
 
                 # Auto-restore if using scale injection
                 if inject_method == "scale_zero" and target_deployment and target_namespace:
                     print(f"  >>> Auto-restoring {target_deployment} in {target_namespace} to {target_replicas} replicas...")
                     if restore_metric_source(context, target_deployment, target_namespace, target_replicas):
-                        print(f"  >>> Restore command sent.")
+                        print("  >>> Restore command sent.")
                     else:
-                        print(f"  >>> WARNING: Restore command failed!")
+                        print("  >>> WARNING: Restore command failed!")
 
             if phase == "await_resolve" and state == "inactive":
                 phase = "complete"
@@ -235,10 +237,10 @@ def run_drill(
                     if inject_metric_failure(context, target_deployment, target_namespace, 0):
                         print(f"  >>> Scaled {target_deployment} to 0 replicas.")
                     else:
-                        print(f"  >>> WARNING: Scale command failed!")
+                        print("  >>> WARNING: Scale command failed!")
                 elif inject_method == "manual":
                     print(f"  >>> MANUAL INJECTION REQUIRED: Operator must inject fault for {alert_name}")
-                    print(f"  >>> Press Enter after injecting fault, or wait for auto-inject...")
+                    print("  >>> Press Enter after injecting fault, or wait for auto-inject...")
 
             time.sleep(interval_seconds)
 

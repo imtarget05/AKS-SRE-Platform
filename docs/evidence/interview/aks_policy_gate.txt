@@ -1,0 +1,1 @@
+POLICY GATE PASS: 6 kustomize root(s), 121 object(s), scope=maintained, digest_required=False

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import secrets
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
@@ -113,8 +113,8 @@ async def fetch_settled(
 def _as_instant(value: datetime) -> str:
     """Render a datetime the way Spring's Instant binder expects it."""
     if value.tzinfo is None:
-        value = value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        value = value.replace(tzinfo=UTC)
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 @app.get("/health")

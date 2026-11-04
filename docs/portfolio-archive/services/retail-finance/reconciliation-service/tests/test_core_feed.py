@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from app.main import fetch_settled
@@ -18,8 +18,8 @@ def test_fetch_settled_reads_every_page(monkeypatch):
 
     async def run():
         async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
-            return await fetch_settled(client, datetime(2026, 10, 1, tzinfo=timezone.utc),
-                                       datetime(2026, 10, 2, tzinfo=timezone.utc), limit=2)
+            return await fetch_settled(client, datetime(2026, 10, 1, tzinfo=UTC),
+                                       datetime(2026, 10, 2, tzinfo=UTC), limit=2)
 
     rows = asyncio.run(run())
 

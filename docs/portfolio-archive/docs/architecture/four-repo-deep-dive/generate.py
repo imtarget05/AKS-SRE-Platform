@@ -7,7 +7,6 @@ The boards distinguish implemented boundaries from planned release gates.
 from html import escape
 from pathlib import Path
 
-
 OUT = Path(__file__).resolve().parent
 W, H = 2400, 1350
 INK = "#10263b"

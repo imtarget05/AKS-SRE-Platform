@@ -13,10 +13,9 @@ import math
 import re
 import urllib.parse
 import urllib.request
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 
-UTC = timezone.utc
 SERVICE = 'sre-demo-api'
 ROUTES = '/api/(work|dependency)'
 SELECTOR = f'service="{SERVICE}",route=~"{ROUTES}"'

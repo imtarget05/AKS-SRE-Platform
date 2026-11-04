@@ -27,7 +27,6 @@ import hashlib
 import hmac
 import json
 import os
-import signal
 import socket
 import struct
 import subprocess
@@ -36,7 +35,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 POSTGRES_CONTAINER = "opsbridge-phase2-pg"
 REDIS_CONTAINER = "opsbridge-phase2-redis"
@@ -64,7 +63,7 @@ class FaultInjectionProxy:
             try:
                 client_sock, _ = self.server_sock.accept()
                 threading.Thread(target=self._handle_client, args=(client_sock,), daemon=True).start()
-            except Exception:
+            except OSError:
                 break
 
     def _handle_client(self, client_sock: socket.socket):
@@ -114,7 +113,7 @@ class FaultInjectionProxy:
                             break
                         if b"transfer-encoding: chunked" in resp_data[:r_hdr_end].lower() and resp_data.endswith(b"0\r\n\r\n"):
                             break
-                except socket.timeout:
+                except TimeoutError:
                     break
             target_sock.close()
 
@@ -131,18 +130,12 @@ class FaultInjectionProxy:
 
             client_sock.sendall(resp_data)
             client_sock.close()
-        except Exception:
-            try:
-                client_sock.close()
-            except Exception:
-                pass
+        except (OSError, ValueError):
+            client_sock.close()
 
     def close(self):
         self.running = False
-        try:
-            self.server_sock.close()
-        except Exception:
-            pass
+        self.server_sock.close()
 
 HMAC_KEY = "drill-hmac-key-shared-between-hub-and-opsbridge-32bytes"
 JWT_KEY = "drill-jwt-signing-key-for-test-at-least-32-bytes"
@@ -163,13 +156,13 @@ OPS_ROOT = "/Users/mainguyenbinhtan/Downloads/OpsBridge"
 evidence_log = []
 
 def log(msg: str):
-    ts = datetime.now(timezone.utc).isoformat()
+    ts = datetime.now(UTC).isoformat()
     line = f"[{ts}] {msg}"
     print(line)
     evidence_log.append(line)
 
 def run_cmd(cmd, check=True):
-    res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    res = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
     if check and res.returncode != 0:
         raise RuntimeError(f"Command failed ({res.returncode}): {cmd}\nStderr: {res.stderr}\nStdout: {res.stdout}")
     return res
@@ -195,15 +188,15 @@ def wait_for_http(url: str, timeout=40):
             with urllib.request.urlopen(req, timeout=2) as resp:
                 if resp.status in (200, 401, 404):
                     return True
-        except Exception:
-            pass
+        except (urllib.error.URLError, TimeoutError, OSError):
+            continue
         time.sleep(0.5)
     raise TimeoutError(f"Timed out waiting for {url}")
 
 def compute_hmac(method: str, path: str, body: bytes, key: str) -> dict:
     ts = str(int(time.time()))
     body_hash = hashlib.sha256(body).hexdigest()
-    payload = f"{method}\n{path}\n{ts}\n{body_hash}".encode("utf-8")
+    payload = f"{method}\n{path}\n{ts}\n{body_hash}".encode()
     sig = hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
     return {"X-Agent-Timestamp": ts, "X-Agent-Signature": sig}
 
@@ -307,10 +300,11 @@ def main():
             # 5. Agent Hub: Seed Investigation Run & Evidence, then Propose Intent for Event A ONLY
             log("Agent Hub: Seeding investigation run and evidence for Event A in StorageManager...")
             sys.path.insert(0, f"{REPO_ROOT}/services/agent-hub")
+            from datetime import timedelta
+
             from app.auth import create_signed_token
             from core.storage import StorageManager
             from schemas.evidence_envelope import EvidenceEnvelope
-            from datetime import timedelta
 
             storage = StorageManager(db_path=hub_db_path)
             storage.save_run(
@@ -321,7 +315,7 @@ def main():
                 case_type="order_failure", entity_ref="outbox-stuck-events",
                 source_service="opsbridge-flashsale", source_sha="test-sha",
                 scope_id="ops-cluster-01", record_version=1,
-                expires_at=datetime.now(timezone.utc) + timedelta(minutes=15),
+                expires_at=datetime.now(UTC) + timedelta(minutes=15),
                 facts={"messages": [{"messageId": EVENT_A_ID, "deadLetteredAt": DEAD_LETTER_TIME}]},
                 source_refs=[f"http://127.0.0.1:{API_PORT}/internal/agent/outbox/stuck"]
             ))
@@ -482,7 +476,7 @@ def main():
             log("--- DATABASE STATE AFTER COMMITTED BUT DROPPED RESPONSE ---")
             after_a = psql(f'SELECT "MessageId", "DeadLetteredAt", "RetryCount" FROM "OutboxMessages" WHERE "MessageId" = \'{EVENT_A_ID}\';')
             after_b = psql(f'SELECT "MessageId", "DeadLetteredAt", "RetryCount" FROM "OutboxMessages" WHERE "MessageId" = \'{EVENT_B_ID}\';')
-            after_cmds = psql(f'SELECT "IdempotencyKey", "MessageId", "ApprovedBy", "IntentId" FROM "OutboxRecoveryCommands";')
+            after_cmds = psql('SELECT "IdempotencyKey", "MessageId", "ApprovedBy", "IntentId" FROM "OutboxRecoveryCommands";')
             log(f"Event A (Committed):\n{after_a}")
             log(f"Event B (Untouched):\n{after_b}")
             log(f"OutboxRecoveryCommands (Durable Record):\n{after_cmds}")

@@ -3,10 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="api-token" content="">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+             style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com;
+             img-src 'self' data:;
+             font-src 'self' https://cdnjs.cloudflare.com;
+             connect-src 'self';
+             frame-ancestors 'none';
+             base-uri 'self';">
   <title>AKS SRE Platform — Interactive Architectural Simulation &amp; Telemetry Console</title>
   <link rel="icon" type="image/png" href="/assets/images/favicon.png">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="dist/assets/styles.css" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha384-9nhczxUqK87bcKHh20fSQcTGD4qq5GhayNYSYWqwBkINBhOfQLg/P5HG5lF1urn4" crossorigin="anonymous"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -37,7 +47,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha384-t1nt8BQoYMLFN5p42tRAtuAAFQaCQODekUVeKKZrEnEyp4H2R0RHFz0KWpmj7i8g" crossorigin="anonymous">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-white">
@@ -85,7 +95,7 @@
       <div class="hidden sm:flex flex-col items-end">
         <span class="text-gray-400">Edge Ping</span>
         <span id="header-edge-ping" class="text-emerald-400 font-semibold flex items-center gap-1">
-          <i class="fa-solid fa-wifi text-xs" aria-hidden="true"></i> <span id="val-edge-ping">18 ms</span>
+          <i class="fa-solid fa-wifi text-xs" aria-hidden="true"></i> <span id="val-edge-ping" class="stale">n/a</span>
         </span>
       </div>
       <div class="hidden sm:block h-6 w-px bg-gray-800"></div>
@@ -232,11 +242,12 @@
   </footer>
 
   <!-- SRE Console Scripts -->
-  <script src="app.js"></script>
-  <script src="charts.js"></script>
-  <script src="simulation.js"></script>
-  <script src="actions.js"></script>
-  <script src="runbook.js"></script>
+  <script src="app.js" defer crossorigin="anonymous"></script>
+  <script src="charts.js" defer crossorigin="anonymous"></script>
+  <script src="simulation.js" defer crossorigin="anonymous"></script>
+  <script src="actions.js" defer crossorigin="anonymous"></script>
+  <script src="runbook.js" defer crossorigin="anonymous"></script>
+<script src="datafeed.js" defer crossorigin="anonymous"></script>
 
   <!-- Floating runbook helper -->
   <button id="sre-copilot-btn" aria-label="Mở trợ lý runbook SRE" onclick="toggleSreCopilot()" class="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-orange-600 via-amber-600 to-cyan-600 text-white p-3.5 rounded-full shadow-2xl hover:scale-105 transition-all flex items-center gap-2 border border-white/20 cursor-pointer">

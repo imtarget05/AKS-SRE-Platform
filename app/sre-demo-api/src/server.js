@@ -1,5 +1,7 @@
 import http from 'node:http';
 import { URL } from 'node:url';
+import { randomUUID } from 'node:crypto';
+import { timingSafeEqual } from 'node:crypto';
 
 /**
  * HTTP surface.
@@ -40,6 +42,8 @@ export function createServer({ metrics, state, logger }) {
     const url = new URL(req.url ?? '/', 'https://workload.invalid');
     const route = url.pathname;
     const method = req.method ?? 'GET';
+    const requestId = randomUUID();
+    res.setHeader('x-request-id', requestId);
     metrics.inFlight.inc();
     const done = (status) => {
       metrics.inFlight.dec();
@@ -108,7 +112,22 @@ export function createServer({ metrics, state, logger }) {
       }
 
       if (route === '/internal/readiness') {
-        // Lets a test flip readiness without killing the process.
+        const token = process.env.INTERNAL_READINESS_TOKEN;
+        if (!token) {
+          // Fail-closed: in production the token MUST be configured; never expose an unauthenticated readiness flip.
+          reply(res, 401, { route, status: 401, error: 'internal readiness token not configured' }, route, method);
+          return done(401);
+        }
+        const expected = `Bearer ${token}`;
+        const provided = req.headers.authorization ?? '';
+        let authorized = false;
+        if (provided.length === expected.length) {
+          authorized = timingSafeEqual(Buffer.from(provided, 'utf8'), Buffer.from(expected, 'utf8'));
+        }
+        if (!authorized) {
+          reply(res, 401, { route, status: 401, error: 'unauthorized: missing or invalid internal readiness token' }, route, method);
+          return done(401);
+        }
         const value = url.searchParams.get('ready') !== 'false';
         state.setReady(value);
         reply(res, 200, { ready: value }, route, method);
@@ -119,7 +138,7 @@ export function createServer({ metrics, state, logger }) {
       return done(404);
     } catch (err) {
       logger.error({ route, err: String(err) }, 'unhandled request error');
-      reply(res, 500, { route, status: 500, error: String(err) }, route, method);
+      reply(res, 500, { route, status: 500, error: 'internal server error' }, route, method);
       return done(500);
     }
   });

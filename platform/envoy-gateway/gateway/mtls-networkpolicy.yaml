@@ -1,0 +1,21 @@
+# L3 — mTLS enforcement NetworkPolicy for the shared north-south Gateway.
+#
+# Restricts ingress to the Gateway data plane in platform-gateway to the TLS
+# listener (443) only. Plain HTTP (80) is denied at the pod level so that only
+# mTLS-terminated traffic reaches workloads. kindnet does not enforce
+# NetworkPolicy locally, so this is claimed as a design intent for AKS+Cilium
+# rather than an enforced local behavior.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mtls-enforcement
+  namespace: platform-gateway
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 443

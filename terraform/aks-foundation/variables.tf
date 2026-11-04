@@ -27,8 +27,8 @@ variable "system_pool_vm_size" {
 
 variable "system_pool_node_count" {
   type        = number
-  default     = 1
-  description = "System pool node count for transient validation."
+  default     = 2
+  description = "System pool node count for HA foundation (requires >= 2 nodes)."
 }
 
 variable "enable_workload_pool" {

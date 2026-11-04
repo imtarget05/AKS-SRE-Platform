@@ -95,6 +95,61 @@ test('/api/fail is unavailable unless explicitly armed', async () => {
   });
 });
 
+test('internal readiness rejected 401 when token not configured', async () => {
+  await withServer({ INTERNAL_READINESS_TOKEN: undefined }, async ({ base }) => {
+    const res = await fetch(`${base}/internal/readiness?ready=true`);
+    assert.equal(res.status, 401);
+  });
+});
+
+test('internal readiness rejected 401 with wrong bearer token', async () => {
+  await withServer({ INTERNAL_READINESS_TOKEN: 'test-only-readiness-flip-token-32chars' }, async ({ base }) => {
+    const res = await fetch(`${base}/internal/readiness?ready=true`, {
+      headers: { Authorization: 'Bearer wrong-token' },
+    });
+    assert.equal(res.status, 401);
+  });
+});
+
+test('internal readiness flips state with correct bearer token', async () => {
+  await withServer({ INTERNAL_READINESS_TOKEN: 'test-only-readiness-flip-token-32chars' }, async ({ base }) => {
+    const first = await fetch(`${base}/health/ready`);
+    assert.equal(first.status, 200);
+    assert.equal((await first.json()).status, 'ready');
+
+    const flip = await fetch(`${base}/internal/readiness?ready=false`, {
+      headers: { Authorization: 'Bearer test-only-readiness-flip-token-32chars' },
+    });
+    assert.equal(flip.status, 200);
+    assert.equal((await flip.json()).ready, false);
+
+    const after = await fetch(`${base}/health/ready`);
+    assert.equal(after.status, 503);
+    assert.equal((await after.json()).status, 'not-ready');
+  });
+});
+
+test('500 does not leak internals', async () => {
+  await withServer({}, async ({ base, state }) => {
+    state.dependencyReady = () => { throw new Error('boom'); };
+    const res = await fetch(`${base}/health/ready`);
+    assert.equal(res.status, 500);
+    const body = await res.json();
+    assert.equal(body.error, 'internal server error');
+    assert.ok(!String(body).includes('boom'));
+    assert.ok(!String(body).includes('Error:'));
+    assert.ok(!String(body).includes('at '));
+  });
+});
+
+test('every response carries x-request-id', async () => {
+  await withServer({}, async ({ base }) => {
+    const res = await fetch(`${base}/health/live`);
+    assert.ok(res.headers.get('x-request-id'));
+    assert.match(res.headers.get('x-request-id'), /^[0-9a-f-]{36}$/);
+  });
+});
+
 test('unknown routes return 404', async () => {
   await withServer({}, async ({ base }) => {
     assert.equal((await fetch(`${base}/nope`)).status, 404);

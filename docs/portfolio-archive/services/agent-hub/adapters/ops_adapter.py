@@ -1,9 +1,11 @@
-import os
 import hashlib
 import hmac
+import json
+import os
 import time
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional, List
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import httpx
 from schemas.evidence_envelope import EvidenceEnvelope
 
@@ -22,8 +24,8 @@ class OpsBridgeReadAdapter:
     """
     def __init__(
         self,
-        base_url: Optional[str] = None,
-        read_token: Optional[str] = None
+        base_url: str | None = None,
+        read_token: str | None = None
     ):
         self.base_url = base_url or os.getenv("FLASH_SALE_ORDER_API_URL", "http://order-api.flashsale.svc.cluster.local:80")
         # A token issued by the owner is supplied through the secret store.
@@ -31,19 +33,19 @@ class OpsBridgeReadAdapter:
         self.read_token = read_token or os.getenv("FLASH_SALE_READ_BEARER_TOKEN")
         self.timeout = float(os.getenv("FLASH_SALE_HTTP_TIMEOUT", "5.0"))
 
-    def _read_headers(self) -> Dict[str, str]:
+    def _read_headers(self) -> dict[str, str]:
         if not self.read_token:
             raise PermissionError("OpsBridge read credential is not configured")
         return {"Authorization": f"Bearer {self.read_token}"}
 
     @staticmethod
-    def _owner_headers(path: str) -> Dict[str, str]:
+    def _owner_headers(path: str) -> dict[str, str]:
         key = os.getenv("OPSBRIDGE_AGENT_HMAC_KEY", "")
         if len(key.encode("utf-8")) < 32:
             raise PermissionError("OpsBridge agent credential is not configured")
         timestamp = str(int(time.time()))
         body_hash = hashlib.sha256(b"").hexdigest()
-        payload = f"GET\n{path}\n{timestamp}\n{body_hash}".encode("utf-8")
+        payload = f"GET\n{path}\n{timestamp}\n{body_hash}".encode()
         signature = hmac.new(key.encode("utf-8"), payload, hashlib.sha256).hexdigest()
         return {"X-Agent-Timestamp": timestamp, "X-Agent-Signature": signature}
 
@@ -51,7 +53,7 @@ class OpsBridgeReadAdapter:
         self,
         order_id: str,
         scope_id: str = "ops-cluster-01",
-        synthetic_payload: Optional[Dict[str, Any]] = None
+        synthetic_payload: dict[str, Any] | None = None
     ) -> EvidenceEnvelope:
         if scope_id != "ops-cluster-01":
             raise PermissionError("Cross-scope OpsBridge read denied")
@@ -79,12 +81,9 @@ class OpsBridgeReadAdapter:
 
                         # Try reading saga details
                         saga_data = None
-                        try:
-                            resp_saga = client.get(saga_url, headers=headers)
-                            if resp_saga.status_code == 200:
-                                saga_data = resp_saga.json()
-                        except Exception:
-                            pass
+                        resp_saga = client.get(saga_url, headers=headers)
+                        if resp_saga.status_code == 200:
+                            saga_data = resp_saga.json()
 
                         facts = {
                             "order_id": order_id,
@@ -96,7 +95,7 @@ class OpsBridgeReadAdapter:
                         }
                     source_sha = "b507464"
                     record_version = 1
-            except httpx.HTTPError as exc:
+            except (httpx.HTTPError, json.JSONDecodeError) as exc:
                 raise ConnectionError(f"Failed to fetch order facts from Order API at {endpoint_url}: {exc}")
 
         return EvidenceEnvelope(
@@ -106,8 +105,8 @@ class OpsBridgeReadAdapter:
             source_sha=source_sha,
             scope_id=scope_id,
             record_version=record_version,
-            observed_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+            observed_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
             facts=facts,
             source_refs=[endpoint_url],
             classification="INTERNAL_CONFIDENTIAL",
@@ -117,7 +116,7 @@ class OpsBridgeReadAdapter:
     def fetch_stuck_outbox(
         self,
         scope_id: str = "ops-cluster-01",
-        synthetic_payload: Optional[Dict[str, Any]] = None
+        synthetic_payload: dict[str, Any] | None = None
     ) -> EvidenceEnvelope:
         if scope_id != "ops-cluster-01":
             raise PermissionError("Cross-scope OpsBridge read denied")
@@ -172,8 +171,8 @@ class OpsBridgeReadAdapter:
             source_sha=source_sha,
             scope_id=scope_id,
             record_version=record_version,
-            observed_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+            observed_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
             facts=facts,
             source_refs=[endpoint_url, pending_url],
             classification="INTERNAL_CONFIDENTIAL",

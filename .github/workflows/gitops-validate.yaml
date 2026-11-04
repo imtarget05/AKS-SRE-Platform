@@ -25,6 +25,7 @@ jobs:
   semantic:
     name: gitops semantics
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
@@ -32,20 +33,33 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: checkout CreditFlow at the pinned Application revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: imtarget05/CreditFlow
+          ref: 6fffe4f9aff97062f28d9567a2aaa7707b7fd1b7
+          path: external/CreditFlow
+
+      - name: checkout QuanLyKho at the pinned Application revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: imtarget05/QuanLyKho
+          ref: 573dfadc96ff843171f0b7fab4cc7feb
+          path: external/QuanLyKho
+
       - run: >-
           pip install --require-hashes --only-binary ':all:' -r requirements.lock
 
       - name: repo-owned GitOps validation
-        run: python3 gitops/validate-gitops.py
+        run: python3 gitops/validate-gitops.py --repo-map gitops/repo-map.ci.yaml
 
-      # The external repositories these Applications point at are not checked
-      # out here, so they are reported as EXTERNAL_REPO_NOT_PRESENT rather than
-      # silently passing. The step asserts on that outcome explicitly, so a
-      # future change that turns "not present" into a green result fails CI.
+      # The maintained external repositories are checked out above at the exact
+      # revisions pinned by their Applications. The validator therefore renders
+      # their source trees instead of treating missing source as a green result.
       - name: assert external repos are honestly classified
         run: |
           set -euo pipefail
-          python3 gitops/validate-gitops.py --json > gitops-report.json
+          python3 gitops/validate-gitops.py --repo-map gitops/repo-map.ci.yaml --json > gitops-report.json
           python3 - <<'PY'
           import json, sys
           rows = json.load(open("gitops-report.json"))["checks"]
@@ -56,11 +70,10 @@ jobs:
                   print(f"::error::{f['check']} {f['target']}: {f['detail']}")
               sys.exit(1)
           if not not_present:
-              print("::warning::no EXTERNAL_REPO_NOT_PRESENT rows. If the Applications now")
-              print("::warning::point at repositories in this repo, update this assertion;")
-              print("::warning::a silent green here would hide unvalidated source trees.")
+              print("All maintained external source trees were checked out and rendered.")
           else:
-              print(f"{len(not_present)} external source tree(s) correctly reported NOT_PRESENT.")
+              print(f"::error::{len(not_present)} maintained external source tree(s) were not rendered.")
+              sys.exit(1)
           PY
 
       - name: gate test matrix (G1-G15)
@@ -69,6 +82,7 @@ jobs:
   negative-control:
     name: negative control (gate must bite)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 

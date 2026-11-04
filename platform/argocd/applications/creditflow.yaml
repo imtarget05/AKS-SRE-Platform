@@ -1,0 +1,33 @@
+# CreditFlow under GitOps — external workload.
+#
+# The source repository owns the k8s/ manifests. This platform repository
+# owns only the Application registration and the portfolio AppProject boundary.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: creditflow
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: portfolio
+  source:
+    repoURL: https://github.com/imtarget05/CreditFlow.git
+    targetRevision: 6fffe4f9aff97062f28d9567a2aaa7707b7fd1b7
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: portfolio
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+    syncOptions:
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true

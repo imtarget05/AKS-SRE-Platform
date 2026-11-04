@@ -1,5 +1,7 @@
 # AKS/SRE business-to-evidence audit — 2026-10-21
 
+> **2026-11-03 correction:** The NetworkPolicy row below is a historical probe observation, not proof of policy enforcement on kindnet. See the corrected [probe record](network-policy-enforcement-PASS.md). The old Azure teardown and cost statements also do not describe the 2026-11-01 read-only inventory; consult [current state](../engineering/CURRENT_STATE.md) before making a current cloud claim.
+
 **Code base:** `62c901ff0e399bc028b4a4b3d3fb53a314703975`.
 **Method:** read the tracked configuration, current checkpoint, tests and
 recorded outputs; rerun local gates. No Azure mutation or fresh Azure runtime

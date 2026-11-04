@@ -12,7 +12,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +21,7 @@ ALERTMANAGER_SERVICE = "http:kps-kube-prometheus-stack-alertmanager:9093"
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def kube_json(context: str, service: str, path: str) -> dict[str, Any] | list[Any]:

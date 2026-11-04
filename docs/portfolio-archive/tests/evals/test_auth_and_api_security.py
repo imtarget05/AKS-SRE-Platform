@@ -1,5 +1,6 @@
 import os
 import sys
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -8,8 +9,10 @@ AGENT_HUB_DIR = os.path.join(REPO_ROOT, "services/agent-hub")
 if AGENT_HUB_DIR not in sys.path:
     sys.path.insert(0, AGENT_HUB_DIR)
 
-from app.main import app
+from datetime import UTC
+
 from app.auth import create_signed_token
+from app.main import app
 from core.run_manager import RunManager
 from core.storage import StorageManager
 
@@ -388,7 +391,8 @@ def test_storage_evidence_hash_collision_does_not_overwrite(tmp_path):
     """
     P0 Invariant: EvidenceEnvelope immutability. ON CONFLICT DO NOTHING preserves original record.
     """
-    from datetime import datetime, timezone, timedelta
+    from datetime import datetime, timedelta
+
     from schemas.evidence_envelope import EvidenceEnvelope
 
     db_path = str(tmp_path / "immutability_test.db")
@@ -410,8 +414,8 @@ def test_storage_evidence_hash_collision_does_not_overwrite(tmp_path):
         source_sha="sha-original-1234",
         scope_id="outlet-01",
         record_version=1,
-        observed_at=datetime.now(timezone.utc),
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        observed_at=datetime.now(UTC),
+        expires_at=datetime.now(UTC) + timedelta(hours=1),
         facts={"status": "ORIGINAL_FACT", "amount": 1000},
         source_refs=["/api/v1/recon/TX-01"]
     )
@@ -425,8 +429,8 @@ def test_storage_evidence_hash_collision_does_not_overwrite(tmp_path):
         source_sha="sha-tampered-9999",
         scope_id="outlet-01",
         record_version=2,
-        observed_at=datetime.now(timezone.utc),
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+        observed_at=datetime.now(UTC),
+        expires_at=datetime.now(UTC) + timedelta(hours=1),
         facts={"status": "ORIGINAL_FACT", "amount": 1000},
         source_refs=["/api/v1/recon/TX-01-tampered"],
         evidence_hash=ev_original.evidence_hash  # Force collision

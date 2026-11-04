@@ -1,11 +1,12 @@
-import os
-import json
-import time
 import base64
-import hmac
 import hashlib
-from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, Optional
+import hmac
+import json
+import os
+import time
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 import httpx
 from schemas.evidence_envelope import EvidenceEnvelope
 
@@ -21,8 +22,8 @@ class QuanLyKhoReadAdapter:
     """
     def __init__(
         self,
-        base_url: Optional[str] = None,
-        signing_key: Optional[str] = None
+        base_url: str | None = None,
+        signing_key: str | None = None
     ):
         self.base_url = base_url or os.getenv("QUANLYKHO_SERVICE_URL", "http://bankops-api.quanlykho.svc.cluster.local:8000")
         self.signing_key = signing_key or os.getenv("QUANLYKHO_JWT_KEY", "k8s-platform-bankops-jwt-signing-key-production-grade-at-least-32-bytes-long")
@@ -31,7 +32,7 @@ class QuanLyKhoReadAdapter:
     def _b64url(self, data: bytes) -> str:
         return base64.urlsafe_b64encode(data).decode("utf-8").rstrip("=")
 
-    def _generate_internal_token(self, user_id: Optional[str] = None) -> str:
+    def _generate_internal_token(self, user_id: str | None = None) -> str:
         header = self._b64url(json.dumps({"alg": "HS256", "typ": "JWT"}).encode("utf-8"))
         now = int(time.time())
         payload = self._b64url(json.dumps({
@@ -40,16 +41,16 @@ class QuanLyKhoReadAdapter:
             "iat": now,
             "exp": now + 3600
         }).encode("utf-8"))
-        sig = self._b64url(hmac.new(self.signing_key.encode("utf-8"), f"{header}.{payload}".encode("utf-8"), hashlib.sha256).digest())
+        sig = self._b64url(hmac.new(self.signing_key.encode("utf-8"), f"{header}.{payload}".encode(), hashlib.sha256).digest())
         return f"{header}.{payload}.{sig}"
 
     def fetch_canonical_voucher(
         self,
         voucher_id: str,
         caller_branch_scope: str,
-        target_branch_id: Optional[str] = None,
-        synthetic_payload: Optional[Dict[str, Any]] = None,
-        auth_token: Optional[str] = None
+        target_branch_id: str | None = None,
+        synthetic_payload: dict[str, Any] | None = None,
+        auth_token: str | None = None
     ) -> EvidenceEnvelope:
         target_branch = target_branch_id or caller_branch_scope
 
@@ -79,7 +80,7 @@ class QuanLyKhoReadAdapter:
                         error_detail = ""
                         try:
                             error_detail = resp.json().get("error", {}).get("message", "")
-                        except Exception:
+                        except json.JSONDecodeError:
                             error_detail = resp.text
                         if "phạm vi" in error_detail or "cấp quyền" in error_detail:
                             raise PermissionError(f"Cross-branch access denied: {error_detail}")
@@ -117,8 +118,8 @@ class QuanLyKhoReadAdapter:
             source_sha=source_sha,
             scope_id=target_branch,
             record_version=record_version,
-            observed_at=datetime.now(timezone.utc),
-            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+            observed_at=datetime.now(UTC),
+            expires_at=datetime.now(UTC) + timedelta(minutes=30),
             facts=facts,
             source_refs=[endpoint_url],
             classification="INTERNAL_CONFIDENTIAL",

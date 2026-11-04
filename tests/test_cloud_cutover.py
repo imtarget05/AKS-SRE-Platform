@@ -1,6 +1,6 @@
+import unittest
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-import unittest
 
 path = Path(__file__).resolve().parents[1] / "scripts" / "check-cloud-cutover.py"
 spec = spec_from_file_location("cloud_cutover", path)

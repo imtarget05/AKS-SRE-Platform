@@ -15,7 +15,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   resource_group_name = azurerm_resource_group.aks.name
   dns_prefix          = var.dns_prefix
   kubernetes_version  = var.kubernetes_version
-  sku_tier            = "Free"
+  sku_tier            = var.sku_tier
 
   default_node_pool {
     name                         = "sys"
@@ -24,6 +24,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     only_critical_addons_enabled = true
     node_count                   = var.system_pool_node_count
     auto_scaling_enabled         = false
+    zones                        = var.zones
+    # enable_zone_balancing = true  # not supported by azurerm v5.8.0
   }
 
   identity {
@@ -48,6 +50,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   role_based_access_control_enabled = true
+  private_cluster_enabled           = var.private_cluster_enabled
 
   tags = {
     environment = var.environment
@@ -57,13 +60,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   lifecycle {
     precondition {
-      condition = !var.workload_pool_autoscaling.enabled || (
-        var.enable_workload_pool &&
-        var.system_pool_node_count == 1 &&
-        var.system_pool_vm_size == "Standard_D2s_v6" &&
-        var.workload_pool_vm_size == "Standard_D2s_v6"
-      )
-      error_message = "Autoscaling requires the enabled user pool and a fixed 1xD2s_v6 system pool plus D2s_v6 user nodes to keep the declared 8-vCPU cap."
+      condition     = var.system_pool_node_count >= 2 && length(var.zones) >= 2
+      error_message = "Production requires ≥2 nodes across zones; confirm budget (Sacombank Q1) before apply."
+    }
+    precondition {
+      condition     = !var.workload_pool_autoscaling.enabled || var.enable_workload_pool
+      error_message = "Autoscaling requires the user workload pool to be enabled."
     }
   }
 }

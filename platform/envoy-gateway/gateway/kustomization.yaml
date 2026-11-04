@@ -16,3 +16,5 @@ resources:
   - envoyproxy.yaml
   - gateway.yaml
   - httproute-proof.yaml
+  - mtls-ca-secret.yaml
+  - mtls-networkpolicy.yaml

@@ -1,0 +1,80 @@
+G1 valid repo-owned resources -> PASS
+  [ok  ] G1 rc == 0
+  [ok  ] G1 no FAIL rows
+G2 required resource removed (no inventory) -> FAIL
+  [ok  ] G2 rc != 0
+  [ok  ] G2 FAIL reported
+G3 machine-specific path in --repo-map -> usage error
+  [ok  ] G3 rc == 2
+  [ok  ] G3 explains rejection
+G4 external repo not supplied -> NOT_PRESENT, never a fake pass
+  [ok  ] G4 advisory rc == 0
+  [ok  ] G4 NOT_PRESENT reported
+  [ok  ] G4 --require-external rc != 0
+G5 mapping supplied but wrong path -> FAIL
+  [ok  ] G5 rc != 0
+  [ok  ] G5 FAIL reported
+G6 canonical restored -> PASS
+  [ok  ] G6 rc == 0
+G7 a FAIL row implies a non-zero exit code
+  [ok  ] G7 FAIL implies rc != 0
+G8 orphan manifest detection
+  [ok  ] G8 orphan fails
+  [ok  ] G8 orphan named
+G9 cross-repo destination not in AppProject allowlist -> FAIL
+  [ok  ] G9 rc != 0
+  [ok  ] G9 namespace violation named
+G10 the CI gates are not narrowed back
+  [ok  ] G10 tflint lints from the terraform/ root
+  [ok  ] G10 tflint --init runs before tflint --recursive
+  [ok  ] G10 the recursive lint passes an ABSOLUTE --config
+  [ok  ] G10 CI executes every terraform test root
+  [ok  ] G10 the test step walks the declared roots
+  [ok  ] G10 the test step still fails the job on a zero total
+  [ok  ] G10 the gate-matrix label matches the groups this file defines
+G11 the validator does not skip a project file (regression F3/F4)
+  [ok  ] G11 a duplicate AppProject name fails
+  [ok  ] G11 the duplicate is reported
+  [ok  ] G11 BOTH conflicting paths are named
+  [ok  ] G11 the previously-skipped file is validated too
+  [ok  ] G11 the wildcard allowlist of the skipped file is reported
+  [ok  ] G11 the verdict does not depend on the project directory order
+  [ok  ] G11 non-canonical AppProject fails
+  [ok  ] G11 non-canonical path named
+G12 the Argo CD version is pinned in ONE place (regression F5)
+  [ok  ] G12 platform/argocd/VERSION exists
+  [ok  ] G12 the pin is a vMAJOR.MINOR.PATCH tag
+  [ok  ] G12 bootstrap.sh reads the pin file
+  [ok  ] G12 bootstrap.sh contains no floating Argo CD reference
+  [ok  ] G12 bootstrap.sh asserts the running version against the pin
+  [ok  ] G12 platform/argocd/README.md states the pinned version
+  [ok  ] G12 docs/evidence/local-platform/l4-argocd-PASS.md states the pinned version
+  [ok  ] G12 docs/evidence/local-platform/2026-10-20-reverify.md states the pinned version
+G13 nothing can be overwritten silently (regressions F1/F2)
+  [ok  ] G13 the Argo CD manifest is applied server-side
+  [ok  ] G13 bootstrap defaults to the local kind context
+  [ok  ] G13 bootstrap validates its selected context before mutations
+  [ok  ] G13 bootstrap requires the maintained QuanLyKho Application
+  [ok  ] G13 optional KEDA install is disabled by default and context-pinned
+  [ok  ] G13 no two files declare the same object
+G14 the demo workload's npm start script runs the real entrypoint
+  [ok  ] G14 app/sre-demo-api/package.json exists
+  [ok  ] G14 the npm start script is defined
+  [ok  ] G14 the npm start script names a file that exists
+  [ok  ] G14 the npm start target actually listens
+  [ok  ] G14 the Dockerfile CMD runs the same entrypoint as npm start
+G15 external render uses the exact Application targetRevision
+  [ok  ] G15 invalid pinned ref fails despite valid checkout HEAD
+  [ok  ] G15 valid pinned ref passes despite broken checkout HEAD
+  [ok  ] G15 local-only commit cannot pass cloud gate
+  [ok  ] G15 offline fixture may render a local-only commit
+  [ok  ] G15 mismatched checkout origin cannot pass cloud gate
+G16 GitOps CI runs read-only validation and restores its negative control
+  [ok  ] G16 GitOps validator changes trigger pull-request validation
+  [ok  ] G16 GitOps CI is read-only
+  [ok  ] G16 both GitOps jobs have bounded runtime
+  [ok  ] G16 semantic job runs validator and gate regression suite
+  [ok  ] G16 negative control restores the manifest and verifies clean diff
+  [ok  ] G16 GitOps workflow cannot deploy or sync workloads
+
+62 passed, 0 failed, 62 assertions total

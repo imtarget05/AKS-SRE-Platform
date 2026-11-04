@@ -7,9 +7,6 @@
 /scripts/bootstrap.sh             @platform-team
 /scripts/check-production-environment.py @platform-team
 
-# Legacy application - requires legacy team review
-/apps/legacy-inventory/           @legacy-team
-
 # Observability & SRE - requires SRE team review
 /deploy/base/observability/       @sre-team
 /docs/slo.md                      @sre-team

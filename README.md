@@ -1,5 +1,7 @@
 # AKS / SRE Platform Blueprint
 
+> **Interview release:** [five-minute demo, evidence, and production boundaries](docs/INTERVIEW_RELEASE.md) · [portfolio pack](../PORTFOLIO_INTERVIEW.md)
+
 > **Runtime decision (2026-10-02):** verification runs on a **real AKS
 > cluster**. The local kind cluster is the **OSS / dry-run profile**. Measured
 > capacity arithmetic and the reasoning are in
@@ -137,4 +139,3 @@ historical snapshot, not a release input. The current Agent Hub lives in
 [`apps/agent-hub/`](apps/agent-hub/README.md).
 
 (Trivial smoke-test commit to trigger `pr-gate` CI on push to main.)
-

@@ -100,6 +100,12 @@ def check_images(docs, source, require_digest):
                 fail(source, "image-registry", f"{name} uses a placeholder registry: {img}")
             elif img.endswith(":latest"):
                 fail(source, "image-tag", f"{name} uses a mutable :latest tag: {img}")
+            elif "@sha256:" in img:
+                digest = img.split("@sha256:", 1)[1]
+                if digest == "0" * 64:
+                    fail(source, "image-digest-placeholder", f"{name} uses a placeholder sha256 digest: {img}")
+                elif len(digest) != 64 or any(c not in "0123456789abcdef" for c in digest):
+                    fail(source, "image-digest-malformed", f"{name} has a malformed sha256 digest: {img}")
             elif require_digest and "@sha256:" not in img:
                 fail(source, "image-digest", f"{name} is not digest-pinned (Phase O): {img}")
             elif ":" not in img.split("/")[-1]:

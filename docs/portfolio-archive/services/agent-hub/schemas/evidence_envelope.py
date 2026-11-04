@@ -1,7 +1,8 @@
 import hashlib
 import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
+
 from pydantic import BaseModel, Field, model_validator
 
 
@@ -19,13 +20,13 @@ class EvidenceEnvelope(BaseModel):
     source_sha: str = Field(..., description="Git commit SHA or image digest of the producing service")
     scope_id: str = Field(..., description="Mandatory tenant scope: outlet_id, branch_id, or cluster_id")
     record_version: int = Field(..., description="Monotonically increasing version of the canonical record")
-    observed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Timestamp UTC when evidence was fetched")
+    observed_at: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Timestamp UTC when evidence was fetched")
     expires_at: datetime = Field(..., description="TTL for this evidence snapshot")
-    facts: Dict[str, Any] = Field(..., description="Structured domain facts extracted from read adapter")
-    source_refs: List[str] = Field(default_factory=list, description="Canonical REST URLs / endpoints source of truth")
+    facts: dict[str, Any] = Field(..., description="Structured domain facts extracted from read adapter")
+    source_refs: list[str] = Field(default_factory=list, description="Canonical REST URLs / endpoints source of truth")
     classification: str = Field(default="INTERNAL_CONFIDENTIAL", description="INTERNAL_CONFIDENTIAL | PII_REDACTED")
     redaction_level: str = Field(default="NONE", description="NONE | PARTIAL | FULL")
-    evidence_hash: Optional[str] = Field(default=None, description="SHA-256 checksum over canonical facts")
+    evidence_hash: str | None = Field(default=None, description="SHA-256 checksum over canonical facts")
 
     @model_validator(mode="after")
     def compute_evidence_hash_if_missing(self) -> "EvidenceEnvelope":
@@ -35,8 +36,8 @@ class EvidenceEnvelope(BaseModel):
             self.evidence_hash = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         return self
 
-    def is_expired(self, current_time: Optional[datetime] = None) -> bool:
-        now = current_time or datetime.now(timezone.utc)
+    def is_expired(self, current_time: datetime | None = None) -> bool:
+        now = current_time or datetime.now(UTC)
         return now > self.expires_at
 
     def verify_integrity(self) -> bool:

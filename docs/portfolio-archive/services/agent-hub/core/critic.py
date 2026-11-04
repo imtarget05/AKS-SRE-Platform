@@ -1,7 +1,6 @@
-from typing import List, Tuple
+from core.pii_masker import PIIMasker
 from schemas.evidence_envelope import EvidenceEnvelope
 from schemas.investigation_proposal import InvestigationProposal
-from core.pii_masker import PIIMasker
 
 
 class ProposalCritic:
@@ -11,17 +10,17 @@ class ProposalCritic:
     and forces abstain on conflicting/unverified claims.
     """
 
-    FORBIDDEN_COMMAND_PATTERNS = [
+    FORBIDDEN_COMMAND_PATTERNS = (
         "rm -rf", "drop table", "truncate", "delete from",
         "kubectl delete", "terraform apply", "terraform destroy",
         "requeue", "post ledger", "approve", "rollback"
-    ]
+    )
 
     @classmethod
     def audit_proposal(
         cls,
         proposal: InvestigationProposal,
-        evidences: List[EvidenceEnvelope]
+        evidences: list[EvidenceEnvelope]
     ) -> InvestigationProposal:
         valid_refs = set()
         for ev in evidences:

@@ -34,8 +34,8 @@ run "verify_system_pool_and_security" {
   }
 
   assert {
-    condition     = azurerm_kubernetes_cluster.aks.sku_tier == "Free"
-    error_message = "AKS control plane must be Free tier"
+    condition     = azurerm_kubernetes_cluster.aks.sku_tier == "Standard"
+    error_message = "AKS control plane must be Standard tier"
   }
 
   assert {

@@ -3,10 +3,9 @@
 import sys
 from pathlib import Path
 
-
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "four-repo-deep-dive"))
-import generate as base  # noqa: E402
+import generate as base
 
 base.OUT = HERE
 Svg = base.Svg

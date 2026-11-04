@@ -76,54 +76,24 @@ function syncAllUI() {
   }
 }
 
-// Telemetry Ticker loop every 1000ms
+// Telemetry Ticker loop every 1000ms — STALE: no live telemetry source; randomness removed.
+// Paused when DataFeed owns real KPI values.
 setInterval(() => {
-  if (!window.Charts?.chartTraffic) return;
-  
-  let currentQps = SimulationStore.baseQps + (Math.random() * 80 - 40);
-  let currentErrors = 0;
-  let currentP99 = SimulationStore.baseP99 + (Math.random() * 2.5 - 1.2);
-  let currentP50 = (currentP99 * 0.45) + (Math.random() * 0.5);
-  let currentCpu = SimulationStore.baseCpu + (Math.random() * 4 - 2);
-  let currentMem = 42.1 + (Math.random() * 0.8 - 0.4);
-
-  if (SimulationStore.isBurstActive) {
-    currentQps += 3800 + Math.random() * 300;
-    currentCpu = Math.min(88, currentCpu + 35);
-    currentP99 += 8.5;
-  }
-
-  if (SimulationStore.isChaosActive) {
-    currentErrors = currentQps * 0.92;
-    currentP99 = 145 + Math.random() * 40;
-    currentP50 = 35 + Math.random() * 10;
-    currentCpu += 15;
-  }
-
-  // Update Charts
-  pushData(window.Charts.chartTraffic, 0, Math.round(currentQps));
-  pushData(window.Charts.chartTraffic, 1, Math.round(currentErrors));
-  window.Charts.chartTraffic.update();
-
-  pushData(window.Charts.chartLatency, 0, parseFloat(currentP99.toFixed(1)));
-  pushData(window.Charts.chartLatency, 1, parseFloat(currentP50.toFixed(1)));
-  window.Charts.chartLatency.update();
-
-  pushData(window.Charts.chartResources, 0, parseFloat(currentCpu.toFixed(1)));
-  pushData(window.Charts.chartResources, 1, parseFloat(currentMem.toFixed(1)));
-  window.Charts.chartResources.update();
-
-  // Update Hero KPI badges
-  document.getElementById('kpi-qps').innerText = `${Math.round(currentQps).toLocaleString()} req/s`;
-  document.getElementById('kpi-p99').innerText = `${currentP99.toFixed(1)} ms`;
-
+  if (window.DataFeed) return;
+  const kpiQps = document.getElementById('kpi-qps');
+  const kpiP99 = document.getElementById('kpi-p99');
   const kpiErr = document.getElementById('kpi-errors');
-  if (SimulationStore.isChaosActive) {
-    kpiErr.innerText = '92.4% Error Rate (Chaos)';
-    kpiErr.className = 'text-xs text-rose-400 font-mono mt-0.5 font-bold';
-  } else {
-    kpiErr.innerText = '0.00% Error Rate';
-    kpiErr.className = 'text-xs text-emerald-400 font-mono mt-0.5';
+  if (kpiQps) {
+    kpiQps.textContent = 'n/a';
+    kpiQps.className = 'text-lg font-bold text-gray-500 font-mono mt-1';
+  }
+  if (kpiP99) {
+    kpiP99.textContent = 'n/a';
+    kpiP99.className = 'text-lg font-bold text-gray-500 font-mono mt-1';
+  }
+  if (kpiErr) {
+    kpiErr.textContent = 'STALE';
+    kpiErr.className = 'text-xs text-gray-500 font-mono mt-0.5 font-bold';
   }
 }, 1000);
 
@@ -139,17 +109,25 @@ const clusterEventsPool = [
   { comp: "network-policy-manager", type: "Normal", msg: "Applied 4 iptables rules for Zero-Trust egress lockdown" },
   { comp: "metrics-server", type: "Normal", msg: "Collected resource metrics for 1 nodes, 11 pods in 14ms" }
 ];
+let eventCursor = 0;
 
 function appendEvent(comp, type, msg, isError = false) {
   if (!eventStream) return;
   const timeStr = new Date().toTimeString().split(' ')[0];
   const div = document.createElement('div');
   div.className = `flex items-start gap-2 ${isError ? 'text-rose-400 font-bold' : 'text-gray-300'}`;
-  div.innerHTML = `
-    <span class="text-gray-500 shrink-0">[${timeStr}]</span>
-    <span class="font-semibold text-cyan-400 shrink-0">[sim] ${comp}:</span>
-    <span class="flex-1">${msg}</span>
-  `;
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'text-gray-500 shrink-0';
+  timeSpan.textContent = `[${timeStr}]`;
+  const compSpan = document.createElement('span');
+  compSpan.className = 'font-semibold text-cyan-400 shrink-0';
+  compSpan.textContent = `[sim] ${comp}:`;
+  const msgSpan = document.createElement('span');
+  msgSpan.className = 'flex-1';
+  msgSpan.textContent = msg;
+  div.appendChild(timeSpan);
+  div.appendChild(compSpan);
+  div.appendChild(msgSpan);
   eventStream.appendChild(div);
   eventStream.scrollTop = eventStream.scrollHeight;
 
@@ -166,13 +144,14 @@ setInterval(() => {
   if (SimulationStore.isChaosActive) {
     appendEvent("kubelet/sre-demo-api-pod-1", "Warning", "Readiness probe failed: HTTP 503 (Dependency unready) • 0 RESTARTS", true);
   } else {
-    const item = clusterEventsPool[Math.floor(Math.random() * clusterEventsPool.length)];
+    const item = clusterEventsPool[eventCursor % clusterEventsPool.length];
+    eventCursor += 1;
     appendEvent(item.comp, item.type, item.msg);
   }
 }, 2800);
 
 function clearEventLog() {
-  if (eventStream) eventStream.innerHTML = '';
+  if (eventStream) eventStream.textContent = '';
   appendEvent("system", "Normal", "Simulation event feed buffer cleared by operator.");
 }
 

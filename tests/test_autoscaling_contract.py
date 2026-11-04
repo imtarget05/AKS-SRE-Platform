@@ -6,14 +6,13 @@ The validation overlay renders these for observability; the aks-observability
 overlay includes them for production monitoring.
 """
 
-import subprocess
 import importlib.util
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 import yaml
-
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts/log_scale_events.py"

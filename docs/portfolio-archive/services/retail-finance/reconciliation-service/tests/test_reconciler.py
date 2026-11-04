@@ -6,9 +6,7 @@ that operators and auditors depend on.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-import pytest
+from datetime import UTC, datetime
 
 from app.models import CoreTransaction, MatchStatus, PartnerRecord
 from app.reconciler import reconcile, summary_line
@@ -21,7 +19,7 @@ def core(ref: str, amount: int, **kw) -> CoreTransaction:
         "type": "CASH_OUT",
         "fee": 0,
         "signed_amount": -amount,
-        "settled_at": datetime(2026, 10, 2, 9, 0, tzinfo=timezone.utc),
+        "settled_at": datetime(2026, 10, 2, 9, 0, tzinfo=UTC),
     }
     return CoreTransaction(txn_ref=ref, amount=amount, **{**defaults, **kw})
 

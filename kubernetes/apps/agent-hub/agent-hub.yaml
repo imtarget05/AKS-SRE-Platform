@@ -1,3 +1,6 @@
+# LEGACY_NOT_DEPLOYED — agent-hub dropped from project per ADR-019 and the
+# go/no-go decision. Retained as reference only; no kustomization or Argo CD
+# Application references this manifest.
 apiVersion: v1
 kind: Namespace
 metadata:

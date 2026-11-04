@@ -1,6 +1,7 @@
+import argparse
+import unittest
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
-import unittest
 
 path = Path(__file__).resolve().parents[1] / "scripts" / "render-azure-origin.py"
 spec = spec_from_file_location("azure_origin", path)
@@ -31,7 +32,7 @@ class AzureOriginTests(unittest.TestCase):
     def test_placeholders_are_rejected(self):
         with self.assertRaises(ValueError):
             module.resources("<node-rg>", "ip", "label", "server", "ca")
-        with self.assertRaises(Exception):
+        with self.assertRaises(argparse.ArgumentTypeError):
             module.valid_name("REPLACE_ME")
 
 

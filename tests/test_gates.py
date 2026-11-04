@@ -88,7 +88,7 @@ WORKFLOW = os.path.join(REPO, ".github", "workflows", "pr-gate.yaml")
 # file advertises a control that does not exist.
 GATE_GROUPS = (
     "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10", "G11", "G12", "G13",
-    "G14", "G15",
+    "G14", "G15", "G16",
 )
 
 APP_PROJECT = """apiVersion: argoproj.io/v1alpha1
@@ -431,7 +431,8 @@ def reverse_projects_dirs(tmp):
     under test — not a mocked one.
     """
     path = os.path.join(tmp, "gitops", "validate-gitops.py")
-    src = open(path).read()
+    with open(path, encoding="utf-8") as validator_file:
+        src = validator_file.read()
     old = ('PROJECTS_DIRS = [\n'
            '    os.path.join(ROOT, "gitops", "projects"),\n'
            '    CANONICAL_PROJECTS_DIR,\n'
@@ -465,7 +466,8 @@ def duplicate_objects():
                     continue
                 path = os.path.join(dirpath, name)
                 try:
-                    docs = [d for d in yaml.safe_load_all(open(path)) if d]
+                    with open(path, encoding="utf-8") as manifest_file:
+                        docs = [d for d in yaml.safe_load_all(manifest_file) if d]
                 except yaml.YAMLError:
                     continue
                 for d in docs:
@@ -738,7 +740,8 @@ def main():
         check("G12 platform/argocd/VERSION exists", os.path.isfile(version_file))
         version = ""
         if os.path.isfile(version_file):
-            version = open(version_file).read().strip()
+            with open(version_file, encoding="utf-8") as version_handle:
+                version = version_handle.read().strip()
         check("G12 the pin is a vMAJOR.MINOR.PATCH tag",
               bool(re.fullmatch(r"v\d+\.\d+\.\d+", version)), f"got {version!r}")
         with open(os.path.join(REPO, "scripts", "bootstrap.sh")) as fh:
@@ -755,7 +758,11 @@ def main():
                     "docs/evidence/local-platform/l4-argocd-PASS.md",
                     "docs/evidence/local-platform/2026-10-20-reverify.md"):
             path = os.path.join(REPO, rel)
-            text = open(path).read() if os.path.isfile(path) else ""
+            if os.path.isfile(path):
+                with open(path, encoding="utf-8") as doc_file:
+                    text = doc_file.read()
+            else:
+                text = ""
             check(f"G12 {rel} states the pinned version",
                   bool(version) and version in text,
                   f"version {version!r} not found in {rel}")
@@ -767,6 +774,20 @@ def main():
             bootstrap = fh.read()
         check("G13 the Argo CD manifest is applied server-side",
               "--server-side" in bootstrap and "force-conflicts" in bootstrap)
+        check("G13 bootstrap defaults to the local kind context",
+              'KUBE_CONTEXT="${KUBE_CONTEXT:-kind-local-platform}"' in bootstrap)
+        check("G13 bootstrap validates its selected context before mutations",
+              "kubectl_ctx cluster-info" in bootstrap
+              and bootstrap.index("kubectl_ctx cluster-info")
+              < bootstrap.index("kubectl_ctx create namespace argocd"))
+        check("G13 bootstrap requires the maintained QuanLyKho Application",
+              'require_file "$APPS_DIR/creditflow.yaml"' in bootstrap
+              and 'require_file "$APPS_DIR/quanlykho.yaml"' in bootstrap
+              and 'require_file "$APPS_DIR/legacyapp.yaml"' not in bootstrap
+              and 'APPLY_LEGACYAPP' not in bootstrap)
+        check("G13 optional KEDA install is disabled by default and context-pinned",
+              'INSTALL_KEDA="${INSTALL_KEDA:-0}"' in bootstrap
+              and '--kube-context "$KUBE_CONTEXT"' in bootstrap)
         duplicates = duplicate_objects()
         check("G13 no two files declare the same object",
               not duplicates, f"duplicate object(s): {duplicates}")
@@ -904,6 +925,40 @@ def main():
               ), f"rc={mismatch.returncode} {mismatch.stdout[-350:]}")
     with_tmp({"app_yaml": APP_EXTERNAL, "project_yaml": APP_PROJECT_EXTERNAL}, g15)
 
+    print("G16 GitOps CI runs read-only validation and restores its negative control")
+    workflow_path = os.path.join(REPO, ".github", "workflows", "gitops-validate.yaml")
+    with open(workflow_path, encoding="utf-8") as workflow_file:
+        workflow_text = workflow_file.read()
+    workflow = yaml.load(workflow_text, Loader=yaml.BaseLoader)
+    events = workflow.get("on") or {}
+    pr_paths = set((events.get("pull_request") or {}).get("paths") or [])
+    check("G16 GitOps validator changes trigger pull-request validation",
+          "gitops/**" in pr_paths and "platform/argocd/**" in pr_paths)
+    check("G16 GitOps CI is read-only",
+          workflow.get("permissions") == {"contents": "read"})
+    check("G16 both GitOps jobs have bounded runtime",
+          all(job.get("timeout-minutes") == "15"
+              for job in workflow.get("jobs", {}).values()))
+    semantic_steps = "\n".join(
+        step.get("run", "")
+        for step in workflow["jobs"]["semantic"].get("steps", [])
+    )
+    check("G16 semantic job runs validator and gate regression suite",
+          "gitops/validate-gitops.py" in semantic_steps
+          and "tests/test_gates.py" in semantic_steps)
+    negative_steps = "\n".join(
+        step.get("run", "")
+        for step in workflow["jobs"]["negative-control"].get("steps", [])
+    )
+    check("G16 negative control restores the manifest and verifies clean diff",
+          "cp \"$APP\" \"$APP.orig\"" in negative_steps
+          and 'mv "$APP.orig" "$APP"' in negative_steps
+          and "git diff --exit-code" in negative_steps)
+    check("G16 GitOps workflow cannot deploy or sync workloads",
+          not any(token in workflow_text for token in (
+              "kubectl apply", "argocd app sync", "terraform apply", "docker push",
+          )))
+
     passed = sum(1 for _n, ok in RESULTS if ok)
     failed = len(RESULTS) - passed
     print(f"\n{passed} passed, {failed} failed, {len(RESULTS)} assertions total")
@@ -912,4 +967,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

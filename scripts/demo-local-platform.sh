@@ -1,105 +1,76 @@
 #!/usr/bin/env bash
-# Automated Interactive Demo of the Local Platform v1.1
-# Proves kind, Envoy Gateway, P01/P02, Prometheus, and Grafana in <= 10 mins.
 set -euo pipefail
 
-BASE_URL="http://127.0.0.1:8088"
-PASS="Password123!@#"
-EMAIL="interview_$(date +%s)@example.com"
-IDEM="demo_$(date +%s)"
-CTX="--context kind-local-platform"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+KUBE_CONTEXT="${KUBE_CONTEXT:-kind-local-platform}"
+API_URL="${QUANLYKHO_API_URL:-http://127.0.0.1:8000}"
+WEB_URL="${QUANLYKHO_WEB_URL:-http://127.0.0.1:8080}"
+K=(kubectl --context "$KUBE_CONTEXT")
 
-PIDS=()
-cleanup() {
-  for pid in "${PIDS[@]}"; do
-    kill "$pid" 2>/dev/null || true
-  done
+require_command() {
+  command -v "$1" >/dev/null 2>&1 || {
+    printf 'Required command not found: %s\n' "$1" >&2
+    exit 1
+  }
 }
-trap cleanup EXIT
 
-echo "=========================================================="
-echo "      LOCAL PLATFORM v1.1 — INTERVIEW DEMO RUNNER"
-echo "=========================================================="
+http_status() {
+  curl --silent --show-error --output /dev/null --max-time 5 \
+    --write-out '%{http_code}' "$1"
+}
 
-echo "==> Step 1: Checking Kubernetes Nodes & Pods..."
-kubectl $CTX get nodes -o wide
-echo ""
-echo "Pod counts by namespace:"
-kubectl $CTX get pods -A --no-headers | awk '{print $1}' | sort | uniq -c
+require_command kubectl
+require_command curl
+require_command node
+require_command python3
 
-echo ""
-echo "==> Step 2: Ensuring port-forward for Envoy Gateway, Prometheus, and Grafana..."
-# Start port-forwards
-kubectl $CTX -n envoy-gateway-system port-forward svc/envoy-platform-gateway-portfolio-gateway-d6017b10 8088:80 >/dev/null 2>&1 &
-PIDS+=($!)
-kubectl $CTX -n monitoring port-forward svc/kps-kube-prometheus-stack-prometheus 9090:9090 >/dev/null 2>&1 &
-PIDS+=($!)
-kubectl $CTX -n monitoring port-forward svc/kps-grafana 3000:80 >/dev/null 2>&1 &
-PIDS+=($!)
+printf '%s\n' '=== Local interview demo: verified state only ==='
+printf 'Kubernetes context: %s\n' "$KUBE_CONTEXT"
 
-sleep 2
+"${K[@]}" cluster-info >/dev/null
+"${K[@]}" wait --for=condition=Ready nodes --all --timeout=30s >/dev/null
+printf '\n--- kind nodes ---\n'
+"${K[@]}" get nodes -o wide
 
-echo "==> Step 3: Testing Shared Envoy Gateway Routing..."
-echo "[Route 1] P02 LegacyApp (/health):"
-curl -s -i -H "Host: legacy.local" "$BASE_URL/health" | head -n 8
+"${K[@]}" wait --for=condition=Ready pods --all -n argocd --timeout=60s >/dev/null
+printf '\n--- Argo CD control plane ---\n'
+"${K[@]}" -n argocd get pods
 
-echo ""
-echo "[Route 2] P01 FlashSale (/healthz):"
-curl -s -i -H "Host: flashsale.local" "$BASE_URL/healthz" | head -n 8
+printf '\n--- GitOps configuration and current application status ---\n'
+"${K[@]}" -n argocd get appprojects,applications
+"${K[@]}" -n argocd get application quanlykho \
+  -o 'custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,SOURCE:.spec.source.targetRevision'
+workloads="$("${K[@]}" -n quanlykho get deployments,statefulsets,services --no-headers)"
+printf 'QuanLyKho namespace workloads: '
+if [[ -z "$workloads" ]]; then
+  printf 'none\n'
+else
+  printf '\n%s\n' "$workloads"
+fi
 
-echo ""
-echo "[Negative Control] Unmatched Host (/):"
-curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" -H "Host: unmatched.local" "$BASE_URL/"
+printf '\n--- Local QuanLyKho endpoints ---\n'
+api_status="$(http_status "$API_URL/api/v1/health/ready")"
+web_status="$(http_status "$WEB_URL/")"
+printf 'API readiness: HTTP %s (%s/api/v1/health/ready)\n' "$api_status" "$API_URL"
+printf 'Web UI:        HTTP %s (%s/)\n' "$web_status" "$WEB_URL"
+[[ "$api_status" == 200 ]] || { printf 'API readiness check failed\n' >&2; exit 1; }
+[[ "$web_status" == 200 ]] || { printf 'Web UI check failed\n' >&2; exit 1; }
 
-echo ""
-echo "==> Step 4: Executing FlashSale Business Flow (Auth -> 202 -> Completed -> Pay)..."
-echo "1. Registering user $EMAIL..."
-REG_OUT=$(curl -s -X POST "$BASE_URL/api/auth/register" \
-  -H "Host: flashsale.local" -H "Content-Type: application/json" \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}")
-TOKEN=$(echo "$REG_OUT" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).accessToken))")
-echo "   Token acquired successfully."
+printf '\n--- Platform-owned SRE demo API unit tests ---\n'
+(cd "$ROOT/app/sre-demo-api" && npm test)
 
-echo "2. Submitting authenticated order (Idempotency-Key: $IDEM)..."
-ORDER_OUT=$(curl -s -X POST "$BASE_URL/api/orders" \
-  -H "Host: flashsale.local" -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Idempotency-Key: $IDEM" \
-  -d '{"productId":5,"quantity":1}')
-echo "   Response: $ORDER_OUT"
+printf '\n--- Platform gate regression tests ---\n'
+(cd "$ROOT" && python3 tests/test_gates.py)
 
-echo "3. Waiting for asynchronous worker fulfillment..."
-for i in {1..10}; do
-  sleep 1
-  POLL_OUT=$(curl -s -H "Host: flashsale.local" -H "Authorization: Bearer $TOKEN" "$BASE_URL/api/orders/$IDEM")
-  STATUS=$(echo "$POLL_OUT" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log(JSON.parse(d).status))")
-  echo "   [Poll $i] Status: $STATUS"
-  if [ "$STATUS" = "completed" ] || [ "$STATUS" = "Completed" ]; then
-    break
-  fi
-done
+printf '\n--- Manifest composition checks ---\n'
+(
+  cd "$ROOT"
+  kubectl kustomize platform/envoy-gateway/gateway >/dev/null
+  kubectl kustomize platform/envoy-gateway/proof-backend >/dev/null
+  kubectl kustomize deploy/overlays/validation >/dev/null
+)
+printf 'Gateway, proof-backend, and validation Kustomize roots rendered successfully.\n'
 
-echo "4. Confirming payment..."
-PAY_OUT=$(curl -s -X POST "$BASE_URL/api/orders/$IDEM/pay" \
-  -H "Host: flashsale.local" -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"outcome":"completed"}')
-echo "   Payment Response: $PAY_OUT"
-
-echo ""
-echo "==> Step 5: Verifying Argo CD GitOps Applications..."
-kubectl $CTX -n argocd get applications
-
-echo ""
-echo "==> Step 6: Verifying Observability Stack..."
-echo "Prometheus Active Targets Count:"
-curl -s http://127.0.0.1:9090/api/v1/targets | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>console.log('Total active targets:', JSON.parse(d).data.activeTargets.length))"
-
-echo "Grafana Dashboard List:"
-GF_PASS=$(kubectl $CTX -n monitoring get secret grafana-admin -o jsonpath="{.data.admin-password}" | base64 -d)
-curl -s http://admin:"$GF_PASS"@127.0.0.1:3000/api/search | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>JSON.parse(d).filter(x=>x.type==='dash-db').forEach(x=>console.log(' - ' + x.title)))"
-
-echo ""
-echo "=========================================================="
-echo "    DEMO COMPLETED SUCCESSFULLY — 100% GREEN LIVE PROOF"
-echo "=========================================================="
+printf '\n%s\n' \
+  'Demo checks passed. QuanLyKho remains manually promoted and unsynced in kind.' \
+  'This runner is read-only: it does not apply manifests, sync Argo CD, register users, or mutate Azure.'

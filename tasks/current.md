@@ -1,36 +1,64 @@
 # AKS-SRE-Platform — Current Tasks
 
-> **Execution checkpoint (2026-11-01; local/CI validation only):** The
-> platform-owned SRE agent is implemented and its Python suite passes (52
-> tests; 87.54% package coverage), the gate matrix passes 52/52 assertions,
-> and all five Terraform test roots pass (16 runs). Recursive Terraform format
-> and the HIGH/CRITICAL Trivy config gate pass. `apps/agent-hub` still has
-> 565 repo-wide Ruff findings and remains legacy/reference, not the SRE runtime.
-> Docker is unavailable, so local kind/Compose were not verified. No live cloud
-> inventory, apply, deployment, push, or production release was performed;
-> production remains blocked on current cloud evidence and explicit SHA/image
-> review.
+> **2026-11-03 local recheck:** See [the current verification checkpoint](../docs/evidence/2026-11-03-verification-checkpoint.md). It supersedes the 2026-11-01 test counts below: G1–G16 now runs 62 assertions and Terraform has five roots with 16 passing runs. Agent Hub is dropped from this repository's maintained scope and is retained only under `apps/agent-hub.dropped/`; it is not a CI or production gate. NetworkPolicy enforcement is inconclusive on kindnet; cloud and Compose gates remain open.
+
+> **Execution checkpoint (2026-11-01; local/CI + read-only cloud):** Full
+> repository Ruff passes. The platform-owned SRE agent suite passes (**52
+> tests; 87.54% package coverage**), the gate matrix passes 56/56 assertions,
+> and all five Terraform test roots pass (**16 runs**). Recursive Terraform
+> format and the HIGH/CRITICAL Trivy config gate pass. Agent Hub's 27 tests
+> pass, but it remains a dropped legacy/reference application, not the
+> platform-owned SRE runtime, and is excluded from CI and production readiness
+> scoring. Docker
+> Desktop is running; local `local-platform` kind has 3/3 Ready nodes. Argo CD
+> v3.5.5 and all seven components are Ready, and the `portfolio` AppProject
+> plus `quanlykho` Application are installed. The app is pinned to
+> `573dfadc96ff843171f0b127dbf0b7fab4cc7feb` and remains deliberately
+> `OutOfSync`/`Missing` with manual sync; no application workloads are in its
+> namespace. The read-only interview runner passes its SRE demo API unit tests
+> (7/7), platform gate regression tests (56/56), and Kustomize render checks.
+> Full platform/Compose integration remains unverified.
+> Read-only Azure inspection found `aks-portfolio-dev` Running on Kubernetes
+> 1.36 with 3/3 Ready nodes (v1.36.5), but only system namespaces/pods: no Argo
+> CD namespace/Application CRD and no application deployments. ACR
+> `acrflashsalep6` has `bankops-api:sha-fde9570`
+> (`sha256:bd8098b0603478335352676d19872fb66dd9d3505a569be149d5c70c86495d61`,
+> source commit `fde9570a390babbffd9149f5e408771cb9300bb0`, created
+> 2026-10-25); this is an artifact, not a running workload. Current `main` and
+> `origin/main` are both `0dac76eb2b341e68c80ed3548eb57008383ad38d`; the
+> current ACR read-only check found no `bankops-api:sha-0dac76e` tag. The
+> existing registry artifact is not a release candidate for this SHA. No cloud
+> apply or deployment was performed, and no release image was built from this
+> commit.
+
+> **QuanLyKho local recheck (2026-11-01):** API readiness and web UI both
+> return HTTP 200. Flutter analysis is clean and all 261 Flutter tests pass.
+> This host-based app is separate from kind; no app workload was synced into
+> the cluster.
 
 > The phase plans below are historical snapshots unless explicitly updated in
 > this checkpoint. Passing local tests does not close cloud-inventory,
 > production-like drill, quota, or production-promotion phases.
 
-> **Latest cloud recheck (2026-10-25 13:27 UTC):** The earlier G0–G7 acceptance
-> below is historical. Live Argo now reports FlashSale and QuanLyKho Healthy
-> but OutOfSync, and the public OpsBridge path returns 404. Exact revisions,
-> probes and limits: [cloud-recheck-1327-utc.md](../docs/evidence/2026-10-25/cloud-recheck-1327-utc.md).
+> **Historical cloud recheck (2026-10-25 13:27 UTC):** The earlier G0–G7
+> acceptance below is historical. That check reported FlashSale and QuanLyKho
+> Healthy but OutOfSync, and the public OpsBridge path returned 404. Exact
+> revisions, probes and limits:
+> [cloud-recheck-1327-utc.md](../docs/evidence/2026-10-25/cloud-recheck-1327-utc.md).
 
 > **Historical claim (2026-10-25, superseded):** the **All Cloud Gates (G0 —
 > G7) 100% Closed & Independently VERIFIED** statement below is not current
-> release evidence; use the cloud recheck above and obtain a fresh read-only
-> cloud inventory before promotion.
+> release evidence; use the dated evidence above and obtain another read-only
+> inventory before any future promotion.
 > Monorepo Scope: `FlashSale-Backend`, `QuanLyKho`, `AKS-SRE-Platform`.
 > Live Cluster: `aks-portfolio-dev` (Azure East Asia) + Cloudflare Edge (`portfolio-api-edge.tanmainguyenbinh.workers.dev`).
 > Evidence Index: `docs/evidence/2026-10-25/FINAL_CLOUD_GATES_ACCEPTANCE.md`.
 
-## LIVE — 2026-10-25: Cloud Gates G0–G7 Full Closure & Acceptance
+## HISTORICAL (SUPERSEDED) — 2026-10-25 Cloud Gates G0–G7 Snapshot
 
-**Status: 🟢 ALL CLOUD GATES VERIFIED (G0 through G7) · 🟢 Public mTLS Edge Live · 🟢 Dual-Repo ArgoCD Synced · 🟢 Incident Drills D01–D06 Completed.**
+**Status at that dated snapshot only; not current release evidence.** The
+2026-11-01 read-only inventory above supersedes its claims about live
+applications, Argo CD, and cluster state.
 
 ### Summary of Closed Cloud Gates
 
@@ -47,7 +75,11 @@
 
 ---
 
-**Status: 🟢 LOCAL platform restored and self-heal re-measured · 🟢 AZURE cluster fully destroyed (0 billable dev resources remain, verified per runbook §9) · ⏳ `main` pushed at `30ab2dd`.**
+**Historical status at the earlier checkpoint:** local platform restored and
+self-heal re-measured; Azure teardown was reported complete under runbook §9;
+`main` was pushed at `30ab2dd`. The Azure state has since changed: the latest
+read-only inventory finds `aks-portfolio-dev` running with system workloads
+only. This historical status does not establish current cost or deployment.
 **Branch:** `main` @ `30ab2dd` (the `recovery/g2-20261020` work is merged
 into `main`; the branch itself sits at `d7a9319` locally / `a87990c` on
 origin and is **behind** `main` — `main` is the line that carries the current
@@ -176,7 +208,9 @@ cluster).
   > → `ResourceNotFound`; `az group delete` → `ResourceGroupNotFound` for
   > `rg-aks-platform-dev` and `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia`;
   > kubeconfig context deleted; Terraform local state cleaned.
-  > **0 Azure dev resources remain → no Azure cost.**
+  > **At that time, 0 Azure dev resources were reported.** This historical
+  > statement is superseded by the 2026-11-01 inventory, which finds the
+  > cluster running; current cost is unknown.
 - **`legacyapp` Application** — not deployed, by design (`APPLY_LEGACYAPP=1`
   not set; ADR-015 source switch unapproved).
 - **Business E2E / concurrency flow** — not re-run; only the deployment plane
@@ -203,18 +237,20 @@ cluster).
 | 11 | **NEW 2026-10-21:** the repo's legacy `kubernetes/` root does not server-dry-run cleanly next to the synced upstream app (3 of 56 objects rejected by the KEDA webhook) — coexistence decision | P03 |
 | 12 | **NEW 2026-10-21:** the **kubeconfig `current-context` on this machine is the destroyed `aks-portfolio-dev`**, not `kind-local-platform` — always pin `--context` (the machine's kubeconfig was **not** modified) | machine owner |
 | 13 | **NEW 2026-10-21:** `docs/evidence/live-aks-2026-10-20/aks-live-evidence.md` still says "AZURE_CLOUD_VERIFIED" unqualified, and its "3 nodes Ready" claim is contradicted by its own `kubectl-nodes.txt` (1 node, v1.36.4) — audit addendum appended | P03 / author of `d628250` |
-| 14 | ~~**RESOLVED 2026-10-21 (cost):** the AKS cluster `aks-portfolio-dev` / RG `rg-aks-platform-dev` was **DELETED** per `azure-teardown-runbook.md` §9. Re-verified: `az aks list` is empty, `az group show -n rg-aks-platform-dev` returns ResourceGroupNotFound. **0 billable Azure dev resources remain.**~~ | **P03** |
+| 14 | **Historical teardown report (2026-10-21), superseded:** `aks-portfolio-dev` and RG `rg-aks-platform-dev` were reported deleted per `azure-teardown-runbook.md` §9. The 2026-11-01 read-only inventory finds the cluster running again; current owner, billing, and quota remain unverified. | **P03** |
 | 15 | ~~**NEW 2026-10-21:** the local kind cluster is left **degraded** after 6 Docker-daemon crashes~~ → **RESOLVED 2026-10-21 12:16.** The cluster was **re-created from scratch** and the platform re-bootstrapped and re-measured: `flashsale` `Synced`/`Healthy`, Argo CD 7/7, hook green — and the **self-heal** re-measured at 13:52–13:54 local (**21 s / 17 s**, evidence §17). The **host-level** cause (memory pressure on the shared 7.75 GiB Docker VM) is unchanged and still needs the isolation recommendation | P03 / runbook |
 
 | 16 | **NEW 2026-10-21 14:0x:** the two committed raw dumps `docs/evidence/live-aks-2026-10-20/kubectl-cluster-info.txt` (1 093 875 B) and `docs/evidence/live-aks-azure-2026-10-21/kubectl-cluster-info.txt` (1 104 134 B) are **~1 MB each** of API dump under a `cluster-info` name — **proposal only** (`.gitattributes`, or untrack + keep a trimmed extract). **Not deleted or modified** by this slice — removal needs an explicit go-ahead | P03 |
 | 17 | **NEW 2026-10-21 14:0x:** `terraform/aks-foundation/terraform.tfstate.backup` is **181 B** (empty — the `local`-backend run overwrote the old 32 KB pre-destroy state). Gitignored; **not deleted** by this slice (owner's file) | machine owner |
 
-### Next step (owned by whoever integrates — `main` was pushed at `30ab2dd`)
+### Historical next steps (2026-10-21 snapshot; not a current cloud plan)
 
 The `recovery/g2-20261020` work **is on `main`** (pushed at `30ab2dd`); the
 branch itself now sits **behind** `main`. The remaining next steps, in order:
 
-1. ~~**Destroy the billable Azure cluster** `aks-portfolio-dev`~~ — **COMPLETED** (runbook executed per `docs/runbooks/azure-teardown-runbook.md` §9; 0 Azure dev resources remain).
+1. The teardown was reported complete at that checkpoint. The 2026-11-01
+   inventory finds the cluster running again; do not infer current cost or
+   ownership from the historical teardown report.
 2. **Decide the backend**: restore `backend "azurerm"` (the remote state
    `aks-sre/validation.terraform.tfstate` is **orphaned**) or document it as
    deliberately abandoned (owner P03).

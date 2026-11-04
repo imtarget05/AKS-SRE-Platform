@@ -34,7 +34,7 @@ patches:
 # tag.
 images:
   - name: sre-demo-api
-    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000  # REPLACE with signed digest from release pipeline
+    digest: sha256:28c3eeb9361efaa58149e1347430890a5e2b5312fcaa7edffa7d96faacc4ffe3  # REPLACE with signed digest from release pipeline
 
 commonAnnotations:
   aks-sre-platform.io/profile: prod

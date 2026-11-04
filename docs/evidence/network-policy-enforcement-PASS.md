@@ -1,8 +1,26 @@
 # NetworkPolicy Enforcement Verification (Positive & Negative Controls)
 
+## Capable-CNI verification — PASS
+
+- **Execution:** Isolated local cluster `kind-netpol-verification`
+- **Node image:** `kindest/node:v1.37.0`
+- **CNI:** Calico v3.30.3
+- **Scope:** Local enforcement proof only; this does not promote `kind-local-platform` or prove AKS runtime readiness.
+- **Control sequence:** The same HTTP probe was run before policy, after a default-deny ingress policy, and after an explicit allow policy.
+
+| Control | Observed result | Verdict |
+|---|---:|:---:|
+| Before policy | HTTP 200 | **PASS** |
+| Default-deny ingress | HTTP 000 / connection blocked | **PASS** |
+| Allow policy restored | HTTP 200 | **PASS** |
+
+This causal negative-control proves NetworkPolicy enforcement in a capable-CNI environment. The default `kind-local-platform` cluster still uses kindnet and remains **INCONCLUSIVE** for NetworkPolicy enforcement; AKS production enforcement remains **NOT_VERIFIED** until a live AKS+Cilium observation exists.
+
+> **Correction, 2026-11-03 — enforcement INCONCLUSIVE.** The six probe responses below were observed, but this kind cluster uses the default `kindnet` DaemonSet (`local/kind/cluster.yaml` keeps `disableDefaultCNI: false`). The result does not prove NetworkPolicy caused the denied responses: no policy-toggle control or CNI rule evidence was captured. The mechanism and PASS verdict below are historical claims, not current acceptance evidence. Re-run the same probes on a CNI that implements NetworkPolicy, with an allow/deny policy toggle and captured CNI identity, before closing this gate. See [kind networking configuration](https://kind.sigs.k8s.io/docs/user/configuration/) and [Kubernetes NetworkPolicy prerequisites](https://kubernetes.io/docs/concepts/services-networking/network-policies/).
+
 - **Execution Date:** 2026-10-21T14:57:40Z
 - **Environment:** Local Platform (Kubernetes v1.36.1 / kindnet with in-tree nftables CNI engine)
-- **Status:** **PASS** (Zero unauthorized ingress/egress leakage)
+- **Status:** **INCONCLUSIVE for NetworkPolicy enforcement** (six probe observations retained)
 
 ## 1. Empirical Results Matrix
 
@@ -16,6 +34,5 @@
 | **POS-02** | `sre-demo-api` pod | `mock-dependency:80` | Egress | HTTP 200 allowed by policy | `STATUS: 200` | **PASS** |
 
 ## 2. Policy Enforcement Mechanism
-- NetworkPolicy is enforced via kernel-level nftables filtering by the CNI engine.
-- Default deny rules (`default-deny`) unconditionally drop unapproved ingress and egress packets.
-- Only pods carrying explicit matching selector labels in allowlisted namespaces are permitted to traverse ingress/egress ports.
+- The original report attributed the timeouts to kernel-level nftables filtering, but did not capture a CNI implementation or a policy-toggle control that proves this attribution.
+- The configured local kindnet setup cannot close the NetworkPolicy enforcement gate; the matrix above records responses, not their cause.

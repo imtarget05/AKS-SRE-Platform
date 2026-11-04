@@ -52,7 +52,6 @@ import argparse
 import json
 import os
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -139,7 +138,7 @@ def usage_error(msg):
 
 def repo_tail(url):
     tail = url.rstrip("/").rsplit("/", 1)[-1]
-    return tail[:-4] if tail.endswith(".git") else tail
+    return tail.removesuffix(".git")
 
 
 def pinned_commit(checkout, revision):
@@ -513,7 +512,8 @@ def check_inventory(rep):
     if not os.path.isfile(INVENTORY):
         rep.add("manifest-inventory", "MANIFEST-INVENTORY.md", FAIL, "inventory file missing")
         return
-    text = open(INVENTORY).read()
+    with open(INVENTORY, encoding="utf-8") as inventory_file:
+        text = inventory_file.read()
     kube = os.path.join(ROOT, "kubernetes")
     if not os.path.isdir(kube):
         return
@@ -537,7 +537,8 @@ def check_autoscaling(rep):
     if not os.path.isfile(autoscaling_path):
         rep.add("autoscaling-hpa", "deploy/base/autoscaling.yaml", FAIL, "file missing")
     else:
-        docs = [d for d in yaml.safe_load_all(open(autoscaling_path)) if d]
+        with open(autoscaling_path, encoding="utf-8") as manifest_file:
+            docs = [d for d in yaml.safe_load_all(manifest_file) if d]
         hpa_doc = next((d for d in docs if d.get("kind") == "HorizontalPodAutoscaler"), None)
         if not hpa_doc:
             rep.add("autoscaling-hpa", "deploy/base/autoscaling.yaml", FAIL, "no HorizontalPodAutoscaler document found")
@@ -578,7 +579,8 @@ def check_autoscaling(rep):
     if not os.path.isfile(ca_config_path):
         rep.add("cluster-autoscaler-config", "deploy/base/observability/cluster-autoscaler-config.yaml", FAIL, "file missing")
     else:
-        docs = [d for d in yaml.safe_load_all(open(ca_config_path)) if d]
+        with open(ca_config_path, encoding="utf-8") as manifest_file:
+            docs = [d for d in yaml.safe_load_all(manifest_file) if d]
         has_configmap = any(d.get("kind") == "ConfigMap" and d.get("metadata", {}).get("name") == "cluster-autoscaler-status" for d in docs)
         has_pdb = any(d.get("kind") == "PodDisruptionBudget" and d.get("metadata", {}).get("name") == "cluster-autoscaler" for d in docs)
 
@@ -607,7 +609,8 @@ def check_autoscaling(rep):
     if not os.path.isfile(scale_events_path):
         rep.add("scale-events-rule", "deploy/base/observability/aks-sre-platform-scale-events.yaml", FAIL, "file missing")
     else:
-        docs = [d for d in yaml.safe_load_all(open(scale_events_path)) if d]
+        with open(scale_events_path, encoding="utf-8") as manifest_file:
+            docs = [d for d in yaml.safe_load_all(manifest_file) if d]
         for doc in docs:
             if isinstance(doc, dict) and doc.get("kind") == "PrometheusRule":
                 spec = doc.get("spec") or {}
@@ -636,7 +639,8 @@ def check_autoscaling(rep):
     if not os.path.isfile(slo_rules_path):
         rep.add("slo-burn-rate-rules", "deploy/base/observability/slo-burn-rate-rules.yaml", FAIL, "file missing")
     else:
-        docs = [d for d in yaml.safe_load_all(open(slo_rules_path)) if d]
+        with open(slo_rules_path, encoding="utf-8") as manifest_file:
+            docs = [d for d in yaml.safe_load_all(manifest_file) if d]
         for doc in docs:
             if isinstance(doc, dict) and doc.get("kind") == "PrometheusRule":
                 spec = doc.get("spec") or {}
@@ -658,7 +662,8 @@ def check_autoscaling(rep):
     if not os.path.isfile(slo_doc_path):
         rep.add("slo-documentation", "docs/slo.md", FAIL, "file missing")
     else:
-        content = open(slo_doc_path).read()
+        with open(slo_doc_path, encoding="utf-8") as slo_file:
+            content = slo_file.read()
         required_sections = ["sre-demo-api", "argocd", "prometheus", "cluster-autoscaler", "30-Day Observation"]
         for section in required_sections:
             if section.lower() in content.lower():
@@ -737,4 +742,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

@@ -17,17 +17,26 @@ const systemPods = [
 function renderClusterPods() {
   const tbody = document.getElementById('cluster-pods-body');
   if (!tbody) return;
-  tbody.innerHTML = systemPods.map(p => `
-    <tr class="hover:bg-gray-800/30 transition">
-      <td class="py-2.5 font-semibold text-white">${p.name}</td>
-      <td class="py-2.5 text-emerald-400 font-bold">${p.ready}</td>
-      <td class="py-2.5 text-emerald-400">${p.status}</td>
-      <td class="py-2.5 text-gray-400">${p.restarts}</td>
-      <td class="py-2.5 text-cyan-400">${p.cpu}</td>
-      <td class="py-2.5 text-purple-400">${p.mem}</td>
-      <td class="py-2.5 text-gray-400 text-[11px]">${p.role}</td>
-    </tr>
-  `).join('');
+  tbody.textContent = '';
+  systemPods.forEach((p) => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-gray-800/30 transition';
+    [
+      ['py-2.5 font-semibold text-white', p.name],
+      ['py-2.5 text-emerald-400 font-bold', p.ready],
+      ['py-2.5 text-emerald-400', p.status],
+      ['py-2.5 text-gray-400', p.restarts],
+      ['py-2.5 text-cyan-400', p.cpu],
+      ['py-2.5 text-purple-400', p.mem],
+      ['py-2.5 text-gray-400 text-[11px]', p.role]
+    ].forEach(([cls, text]) => {
+      const td = document.createElement('td');
+      td.className = cls;
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
 }
 renderClusterPods();
 
@@ -46,7 +55,9 @@ function loadTabContent(tabId) {
       return r.text();
     })
     .then((html) => {
-      targetView.innerHTML = html;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      Array.from(doc.body.children).forEach((child) => targetView.appendChild(child));
       loadedTabs.add(tabId);
     })
     .catch((err) => {
@@ -110,9 +121,12 @@ async function measureRealEdgePing() {
     document.getElementById('val-edge-ping').innerText = `${rtt} ms`;
     document.getElementById('stat-rtt').innerText = `${rtt} ms`;
   } catch {
-    const simulated = (14 + Math.random() * 6).toFixed(1);
-    document.getElementById('val-edge-ping').innerText = `${simulated} ms`;
-    document.getElementById('stat-rtt').innerText = `${simulated} ms`;
+    document.getElementById('val-edge-ping').textContent = 'n/a';
+    document.getElementById('stat-rtt').textContent = 'n/a';
+    const pingEl = document.getElementById('val-edge-ping');
+    if (pingEl) pingEl.classList.add('stale');
+    const statEl = document.getElementById('stat-rtt');
+    if (statEl) statEl.classList.add('stale');
   }
 }
 setInterval(measureRealEdgePing, 3000);
@@ -121,6 +135,7 @@ measureRealEdgePing();
 // Initialize cross-tab sync on load
 document.addEventListener('DOMContentLoaded', () => {
   if (typeof syncAllUI === 'function') syncAllUI();
+  if (typeof window.startDataFeed === 'function') window.startDataFeed();
   const active = document.querySelector('.tab-btn[aria-selected="true"]');
   if (active) {
     const mm = active.id.match(/^tab-(.+)$/);
