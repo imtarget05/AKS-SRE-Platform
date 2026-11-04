@@ -1,0 +1,17 @@
+...........................................................              [100%]
+
+--------- coverage: platform darwin, python 3.11.15-final-0 ----------
+Name                                            Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------
+app/sre_incident_agent/__init__.py                  4      0   100%
+app/sre_incident_agent/adapters.py                 82     29    65%   48-51, 68-72, 79, 82-91, 115, 123-133, 168-173, 185
+app/sre_incident_agent/cli.py                      28      2    93%   57, 91
+app/sre_incident_agent/models.py                   71      0   100%
+app/sre_incident_agent/tests/__init__.py            0      0   100%
+app/sre_incident_agent/tests/test_adapters.py      36      0   100%
+app/sre_incident_agent/validation.py               29      3    90%   24, 26, 40
+app/sre_incident_agent/workflow.py                133      5    96%   74-75, 284, 326-327
+-----------------------------------------------------------------------------
+TOTAL                                             383     39    90%
+
+Required test coverage of 75% reached. Total coverage: 89.82%

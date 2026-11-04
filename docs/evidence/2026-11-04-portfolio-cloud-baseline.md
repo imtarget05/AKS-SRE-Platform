@@ -1,5 +1,7 @@
 # Three-repository cloud acceptance baseline — 2026-11-04 UTC
 
+**Historical snapshot.** For the later CI, Cloudflare Preview and scored gate results, use the [current gate matrix](2026-11-04-portfolio-gate-matrix.md). Counts, SonarCloud states and cluster node count below were observed earlier and are not current status.
+
 This is a read-only inventory, not a deployment or production acceptance. The
 three working trees contained pre-existing uncommitted work at the initial
 checkpoint; they were later committed to draft branches and sent through CI.
@@ -20,8 +22,8 @@ as reachability only. Sanitized command output is retained in
 For each repository, score = accepted gate count / frozen denominator. Portfolio
 score = `(AKS score + QuanLyKho score + CreditFlow score) / 3`. A gate counts only
 when the expected behavior has raw, dated evidence in its required environment
-and the evidence identifies the same immutable release SHA and cloud image
-digest/revision. An untested gate, a skipped test without accepted reason, an old
+and the evidence identifies the same immutable release SHA. For deployed gates,
+record the matching cloud image digest/revision. An untested gate, a skipped test without accepted reason, an old
 release, or a mere health check counts as OPEN. Do not change a denominator to
 raise the score. Production go-live decisions are recorded separately by the
 system's owners; a portfolio score above 90% alone does not authorize go-live.

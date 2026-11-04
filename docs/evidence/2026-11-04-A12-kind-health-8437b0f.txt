@@ -1,0 +1,7 @@
+UTC 2026-11-04T14:41:59Z
+source_sha 8437b0fd1790668b21d171d57374e1546800170a
+command kubectl --context kind-local-platform get nodes -o wide
+actual 3/3 Ready nodes, Kubernetes v1.36.1, local kind cluster
+command kubectl --context kind-local-platform -n kube-system get daemonset kindnet
+actual kindnet desired/current/ready/up-to-date/available 3/3/3/3/3
+result PASS local kind health only; NetworkPolicy enforcement not inferred from kindnet

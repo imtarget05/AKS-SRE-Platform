@@ -1,0 +1,25 @@
+UTC 2026-11-04T14:40:17.711504+00:00
+environment Cloudflare Pages Preview
+deployment_id f600044d-9ce7-4a2d-9689-9176f6f5b986
+source_sha 8437b0fd1790668b21d171d57374e1546800170a
+url https://f600044d.aks-sre-platform.pages.dev
+probe Python urllib with User-Agent Mozilla/5.0 (default urllib UA received 403)
+expected all listed assets HTTP 200 and release-sha matches source
+GET /: 200, bytes=49910
+release_sha_match True
+GET /assets/styles.css: 200, bytes=23500
+GET /app.js: 200, bytes=5571
+GET /charts.js: 200, bytes=2301
+GET /simulation.js: 200, bytes=4542
+GET /actions.js: 200, bytes=2533
+GET /runbook.js: 200, bytes=3980
+GET /datafeed.js: 200, bytes=11177
+GET /tabs/realtime.html: 200, bytes=8527
+GET /tabs/cluster.html: 200, bytes=3548
+GET /tabs/workload.html: 200, bytes=4205
+GET /tabs/gitops.html: 200, bytes=5102
+GET /tabs/gates.html: 200, bytes=9152
+browser: no JavaScript error; cluster tab, outage control, runbook response verified via IAB
+production deployment unchanged: environment Production main source 52c6a64 observed via wrangler deployment list
+cost: no new project or paid runtime created; incremental billed amount not verified (billing review OPEN)
+result PASS preview asset/runtime reachability

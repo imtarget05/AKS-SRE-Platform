@@ -1,33 +1,33 @@
 # Portfolio cloud gate matrix — 2026-11-04 UTC
 
-**Decision: >90% with cloud evidence is not established. No production go-live.** This matrix uses the frozen denominators and strict PASS rule in [the baseline](2026-11-04-portfolio-cloud-baseline.md). A local test or public health response supports investigation but does not certify a gate against a single immutable release deployed to its required environment. The three draft branches are now clean and pushed, but no SHA is deployed with a matching image digest, frontend revision and verified rollback target.
+**Decision: >90% with cloud evidence is not established. No production go-live.** This matrix uses the frozen denominators and strict PASS rule in [the baseline](2026-11-04-portfolio-cloud-baseline.md). Local gates count only when their required environment is LOCAL and the run identifies the immutable source SHA. Cloud gates require deployed release identity and cloud evidence; a public health response alone does not certify them. The three draft branches have green CI, but no complete cloud release has a matching image digest, frontend revision and verified rollback target.
 
 | Repository | PASS | FAIL | OPEN | Denominator | Accepted score |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| AKS-SRE-Platform | 0 | 0 | 14 | 14 | 0% |
+| AKS-SRE-Platform | 11 | 0 | 3 | 14 | 78.57% |
 | QuanLyKho | 0 | 0 | 21 | 21 | 0% |
 | CreditFlow | 0 | 0 | 22 | 22 | 0% |
 
-`portfolio = (0/14 + 0/21 + 0/22) / 3 = 0%` under the acceptance rule at this checkpoint. This is an evidence score, not a measure of code completeness. The earlier AKS 13/14 local result remains local-only.
+`portfolio = (11/14 + 0/21 + 0/22) / 3 = 26.19%` under the acceptance rule at this checkpoint. This is an evidence score, not a measure of code completeness. The AKS local checks below were rerun or proved by CI on source SHA `8437b0fd1790668b21d171d57374e1546800170a`, the same SHA as its [Cloudflare Pages preview](2026-11-04-cloudflare-preview-8437b0f.md). Preview reachability does not close Azure runtime gate A16.
 
 ## AKS-SRE-Platform
 
 | ID | Gate | Status | Evidence / closure |
 | --- | --- | --- | --- |
-| A01 | Platform Python tests / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A02 | G1–G16 invariants / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A03 | Five Terraform test roots / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A04 | Terraform validate / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A05 | Terraform format / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A06 | GitOps external source validation / LOCAL | OPEN | The earlier dirty checkout reported 47 PASS, 2 FAIL, 1 NOT_PRESENT. The committed PR now has a green GitOps semantics job; retain its raw SHA-linked output and rerun the external-source validator with all mapped repositories before acceptance. |
-| A07 | Static policy gate / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A08 | Maintained manifest render / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A11 | HIGH/CRITICAL config scan / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A12 | Local kind health / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
+| A01 | Platform Python tests / LOCAL | PASS | [Raw local output](2026-11-04-A01-python-8437b0f.txt) and [timestamped CI Python job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): 59 tests passed locally, 89.82% coverage; CI passed on `8437b0f`. |
+| A02 | G1–G16 invariants / LOCAL | PASS | [PR gate Python job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): gate matrix command passed on source SHA `8437b0f`. |
+| A03 | Five Terraform test roots / LOCAL | PASS | [PR gate Terraform job and uploaded per-root logs](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): all five roots passed, nonzero test guard enforced. |
+| A04 | Terraform validate / LOCAL | PASS | [Raw run](2026-11-04-A04-terraform-validate-8437b0f.txt): all five roots valid, exit 0, current SHA. |
+| A05 | Terraform format / LOCAL | PASS | [PR gate Terraform job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): recursive whole-repo format check passed. |
+| A06 | GitOps external source validation / LOCAL | PASS | [Raw run](2026-11-04-A06-gitops-external-8437b0f.txt): 42 PASS, 0 FAIL, 0 NOT_PRESENT; all three mapped checkouts supplied on current SHA. |
+| A07 | Static policy gate / LOCAL | PASS | [PR gate Kubernetes job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): static policy and image gate passed. |
+| A08 | Maintained manifest render / LOCAL | PASS | [PR gate Kubernetes job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): all maintained Kustomize roots rendered and schema-checked. |
+| A11 | HIGH/CRITICAL config scan / LOCAL | PASS | [PR gate security job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): Trivy config HIGH/CRITICAL scan passed; archive excluded from maintained scope. |
+| A12 | Local kind health / LOCAL | PASS | [Raw run](2026-11-04-A12-kind-health-8437b0f.txt): 3/3 kind nodes Ready, kindnet 3/3; no NetworkPolicy inference. |
 | A13 | NetworkPolicy enforcement / LOCAL capable-CNI proof | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
 | A14 | Full platform/Compose integration / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A15 | tflint recursive / LOCAL | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
-| A16 | Current Azure runtime, cost, state and production promotion / AZURE_VALIDATION | OPEN | Previous local proof exists; rerun on the immutable candidate and retain raw output, or for A16 verify live Azure state/workloads/cost and ownership. |
+| A15 | tflint recursive / LOCAL | PASS | [PR gate Terraform job](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078): pinned AzureRM plugin and recursive lint passed. |
+| A16 | Current Azure runtime, cost, state and production promotion / AZURE_VALIDATION | OPEN | [Private AKS Run Command evidence](2026-11-04-A16-private-aks-runcommand-8437b0f.txt): two tainted System nodes cannot schedule the transient command pod. Cluster workload/GitOps, state ownership, actual cost and rollback remain unverified. Cloudflare frontend preview is separate. |
 
 ## QuanLyKho
 
@@ -84,7 +84,7 @@
 
 ## Evidence and release decision
 
-- AKS read-only Azure inventory and commands: [raw cloud log](2026-11-04-cloud-inventory.log). Cluster has 3 Ready nodes, but no verified application workload or Argo CD CRD. Terraform state ownership and cost approval remain open. Previous [pr-gate](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41284254764) and [SBOM](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41284254830) runs failed on `0dac76e`; draft [PR #18](https://github.com/imtarget05/AKS-SRE-Platform/pull/18) has green Terraform, Kubernetes, security, Python, source SBOM and SonarCloud jobs on its committed branch. This does not close A16.
-- QuanLyKho: migration from an empty isolated PostgreSQL database reaches `034_general_ledger_coa`; the full backend suite ended with **975 passed, 8 skipped, 1 xfailed, 0 failed** after fixing the idempotency collision. Ruff and Flutter analysis pass, Flutter tests have 355 passes, and the Flutter web build and Worker typecheck pass. The current public API and web HTTP 200 are reachability only; no 21-ID cloud/device UAT is recorded.
-- CreditFlow: 597 passed, 1 skipped, 23 deselected in the local CI subset; Python dependency audit found no known vulnerabilities; 14 fictional demo prediction cases validated. A current PR CI run has passed Gitleaks and Trivy; later commits still need a complete run. ACA currently serves image `:latest` at revision `creditflow-api--mbcr9yc`, so no source SHA can be proven for the live service. Azure deploy failed before rollout because required OIDC inputs are absent. The bank-input [handoff template](/Users/mainguyenbinhtan/Downloads/CreditFlow/docs/qa/SACOMBANK_INPUTS_FOR_PILOT.md) exists; no owner approvals supplied.
+- AKS: [initial cloud inventory](2026-11-04-cloud-inventory.log) observed 3 Ready nodes at that time; the later [Azure Run Command recheck](2026-11-04-A16-private-aks-runcommand-8437b0f.txt) found a 2-node tainted System pool and could not inspect workloads. Terraform state ownership and actual cost remain open. [pr-gate](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472078), [GitOps](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472157), [SBOM](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41849472108) and external SonarCloud passed on `8437b0f`; [Pages Preview](2026-11-04-cloudflare-preview-8437b0f.md) was browser tested on that SHA. This does not close A16.
+- QuanLyKho: migration from an empty isolated PostgreSQL database reaches `034_general_ledger_coa`; the full backend suite ended with **975 passed, 8 skipped, 1 xfailed, 0 failed** after fixing the idempotency collision. [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41848609393), [S9 kind](https://github.com/imtarget05/QuanLyKho/actions/runs/41848609354) and external SonarCloud passed on `18bd344`; Flutter web build and Worker typecheck passed. The current public API and web HTTP 200 are reachability only; no 21-ID cloud/device UAT is recorded.
+- CreditFlow: [CI](https://github.com/imtarget05/CreditFlow/actions/runs/41846011816), [gateway checks](https://github.com/imtarget05/CreditFlow/actions/runs/41846011762) and external SonarCloud passed on `b5b69ea`; Python dependency audit, Gitleaks, Trivy and the 14 fictional demo prediction cases passed. ACA still serves image `:latest` at revision `creditflow-api--mbcr9yc`, so no source SHA can be proven for the live service. Azure deploy failed before rollout because required OIDC inputs are absent. The bank-input [handoff template](/Users/mainguyenbinhtan/Downloads/CreditFlow/docs/qa/SACOMBANK_INPUTS_FOR_PILOT.md) exists; no owner approvals supplied.
 - Go-live: **AKS OPEN, QuanLyKho OPEN, CreditFlow OPEN.** The respective cloud, product and bank owners must approve the release after their evidence is collected. No approval signature is recorded here. No production deploy or real applicant data use is authorized by this checkpoint.

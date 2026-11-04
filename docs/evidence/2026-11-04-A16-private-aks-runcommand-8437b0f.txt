@@ -1,0 +1,12 @@
+UTC 2026-11-04T14:42Z (read-only Azure inventory and transient Run Command)
+subscription current authenticated Azure subscription; no credentials recorded
+source_sha 8437b0fd1790668b21d171d57374e1546800170a
+cluster rg-aks-platform-dev/aks-portfolio-dev, private API, Running
+az aks list: system pool count 2 (earlier checkpoint observed 3; resource count changed)
+az aks nodepool list: sys pool, 2 Standard_D2s_v6 nodes, CriticalAddonsOnly=true:NoSchedule, Running, Succeeded
+command az aks command invoke ... --command 'kubectl get nodes -o wide'
+actual CLI error: Operation returned an invalid status 'OK'
+follow-up REST Run Command (2025-04-01) accepted with HTTP 202; result id 5ac3fe05688b46e198b66903792f7a96
+result provisioningState Failed; reason: Unschedulable - 0/2 nodes available, both with untolerated taints; no kubectl output
+conclusion A16 OPEN: live workloads, Argo CD, policy and recovery were not inspected. Do not remove system taint or add paid user nodes without a cost/state/owner review.
+request cost: Run Command transient pod requests 200m CPU/500Mi memory per Microsoft Learn; no new VM created by this probe. Actual billing remains OPEN.

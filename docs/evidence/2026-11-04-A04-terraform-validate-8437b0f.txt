@@ -1,0 +1,14 @@
+ROOT=terraform/aks-foundation
+Success! The configuration is valid.
+
+ROOT=terraform/modules/acr_attachment
+Success! The configuration is valid.
+
+ROOT=terraform/modules/aks_cluster
+Success! The configuration is valid.
+
+ROOT=terraform/modules/networking
+Success! The configuration is valid.
+
+ROOT=terraform/modules/observability
+Success! The configuration is valid.
