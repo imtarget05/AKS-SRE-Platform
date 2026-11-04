@@ -1,0 +1,33 @@
+UTC: 2026-11-04T06:39:47.548384+00:00
+Read-only recheck. No deployment, apply, destroy, or Argo sync.
+
+## AKS private API profile
+$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev --query {private:apiServerAccessProfile.enablePrivateCluster,publicFqdn:fqdn,privateFqdn:privateFqdn,power:powerState.code} -o json
+exit=0
+{
+  "power": "Running",
+  "private": true,
+  "privateFqdn": "aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io",
+  "publicFqdn": null
+}
+WARNING: The behavior of this command has been altered by the following extension: aks-preview
+
+## AKS runtime from local admin context
+$ kubectl --context aks-portfolio-dev-admin get deploy -A
+exit=1
+
+E1104 13:39:50.618025   13615 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host"
+E1104 13:39:50.619197   13615 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host"
+E1104 13:39:50.619861   13615 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host"
+E1104 13:39:50.621119   13615 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host"
+E1104 13:39:50.621789   13615 memcache.go:265] "Unhandled Error" err="couldn't get current server API group list: Get \"https://aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io:443/api?timeout=32s\": dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host"
+Unable to connect to the server: dial tcp: lookup aksportfoliodev-cg0zebki.99425892-77aa-405a-b95b-7023335b97a1.privatelink.eastasia.azmk8s.io: no such host
+
+## CreditFlow live Container App
+$ az containerapp show -g rg-portfolio-prod -n creditflow-api --query {revision:properties.latestReadyRevisionName,image:properties.template.containers[0].image,fqdn:properties.configuration.ingress.fqdn} -o json
+exit=0
+{
+  "fqdn": "creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io",
+  "image": "crportfolioa3deec.azurecr.io/creditflow-api:latest",
+  "revision": "creditflow-api--mbcr9yc"
+}
