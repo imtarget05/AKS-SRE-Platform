@@ -425,6 +425,7 @@ jobs:
             -Dsonar.projectKey=imtarget05_AKS-SRE-Platform \
             -Dsonar.organization=imtarget05 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login="$SONAR_TOKEN"
+            -Dsonar.login="$SONAR_TOKEN" \
+            -Dsonar.automaticAnalysis=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
