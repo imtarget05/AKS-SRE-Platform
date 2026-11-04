@@ -1,0 +1,17 @@
+UTC 2026-11-04T15:11:22.915816+00:00
+AKS release source SHA 8437b0fd1790668b21d171d57374e1546800170a
+CreditFlow checkout SHA c3d51db5a40c9ac3bacba03bf0f2ac961407ccd4
+environment local Docker Compose api + web
+api image ID sha256:cc722e534048b39bea5cbcf63405fce92a7a34f1a4f60d144d02e24ab61fb841
+web image ID sha256:c11dd26cc78bc36c104686d16df55fe3fa30f2d0eb6bcd1f47550ed846965440
+command docker compose up --build -d api web, then docker compose up -d --no-build api web
+expected API /health HTTP 200 with model_loaded=true; frontend root HTTP 200
+api GET 127.0.0.1:8081/health: HTTP 200, bytes=223
+api model_loaded=True
+api model_version=logistic_regression_v001
+api runtime_mode=development
+web GET 127.0.0.1:8082/: HTTP 200, bytes=837
+web contains app root=True
+first web probe against hardcoded port 8080 failed; docker compose port web 8080 returned host port 8082 and corrected probe passed
+cleanup docker compose down --remove-orphans completed; temporary empty .env removed
+result PASS local Compose smoke only; Azure runtime remains OPEN
