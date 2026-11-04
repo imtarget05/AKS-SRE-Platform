@@ -6,8 +6,8 @@
 | commit SHA | 513df730776939c15895eaa56e77e60b27a823a7 |
 | command | `python3 tests/test_gates.py` |
 | output | 33 passed, 5 errors (kubectl missing). Gate matrix G1–G14 executed; G15 crashed on validator non-JSON output (pre-existing, unrelated to kubectl). See `tests/test_gates.py`. |
-| status | PASS (degraded: kubectl not installed, 5 tests could not run) |
-| evidence file | `test-gates-source.py` (symlink → `tests/test_gates.py`) |
+| status | PARTIAL historical result; 5 errors are not PASS under the current acceptance rule |
+| source at recorded SHA | `git show 513df730776939c15895eaa56e77e60b27a823a7:tests/test_gates.py` |
 
 ## Test counts
 

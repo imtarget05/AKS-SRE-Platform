@@ -22,11 +22,11 @@
 | 5 | Argo CD sync | `evidence-argocd-sync.md` | P3.7 (Argo CD sync) | 513df730...23a7 | PASS |
 | 6 | Manifest inventory | `evidence-manifest-inventory.md` | P3.7 (manifest inventory) | 513df730...23a7 | PASS |
 
-## Raw evidence files (symlinked into this directory)
+## Raw evidence files
 
 | File | Source |
 |------|--------|
-| `test-gates-source.py` | `tests/test_gates.py` |
+| historical gate source | `git show 513df730776939c15895eaa56e77e60b27a823a7:tests/test_gates.py` |
 | `terraform-plan.txt` | `docs/evidence/live-aks-2026-10-20/terraform-plan.txt` |
 | `slo-baseline-2026-10-26.json` | `docs/evidence/2026-10-26/slo-baseline-2026-10-26.json` |
 | `sli-probe-raw-output.txt` | `docs/evidence/2026-10-26/sli-probe-raw-output.txt` |
