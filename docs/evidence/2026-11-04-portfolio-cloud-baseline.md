@@ -3,7 +3,8 @@
 This is a read-only inventory, not a deployment or production acceptance. The
 three working trees contain pre-existing uncommitted work, so no current release
 SHA or cross-repository score can be certified yet. Health responses are recorded
-as reachability only.
+as reachability only. Sanitized command output is retained in
+[`2026-11-04-cloud-inventory.log`](2026-11-04-cloud-inventory.log).
 
 ## Frozen scoring rule
 
@@ -30,7 +31,7 @@ system's owners; a portfolio score above 90% alone does not authorize go-live.
 | AKS | `kubectl --context aks-portfolio-dev-admin get deploy -A` showed system deployments only; `get applications.argoproj.io -A` reported that the resource type does not exist. The normal `aks-portfolio-dev` context cannot authenticate on this host because `kubelogin` is missing. | No Argo CD or maintained application is verified on Azure. The admin context was used for read-only inventory only. |
 | AKS | The remote blob `stakssre/tfstate/aks-sre/validation.terraform.tfstate` exists (34,429 bytes, last modified 2026-11-03 15:08 UTC, unlocked). | State ownership and reconciliation with the local backend remain OPEN; existence alone does not establish which state is authoritative. |
 | QuanLyKho | `GET` to the documented Modal API `/api/v1/health/live` returned HTTP 200; the documented Cloudflare web root returned HTTP 200. | Reachability only. The 21 MVP journeys, migration, release identity, device UAT and rollback remain OPEN. |
-| CreditFlow | Azure CLI reports Container App `creditflow-api` revision `creditflow-api--mbcr9yc`, created 2026-11-03 08:56 UTC, with FQDN `creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io`. `/health/live` returned HTTP 200. | Reachability only. The live image is `crportfolioa3deec.azurecr.io/creditflow-api:latest`, so it cannot be traced to an immutable source SHA. |
+| CreditFlow | Azure CLI reports Container App `creditflow-api` revision `creditflow-api--mbcr9yc`, created 2026-11-03 08:56 UTC, with FQDN `creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io`. `/health/live` returned HTTP 200 on one probe, timed out after 15 seconds on another, then returned 200 on retry. | Reachability is intermittent and is not a readiness verdict. The live image is `crportfolioa3deec.azurecr.io/creditflow-api:latest`, so it cannot be traced to an immutable source SHA. |
 | CreditFlow | Azure Container App environment variable names include OIDC fields but do not include `CREDITFLOW_ENV`. At inventory time, the published CD and documentation still named an older `blackisland` FQDN; the local workflow and docs have since been corrected but are not deployed. | Production mode, current frontend/API alignment and bank integration acceptance remain OPEN. Do not send real applicant data. |
 | CreditFlow | GitHub repository secrets list includes `AZURE_CREDENTIALS` and `CREDITFLOW_API_KEY`, but no `CREDITFLOW_OIDC_ISSUER`, `CREDITFLOW_OIDC_AUDIENCE`, `CREDITFLOW_OIDC_JWKS_URL` or `CREDITFLOW_OIDC_ROLE_MAP_JSON`. Only secret names were inspected. | The production deploy script's required IdP gate cannot pass yet; do not substitute fictional IdP values in production. |
 

@@ -1,0 +1,87 @@
+UTC: 2026-11-04T01:50:01.742649+00:00
+Read-only inventory. No candidate release SHA is certified.
+
+## AKS resource
+$ az aks show -g rg-aks-platform-dev -n aks-portfolio-dev --query {power:powerState.code,version:kubernetesVersion,sku:sku,nodePools:agentPoolProfiles[].{name:name,count:count,vmSize:vmSize}} -o json
+exit=0
+{
+  "nodePools": [
+    {
+      "count": 3,
+      "name": "nodepool1",
+      "vmSize": "Standard_D2s_v6"
+    }
+  ],
+  "power": "Running",
+  "sku": {
+    "name": "Base",
+    "tier": "Free"
+  },
+  "version": "1.36"
+}
+WARNING: The behavior of this command has been altered by the following extension: aks-preview
+
+## AKS nodes
+$ kubectl --context aks-portfolio-dev-admin get nodes -o wide
+exit=0
+NAME                                STATUS   ROLES    AGE    VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION             CONTAINER-RUNTIME
+aks-nodepool1-25386530-vmss000000   Ready    <none>   4d8h   v1.36.5   10.224.0.62   <none>        Ubuntu 24.04.5 LTS   6.8.0-1071-azure (amd64)   containerd://2.3.7-3
+aks-nodepool1-25386530-vmss000001   Ready    <none>   4d8h   v1.36.5   10.224.0.4    <none>        Ubuntu 24.04.5 LTS   6.8.0-1071-azure (amd64)   containerd://2.3.7-3
+aks-nodepool1-25386530-vmss000002   Ready    <none>   4d8h   v1.36.5   10.224.0.5    <none>        Ubuntu 24.04.5 LTS   6.8.0-1071-azure (amd64)   containerd://2.3.7-3
+
+## AKS deployments
+$ kubectl --context aks-portfolio-dev-admin get deploy -A
+exit=0
+NAMESPACE     NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+kube-system   ama-logs-rs                     1/1     1            1           4d8h
+kube-system   coredns                         2/2     2            2           4d8h
+kube-system   coredns-autoscaler              1/1     1            1           4d8h
+kube-system   konnectivity-agent              2/2     2            2           4d8h
+kube-system   konnectivity-agent-autoscaler   1/1     1            1           4d8h
+kube-system   metrics-server                  2/2     2            2           4d8h
+
+## AKS Argo Applications
+$ kubectl --context aks-portfolio-dev-admin get applications.argoproj.io -A
+exit=1
+error: the server doesn't have a resource type "applications"
+
+## Terraform remote-state blob metadata
+$ az storage blob show --account-name stakssre --container-name tfstate --name aks-sre/validation.terraform.tfstate --auth-mode login --query {lastModified:properties.lastModified,leaseStatus:properties.lease.status,leaseState:properties.lease.state,size:properties.contentLength} -o json
+exit=0
+{
+  "lastModified": "2026-11-03T15:08:46+00:00",
+  "leaseState": "available",
+  "leaseStatus": "unlocked",
+  "size": 34429
+}
+
+## CreditFlow Container App
+$ az containerapp show -g rg-portfolio-prod -n creditflow-api --query {fqdn:properties.configuration.ingress.fqdn,revision:properties.latestReadyRevisionName,image:properties.template.containers[0].image} -o json
+exit=0
+{
+  "fqdn": "creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io",
+  "image": "crportfolioa3deec.azurecr.io/creditflow-api:latest",
+  "revision": "creditflow-api--mbcr9yc"
+}
+
+## CreditFlow health
+$ curl -sS -L --max-time 15 -o /dev/null -w HTTP %{http_code}
+ https://creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io/health/live
+exit=28
+HTTP 000
+curl: (28) Operation timed out after 15011 milliseconds with 0 bytes received
+
+## QuanLyKho API health
+$ curl -sS -L --max-time 15 -o /dev/null -w HTTP %{http_code}
+ https://imtarget05--quan-ly-kho-tra-sua-api.us-east.modal.run/api/v1/health/live
+exit=0
+HTTP 200
+
+## QuanLyKho web
+$ curl -sS -L --max-time 15 -o /dev/null -w HTTP %{http_code}
+ https://quan-ly-kho-tra-sua.tanmainguyenbinh.workers.dev/
+exit=0
+HTTP 200
+UTC retry: 2026-11-04T01:51:02Z
+CreditFlow /health/live HTTP 200 time=0.102015s
+exit=0
