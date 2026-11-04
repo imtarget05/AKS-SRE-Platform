@@ -6,6 +6,7 @@ Checks:
   2. index.html references styles.css and all 5 JS files.
   3. index.html has tab-panel divs for realtime, cluster, workload, gitops, gates.
   4. app.js has loadTabContent function.
+  5. Cloudflare Pages output contains the entry page and every runtime asset.
 Reports PASS/FAIL per check and overall result.
 """
 
@@ -87,12 +88,32 @@ def check_load_tab_content():
     return "PASS", ""
 
 
+def check_pages_artifact():
+    output = os.path.join(BASE_DIR, "dist")
+    expected = [
+        "index.html", "assets/styles.css", "styles.css", "datafeed.js",
+        *JS_FILES,
+        *(f"tabs/{tab}.html" for tab in TAB_PANEL_IDS),
+    ]
+    missing = [rel for rel in expected if not os.path.isfile(os.path.join(output, rel))]
+    if missing:
+        return "FAIL", "Pages output missing: " + ", ".join(missing)
+    with open(os.path.join(output, "index.html"), encoding="utf-8") as file:
+        html = file.read()
+    if 'href="assets/styles.css"' not in html or 'src="datafeed.js"' not in html:
+        return "FAIL", "Pages entry page does not reference compiled CSS and data feed"
+    if "'unsafe-inline'" in html:
+        return "FAIL", "Pages CSP permits inline style/script"
+    return "PASS", ""
+
+
 def main():
     checks = [
         ("Required files exist", check_file_exists),
         ("index.html references styles.css + 5 JS files", check_index_references),
         ("index.html has tab-panel divs (realtime, cluster, workload, gitops, gates)", check_tab_panels),
         ("app.js has loadTabContent function", check_load_tab_content),
+        ("Pages artifact is complete", check_pages_artifact),
     ]
 
     results = []
