@@ -44,3 +44,16 @@ __pycache__/
 
 # Build artifacts (static site output) — never commit; regenerate via scripts/build-distribution-site.sh
 docs-site/site/
+
+# Coverage reports — never commit
+.coverage
+**/.coverage
+
+# Kilo agent working directory — not part of the repo
+.agents/
+
+# Dropped agent-hub project — not part of the release
+apps/agent-hub.dropped/
+
+# Frontend build output — regenerate, never commit
+apps/sre-console/dist/
