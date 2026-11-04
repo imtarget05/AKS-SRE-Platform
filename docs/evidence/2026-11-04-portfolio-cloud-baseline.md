@@ -41,12 +41,18 @@ system's owners; a portfolio score above 90% alone does not authorize go-live.
 | CreditFlow | A workflow dispatch on 2026-11-04 failed before deployment with `production deploy requires CREDITFLOW_OIDC_ISSUER, CREDITFLOW_OIDC_JWKS_URL, and CREDITFLOW_OIDC_ROLE_MAP_JSON`; a subsequent read-only ACA query still returned revision `creditflow-api--mbcr9yc` and image `:latest`. | The attempted run is a failed deploy gate, not cloud release evidence. |
 
 The earlier AKS `pr-gate` and SBOM runs failed on SHA `0dac76e`. Draft
-[AKS PR #18](https://github.com/imtarget05/AKS-SRE-Platform/pull/18) now has
-green PR-gate, source SBOM, SonarCloud, Terraform, Kubernetes, security and
-Python jobs on its committed branch; this is CI evidence, not Azure workload
-acceptance. QuanLyKho CI and S11 E2E failed on SHA `7b602e3`; CreditFlow's
-successful `verify-azure` job on SHA `c5a1893` was read-only. Their local fixes
-still need CI evidence on immutable release candidates.
+[AKS PR #18](https://github.com/imtarget05/AKS-SRE-Platform/pull/18) has
+green internal PR-gate, source SBOM, Terraform, Kubernetes, security and Python
+jobs at SHA `a6d1470`; the external SonarCloud quality gate remains red. The
+workflow job named "SonarCloud scan" passed because its token was unavailable
+and the scanner was skipped; it is not scan evidence. New AKS SHA `47be98c`
+is awaiting CI. [QuanLyKho PR #11](https://github.com/imtarget05/QuanLyKho/pull/11)
+has green CI and S9 kind jobs at SHA `d5caf99`, while external SonarCloud is red
+on duplication. [CreditFlow PR #2](https://github.com/imtarget05/CreditFlow/pull/2)
+has green CI at SHA `29f930e`; external SonarCloud is red on security findings
+and new SHA `df0ecf0` awaits CI. These are CI observations, not cloud release
+acceptance. CreditFlow's successful `verify-azure` job on SHA `c5a1893` was
+read-only and did not deploy.
 CreditFlow already has 14 fictional `/predict` cases in `data/demo/app_cases.json`;
 the fixture validator and its test passed locally. These cases are synthetic
 contract evidence only and cannot close bank-owned acceptance gates.
