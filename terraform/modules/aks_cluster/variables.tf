@@ -85,8 +85,9 @@ variable "sku_tier" {
 }
 
 variable "private_cluster_enabled" {
-  type    = bool
-  default = true
+  description = "Public AKS API is the safe default for local validation and GitOps verification. Private clusters must be opted in explicitly only when the environment has private DNS/VNet reachability and the owner accepts the read-only lockout risk."
+  type        = bool
+  default     = false
 }
 
 variable "zones" {

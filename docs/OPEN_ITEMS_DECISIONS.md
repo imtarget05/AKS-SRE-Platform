@@ -18,3 +18,8 @@ The platform has strong offline and historical Azure evidence plus regression
 gates, but current live acceptance is intentionally blocked until the private
 cluster is accessed from the correct network and the ownership decisions above
 are approved.
+
+Operational guardrail: AKS clusters default to public API access. `private_cluster_enabled`
+must be an explicit opt-in only for VNet-backed environments with private DNS
+reachability; it is not the default for local validation or repo-owned
+read/write proof actions.
