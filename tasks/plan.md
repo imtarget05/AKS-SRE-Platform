@@ -1,6 +1,6 @@
 # Bàn giao AI: hoàn thành ba repo với portfolio >90%
 
-**Chốt trạng thái:** 2026-11-04 15:18 UTC. Đây là kế hoạch thực thi, không phải chứng nhận hoàn thành. Ma trận nguồn là [`docs/evidence/2026-11-04-portfolio-gate-matrix.md`](../docs/evidence/2026-11-04-portfolio-gate-matrix.md); mẫu số cố định: AKS 14, QuanLyKho 21, CreditFlow 22. Hiện có 12/14, 0/21, 0/22 = **28,57%**. Điểm và quyết định go-live phải tách riêng.
+**Chốt trạng thái:** 2026-11-05 04:45 UTC. Đây là kế hoạch thực thi, không phải chứng nhận hoàn thành. Ma trận nguồn là [`docs/evidence/2026-11-04-portfolio-gate-matrix.md`](../docs/evidence/2026-11-04-portfolio-gate-matrix.md); mẫu số cố định: AKS 14, QuanLyKho 21, CreditFlow 22. Baseline được chấp nhận ở checkpoint là 12/14, 0/21, 0/22 = **28,57%**. Mọi PASS phải được kiểm tra lại trên release SHA cuối cùng. Điểm và quyết định go-live phải tách riêng.
 
 ## Quy tắc cho mọi AI nhận việc
 
@@ -14,11 +14,13 @@
 
 | Repo | HEAD khi lập plan | Bằng chứng đã chấp nhận | Vướng mắc chính |
 | --- | --- | --- | --- |
-| AKS-SRE-Platform | `f48b13d` | 12/14; Pages Preview từ `8437b0f`; A14 Compose local PASS | A13 capable-CNI chưa chạy lại, A16 Azure private/tainted System pool, state và cost chưa xác nhận |
-| QuanLyKho | `797da5f` | 0/21; Flutter synthetic Preview từ `2f976dd`, CI của SHA preview xanh | Backend/cloud UI chưa cùng release, migration 034 chưa chứng minh trên cloud, 21 hành trình chưa UAT |
-| CreditFlow | `904504c` | 0/22; 14 control có hỗ trợ test local, chưa có cloud acceptance | ACA chạy image `:latest` cũ; thiếu IdP, dữ liệu/mô hình, tích hợp và phê duyệt ngân hàng |
+| AKS-SRE-Platform | `addc72d` | 12/14 ở checkpoint; PR gate nội bộ xanh | A13 capable-CNI chưa chạy lại, A16 Azure private/tainted System pool, state và cost chưa xác nhận |
+| QuanLyKho | `b31dc99` | 0/21; CI nội bộ xanh, Preview synthetic | Backend/cloud UI chưa cùng release, migration 034 chưa chứng minh trên cloud, 21 hành trình chưa UAT |
+| CreditFlow | `015fcc9` | 0/22; CI nội bộ xanh trên `f40a5cc`, 14 control có hỗ trợ local | ACA chạy image `:latest` cũ; thiếu IdP, dữ liệu/mô hình, tích hợp và phê duyệt ngân hàng |
 
-Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. External SonarCloud PR checks xanh ở checkpoint; **Sonar scanner job nội bộ trên HEAD mới đỏ vì `SONAR_TOKEN` rỗng**. Khắc phục bằng token *mới* do chủ tài khoản tạo và lưu trực tiếp trong GitHub Secrets, rồi chạy lại CI; không tắt hoặc nới gate.
+Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. Scanner job nội bộ đã chạy xanh, nhưng **external SonarCloud Code Analysis đỏ trên cả ba PR**: new-code coverage 0% so với gate 80%; QuanLyKho còn security rating 5/1 do ba issue được Sonar báo. Vì vậy CI phát hành chưa xanh. Không tắt hoặc nới gate.
+
+**Bản vá chưa hoàn tất tại checkout hiện tại:** AKS `.github/workflows/pr-gate.yaml` đã thêm pytest coverage và artifact transfer; QuanLyKho `.github/workflows/ci.yml` đã thêm coverage artifact, `backend/tests/conftest.py` bỏ mật khẩu mặc định; CreditFlow `.github/workflows/ci.yml` đã tải coverage artifact vào scanner. Các file này còn **uncommitted, chưa có CI mới**, người nhận CI-1 phải kiểm tra diff, YAML, report path, chạy test cần thiết rồi commit/push theo từng repo. AKS `coverage.xml` là output local untracked, không đưa vào commit. QuanLyKho `docs/LOCAL_PROJECT_STATUS.md` là file untracked ngoài phạm vi CI-1, không tự xóa hoặc stage.
 
 Điểm >90 có thể kiểm lại: nếu AKS 14/14 và QuanLyKho 21/21, CreditFlow cần tối thiểu 16/22 (90,91% tổng); nếu AKS 13/14 thì CreditFlow cần 18/22; nếu AKS giữ 12/14 thì cần 19/22. Đây là ngưỡng số học, **không** cho phép bỏ các gate còn lại hoặc phát hành khi P0 production còn mở. Mục tiêu thực thi là đóng đầy đủ mọi gate có thể, không tối ưu điểm bằng cách sửa mẫu số.
 
@@ -38,9 +40,9 @@ Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. External SonarCloud PR checks x
 
 ## Gói việc nhỏ để giao cho AI
 
-### CI-1 — Sonar và release guard (CI; S/M)
+### CI-1 — Sonar và release guard (CI; M)
 
-Kiểm tra nguyên nhân `SONAR_TOKEN` rỗng trong ba job, quyền secrets của PR nội bộ và trạng thái external check. Giữ fail-fast. Sau H0, chạy lại trên HEAD mới; tải log scanner thật, xác nhận project key và quality gate. Kiểm chứng: `gh pr checks` xanh toàn bộ trên từng SHA, job Sonar có bước scan thực chạy, không chỉ bước validate hoặc `skip`. Không cần in giá trị token.
+Tiếp quản bốn bản vá uncommitted nêu trên; xác nhận `coverage.xml` có thật trong artifact của từng workflow, path scanner đúng và project key đúng. Chạy CI trên SHA mới, xem log scanner để xác nhận Sonar đã import coverage; kiểm tra `new_coverage` bằng PR quality gate API. Với QuanLyKho, đối chiếu ba issue security Sonar (`githubactions:S8541`, `githubactions:S6506`, `secrets:S6698`) với dòng code ở scan mới trước khi sửa; xử lý nguyên nhân, không dùng false-positive suppression nếu issue còn thực. Kiểm chứng: `gh pr checks` xanh **cả internal lẫn external** trên từng SHA, scan không `skip`, quality gate không bị nới. Không in giá trị token.
 
 ### AKS-1 — A13 policy toggle (AKS; M)
 
