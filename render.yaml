@@ -2,10 +2,11 @@ services:
   - type: web
     name: sre-demo-api
     runtime: docker
+    plan: free
     dockerfilePath: app/sre-demo-api/Dockerfile
     dockerContext: app/sre-demo-api
     healthCheckPath: /health/live
-    autoDeploy: true
+    autoDeploy: false
     envVars:
       - key: NODE_ENV
         value: production
@@ -13,7 +14,3 @@ services:
         value: "8080"
       - key: OTEL_SERVICE_NAME
         value: sre-demo-api
-      - key: OTEL_EXPORTER_OTLP_ENDPOINT
-        sync: false
-      - key: OTEL_EXPORTER_OTLP_PROTOCOL
-        value: http/protobuf
