@@ -1,0 +1,259 @@
+started_utc=2026-11-05T06:40:41Z source_sha=2ff4afc6be302cb01fc542bb252fdf83ec3869a6 context=kind-portfolio-a13-main
+f3e04e46477b2147d117f93b89d1096a015acc299f595fea8bfd4fde17bf0296  /tmp/portfolio-a13-main-networkpolicy.yaml
+Creating cluster "portfolio-a13-main" ...
+ • Ensuring node image (kindest/node:v1.36.1) 🖼️  ...
+ ✓ Ensuring node image (kindest/node:v1.36.1) 🖼️
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+Set kubectl context to "kind-portfolio-a13-main"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-portfolio-a13-main
+
+Have a nice day! 👋
+poddisruptionbudget.policy/calico-kube-controllers created
+serviceaccount/calico-kube-controllers created
+serviceaccount/calico-node created
+serviceaccount/calico-cni-plugin created
+configmap/calico-config created
+customresourcedefinition.apiextensions.k8s.io/bgpconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/bgpfilters.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/bgppeers.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/blockaffinities.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/caliconodestatuses.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/clusterinformations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/felixconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/globalnetworksets.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/hostendpoints.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamblocks.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamconfigs.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipamhandles.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ippools.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/ipreservations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/kubecontrollersconfigurations.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/networksets.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/stagedglobalnetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/stagedkubernetesnetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/stagednetworkpolicies.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/tiers.crd.projectcalico.org created
+customresourcedefinition.apiextensions.k8s.io/clusternetworkpolicies.policy.networking.k8s.io created
+clusterrole.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrole.rbac.authorization.k8s.io/calico-node created
+clusterrole.rbac.authorization.k8s.io/calico-cni-plugin created
+clusterrole.rbac.authorization.k8s.io/calico-tier-getter created
+clusterrolebinding.rbac.authorization.k8s.io/calico-kube-controllers created
+clusterrolebinding.rbac.authorization.k8s.io/calico-node created
+clusterrolebinding.rbac.authorization.k8s.io/calico-cni-plugin created
+clusterrolebinding.rbac.authorization.k8s.io/calico-tier-getter created
+daemonset.apps/calico-node created
+deployment.apps/calico-kube-controllers created
+Waiting for daemon set spec update to be observed...
+Waiting for daemon set "calico-node" rollout to finish: 0 of 1 updated pods are available...
+daemon set "calico-node" successfully rolled out
+node/portfolio-a13-main-control-plane condition met
+namespace/a13-verification created
+namespace/envoy-gateway-system created
+namespace/unauthorized created
+NAME                   STATUS   AGE   LABELS
+envoy-gateway-system   Active   0s    kubernetes.io/metadata.name=envoy-gateway-system
+pod/api created
+pod/mock created
+pod/client created
+pod/gateway created
+pod/api condition met
+pod/mock condition met
+pod/client condition met
+pod/gateway condition met
+NAMESPACE              NAME                                                       READY   STATUS    RESTARTS   AGE   IP                NODE                               NOMINATED NODE   READINESS GATES
+a13-verification       api                                                        1/1     Running   0          20s   192.168.171.197   portfolio-a13-main-control-plane   <none>           <none>
+a13-verification       mock                                                       1/1     Running   0          20s   192.168.171.199   portfolio-a13-main-control-plane   <none>           <none>
+envoy-gateway-system   gateway                                                    1/1     Running   0          20s   192.168.171.200   portfolio-a13-main-control-plane   <none>           <none>
+kube-system            calico-kube-controllers-6ffffbccff-ff69h                   1/1     Running   0          71s   192.168.171.195   portfolio-a13-main-control-plane   <none>           <none>
+kube-system            calico-node-brcq4                                          1/1     Running   0          72s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+kube-system            coredns-589f44dc88-bh5b9                                   1/1     Running   0          71s   192.168.171.194   portfolio-a13-main-control-plane   <none>           <none>
+kube-system            coredns-589f44dc88-vwphq                                   1/1     Running   0          71s   192.168.171.196   portfolio-a13-main-control-plane   <none>           <none>
+kube-system            etcd-portfolio-a13-main-control-plane                      1/1     Running   0          78s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+kube-system            kube-apiserver-portfolio-a13-main-control-plane            1/1     Running   0          79s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+kube-system            kube-controller-manager-portfolio-a13-main-control-plane   1/1     Running   0          78s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+kube-system            kube-proxy-sb22f                                           1/1     Running   0          72s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+kube-system            kube-scheduler-portfolio-a13-main-control-plane            1/1     Running   0          78s   172.18.0.5        portfolio-a13-main-control-plane   <none>           <none>
+local-path-storage     local-path-provisioner-855c7b7774-22th9                    1/1     Running   0          71s   192.168.171.193   portfolio-a13-main-control-plane   <none>           <none>
+unauthorized           client                                                     1/1     Running   0          20s   192.168.171.198   portfolio-a13-main-control-plane   <none>           <none>
+api_ip=192.168.171.197 mock_ip=192.168.171.199
+2026-11-05T06:42:13Z stage=before-policy pod=unauthorized/client exit=0 output=200 expected=allow
+networkpolicy.networking.k8s.io/default-deny created
+networkpolicy.networking.k8s.io/allow-dns created
+networkpolicy.networking.k8s.io/sre-demo-api created
+networkpolicy.networking.k8s.io/mock-dependency created
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"aks-sre-platform"},"name":"allow-dns","namespace":"a13-verification"},"spec":{"egress":[{"ports":[{"port":53,"protocol":"UDP"},{"port":53,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}},"podSelector":{"matchLabels":{"k8s-app":"kube-dns"}}}]}],"podSelector":{},"policyTypes":["Egress"]}}
+    creationTimestamp: "2026-11-05T06:42:13Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: aks-sre-platform
+    name: allow-dns
+    namespace: a13-verification
+    resourceVersion: "800"
+    uid: 11d6797d-f9da-4293-b52f-910246181e65
+  spec:
+    egress:
+    - ports:
+      - port: 53
+        protocol: UDP
+      - port: 53
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+        podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+    podSelector: {}
+    policyTypes:
+    - Egress
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"aks-sre-platform"},"name":"default-deny","namespace":"a13-verification"},"spec":{"podSelector":{},"policyTypes":["Ingress","Egress"]}}
+    creationTimestamp: "2026-11-05T06:42:13Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: aks-sre-platform
+    name: default-deny
+    namespace: a13-verification
+    resourceVersion: "799"
+    uid: 0d3af56e-836b-4f03-a6e9-808e4f3dffc8
+  spec:
+    podSelector: {}
+    policyTypes:
+    - Ingress
+    - Egress
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"mock-dependency"},"name":"mock-dependency","namespace":"a13-verification"},"spec":{"egress":[{"ports":[{"port":53,"protocol":"UDP"},{"port":53,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"kube-system"}},"podSelector":{"matchLabels":{"k8s-app":"kube-dns"}}}]}],"ingress":[{"from":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"sre-demo-api"}}}],"ports":[{"port":8080,"protocol":"TCP"}]}],"podSelector":{"matchLabels":{"app.kubernetes.io/name":"mock-dependency"}},"policyTypes":["Ingress","Egress"]}}
+    creationTimestamp: "2026-11-05T06:42:13Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: mock-dependency
+    name: mock-dependency
+    namespace: a13-verification
+    resourceVersion: "802"
+    uid: 4fc875df-ca16-4f16-8ca6-b22b64ab281c
+  spec:
+    egress:
+    - ports:
+      - port: 53
+        protocol: UDP
+      - port: 53
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+        podSelector:
+          matchLabels:
+            k8s-app: kube-dns
+    ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: sre-demo-api
+      ports:
+      - port: 8080
+        protocol: TCP
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: mock-dependency
+    policyTypes:
+    - Ingress
+    - Egress
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"sre-demo-api"},"name":"sre-demo-api","namespace":"a13-verification"},"spec":{"egress":[{"ports":[{"port":8080,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"mock-dependency"}}}]},{"ports":[{"port":4318,"protocol":"TCP"}],"to":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"monitoring"}}}]}],"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"envoy-gateway-system"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"envoy-gateway"}}}],"ports":[{"port":8080,"protocol":"TCP"}]},{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"monitoring"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"prometheus"}}}],"ports":[{"port":8080,"protocol":"TCP"}]}],"podSelector":{"matchLabels":{"app.kubernetes.io/name":"sre-demo-api"}},"policyTypes":["Ingress","Egress"]}}
+    creationTimestamp: "2026-11-05T06:42:13Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/name: sre-demo-api
+    name: sre-demo-api
+    namespace: a13-verification
+    resourceVersion: "801"
+    uid: 28f13c99-21c0-49af-8d20-c07e554e6d4e
+  spec:
+    egress:
+    - ports:
+      - port: 8080
+        protocol: TCP
+      to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: mock-dependency
+    - ports:
+      - port: 4318
+        protocol: TCP
+      to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: monitoring
+    ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: envoy-gateway-system
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: envoy-gateway
+      ports:
+      - port: 8080
+        protocol: TCP
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: monitoring
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus
+      ports:
+      - port: 8080
+        protocol: TCP
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: sre-demo-api
+    policyTypes:
+    - Ingress
+    - Egress
+kind: List
+metadata:
+  resourceVersion: ""
+2026-11-05T06:42:22Z stage=unauthorized-to-api pod=unauthorized/client exit=28 output=$'curl: (28) Connection timed out after 3002 milliseconds\n000command terminated with exit code 28' expected=deny
+2026-11-05T06:42:22Z stage=gateway-to-api pod=envoy-gateway-system/gateway exit=0 output=200 expected=allow
+2026-11-05T06:42:26Z stage=unauthorized-to-mock pod=unauthorized/client exit=28 output=$'000curl: (28) Connection timed out after 3002 milliseconds\ncommand terminated with exit code 28' expected=deny
+api-to-mock HTTP 200
+quay.io/calico/node@sha256:565d8db3200e443955557f8f28ff44ab8a4a456754bc74a19c4f2f3444af9b1c
+finished_utc=2026-11-05T06:42:26Z verdict=PASS actual=200,blocked,200,blocked,200
+teardown_utc=2026-11-05T06:42:26Z deleting=portfolio-a13-main
+Deleting cluster "portfolio-a13-main" ...
+Deleted nodes: ["portfolio-a13-main-control-plane"]
+remaining_clusters=local-platform,
