@@ -385,6 +385,16 @@ jobs:
       - name: Cloudflare API edge contract
         run: node --test platform/cloudflare/api-edge/test/*.test.mjs
 
+      - name: SRE agent coverage for SonarCloud
+        run: python3 -m pytest --cov-report=xml:coverage.xml --cov-report=term -q
+
+      - name: Upload SRE agent coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: sre-agent-coverage
+          path: coverage.xml
+          if-no-files-found: error
+
   sonar:
     name: SonarCloud scan
     runs-on: ubuntu-latest
@@ -410,6 +420,12 @@ jobs:
             echo "::error::SONAR_TOKEN is unset or empty. Recreate and configure the GitHub secret before running SonarCloud."
             exit 1
           fi
+      - name: Download SRE agent coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: sre-agent-coverage
+      - name: Require coverage report
+        run: test -s coverage.xml
       - name: SonarCloud scan
         run: |
           set -euxo pipefail
@@ -426,6 +442,7 @@ jobs:
             -Dsonar.organization=imtarget05 \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login="$SONAR_TOKEN" \
-            -Dsonar.automaticAnalysis=false
+            -Dsonar.automaticAnalysis=false \
+            -Dsonar.python.coverage.reportPaths=coverage.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
