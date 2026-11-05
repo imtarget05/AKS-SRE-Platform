@@ -3,9 +3,7 @@
 # pytest with pytest-cov enforces a coverage floor on production SRE code.
 # Run:  python3 -m pytest   (fails when coverage < 75%)
 #
-# NOTE: pytest-cov must be added to requirements.lock via
-#       `uv pip compile requirements.in --generate-hashes` before CI installs
-#       with --require-hashes (see requirements.in).
+# CI installs the hashed pytest and pytest-cov dependencies from requirements.lock.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
