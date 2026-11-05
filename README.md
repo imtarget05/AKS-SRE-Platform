@@ -6,6 +6,10 @@
 > cluster**. The local kind cluster is the **OSS / dry-run profile**. Measured
 > capacity arithmetic and the reasoning are in
 > [`docs/adr/014-azure-first-verification.md`](docs/adr/014-azure-first-verification.md).
+>
+> **Portfolio rollout:** the staged Azure design, current cost gate, and
+> production exit criteria for this platform, FlashSale, and QuanLyKho are in
+> [`docs/adr/021-three-project-azure-rollout.md`](docs/adr/021-three-project-azure-rollout.md).
 
 [![Azure](https://img.shields.io/badge/Microsoft_Azure-Platform-0089D6?logo=microsoft-azure)](https://azure.com/)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-AKS-326CE5?logo=kubernetes)](https://kubernetes.io/)

@@ -3,23 +3,23 @@
 ## 1. Metadata & Classification
 - **Trigger:** Kết thúc phiên kiểm thử hiệu năng / đánh giá kiến trúc đám mây; hoặc nhận lệnh cắt giảm chi phí hạ tầng (Cost-containment policy).
 - **Severity:** P2 (Planned Maintenance / Decommissioning)
-- **Impact:** Toàn bộ cụm AKS và tài nguyên phụ thuộc bị xóa; zero ongoing cloud billing ($0/tháng).
+- **Impact:** AKS compute and its managed resources are removed. Separately scoped Azure resources may continue to incur charges.
 - **Owner:** Platform & SRE Operations Team
-- **Verification Target:** 0 running compute resources; Azure Resource Group deletion verified via Azure CLI (`az group exists --name rg-aks-platform-dev` returns false).
+- **Verification Target:** AKS and both AKS resource groups are absent; explicitly out-of-scope ACR, Terraform state, and portfolio resource groups remain.
 
 ---
 
-**Status: EXECUTED 2026-10-21 — COMPLETE.**
-**This runbook has been run. It is no longer PREPARED.**
-The owner authorised the teardown on 2026-10-21. Every command in
-[§3 Destruction order](#3-destruction-order) and
-[§7 Post-deletion verification](#7-post-deletion-verification) **was executed**
-on 2026-10-21, with the real command output recorded in
-[§9 Execution record — 2026-10-21](#9-execution-record--2026-10-21).
+**Latest status: EXECUTED 2026-11-05 — AKS teardown complete.**
+The cluster was rebuilt after the historical 2026-10-21 teardown and has now
+been destroyed with the initialized Terraform state. The latest execution,
+including the plan scope and post-destroy checks, is recorded in
+[§10 Execution record — 2026-11-05](#10-execution-record--2026-11-05).
 
-**End state: the cluster, its resource group and the Azure-managed
-`MC_…` resource group are all deleted. Zero Azure dev resources remain
-running → no Azure compute cost is being incurred.**
+**End state:** `aks-portfolio-dev`, `rg-aks-platform-dev`, and
+`MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` are absent. The shared ACR
+in `rg-flashsale`, Terraform state resources in `rg-aks-tfstate`, and
+`rg-portfolio-prod` remain. AKS compute is removed; this does not assert that
+all Azure resources are gone or that the remaining resources have no cost.
 
 > The read-only commands in
 > [§1 Current state](#1-current-state-read-only-evidence) and
@@ -45,11 +45,11 @@ running → no Azure compute cost is being incurred.**
 | Node pool | `sys` — System mode, `count = 1`, no autoscaling |
 | Workload identity | `azure-wi-webhook-controller-manager` present in `kube-system` |
 
-**This cluster was billable.** It was a live `Succeeded` AKS cluster with one
-`Ready` node and a running node pool. **It was deleted on 2026-10-21** — see
-[§9 Execution record](#9-execution-record--2026-10-21). Leaving it in place
-would have continued to incur Azure compute charges for the node pool and the
-managed control plane; that cost is no longer being incurred.
+**This cluster was billable.** The configuration above describes the
+historical 2026-10-21 cluster. A later validation cluster was rebuilt and
+destroyed on 2026-11-05; see [§10](#10-execution-record--2026-11-05) and the
+[assessment evidence](../evidence/2026-11-05-azure-assessment.md). AKS compute
+is currently removed.
 
 ---
 
@@ -258,7 +258,12 @@ az group list -o table                              # expect rg-aks-platform-dev
 
 ## 4. Risks
 
-### 4.1 The remote state is orphaned — restore the backend **before** any apply/destroy
+### 4.1 Historical (2026-10-21): remote state was orphaned
+
+> This section records the state observed on 2026-10-21 and is superseded by
+> the 2026-11-05 execution in §10. The Terraform backend was subsequently
+> initialized against the active state, a destroy plan was reviewed, and that
+> plan was applied successfully.
 
 `terraform/aks-foundation/versions.tf` currently declares `backend "local"`.
 The remote backend (`aks-sre` storage account → `validation.terraform.tfstate`)
@@ -287,7 +292,11 @@ and a "destroy nothing while claiming success" outcome at worst. If the
 Terraform-managed path is preferred instead, restore the backend first and
 drive the deletion from `terraform destroy` — do not run both.
 
-### 4.2 The local state is gitignored and unbacked
+### 4.2 Historical (2026-10-21): local state was gitignored and unbacked
+
+> This describes the local state at the time of the 2026-10-21 teardown. The
+> 2026-11-05 Terraform destroy completed with an empty tracked-resource list;
+> see §10.
 
 ```
 $ ls -la terraform/aks-foundation/terraform.tfstate*
@@ -317,7 +326,10 @@ state file contains resource IDs, not secrets, but it is still infrastructure
 metadata. Do **not** commit it by force-adding; `.gitignore` excludes it on
 purpose.
 
-### 4.3 Deleting the resource group destroys the state of the deleted cluster
+### 4.3 Historical (2026-10-21): deleting the resource group and reconciling state
+
+> The following describes the 2026-10-21 CLI deletion. The later 2026-11-05
+> teardown used Terraform destroy and is documented in §10.
 
 After `az group delete`, the cluster and everything in the group are gone
 **and** the record of them lives only in the local `terraform.tfstate` (§4.2).
@@ -715,7 +727,7 @@ cluster again (correct if the cluster is ever wanted again) instead of
 attempting to manage a deleted cluster. **No `terraform destroy` was run** and
 no cloud resource was touched by this step.
 
-### 9.8 Result
+### 9.8 Historical result — 2026-10-21
 
 | Item | Before | After |
 | --- | --- | --- |
@@ -726,6 +738,45 @@ no cloud resource was touched by this step.
 | Terraform local state | 2 resource instances | **0 resource instances** |
 | Azure dev compute cost | being incurred | **stopped** |
 
-**The teardown is complete. No AKS-SRE-Platform Azure dev resource remains
-running.**
+**At the end of the 2026-10-21 execution, the teardown was complete.** The
+cluster was later rebuilt; see the latest 2026-11-05 execution in §10.
 
+## 10. Execution record — 2026-11-05
+
+### 10.1 Approved scope and plan
+
+The owner approved teardown after the read-only assessment and PostgreSQL
+backup. Kafka had no recoverable backup; the owner explicitly accepted its
+loss. The reviewed Terraform destroy plan contained exactly four deletes:
+
+1. `module.aks.azurerm_kubernetes_cluster_node_pool.work[0]`
+2. `module.acr_attachment[0].azurerm_role_assignment.aks_acr_pull[0]`
+3. `module.aks.azurerm_kubernetes_cluster.aks`
+4. `module.aks.azurerm_resource_group.aks`
+
+The ACR pull assignment was AKS-specific and attached to the shared ACR
+`acrflashsalep6` in `rg-flashsale`. The owner separately confirmed its removal.
+The ACR itself was not in the plan and was preserved. The plan was
+`0 to add, 0 to change, 4 to destroy`.
+
+### 10.2 Execution and verification
+
+Terraform applied the reviewed plan successfully: **0 added, 0 changed, 4
+destroyed**. Post-destroy checks confirmed:
+
+| Resource/check | Observed |
+|---|---|
+| AKS `aks-portfolio-dev` | Absent |
+| `rg-aks-platform-dev` | `az group exists` returned `false` |
+| `MC_rg-aks-platform-dev_aks-portfolio-dev_eastasia` | `az group exists` returned `false` |
+| `rg-flashsale` | Preserved |
+| ACR `acrflashsalep6` in `rg-flashsale` | Present |
+| `rg-aks-tfstate` | Preserved |
+| `rg-portfolio-prod` | Preserved |
+| Terraform tracked resources | `terraform state list` returned no resources |
+
+The test findings and backup details are recorded in
+[the 2026-11-05 assessment evidence](../evidence/2026-11-05-azure-assessment.md).
+The PostgreSQL dump remains outside the repositories on the encrypted local
+disk. Kafka data was not backed up. No statement is made that the unrelated
+Azure resources above incur zero cost.

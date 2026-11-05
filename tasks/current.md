@@ -1,5 +1,7 @@
 # AKS-SRE-Platform — Current Tasks
 
+> **2026-11-05 Azure validation and teardown:** The FlashSale payment service was assessed read-only on AKS; findings and limitations are in [assessment evidence](../docs/evidence/2026-11-05-azure-assessment.md). After the PostgreSQL dump was verified and Kafka data loss explicitly accepted, the owner approved teardown. Terraform applied a reviewed four-resource destroy plan; the AKS cluster and both AKS resource groups are absent. The shared ACR, Terraform state resource group, and `rg-portfolio-prod` remain. See the [teardown runbook](../docs/runbooks/azure-teardown-runbook.md#10-execution-record--2026-11-05). This does not claim QuanLyKho or platform workloads were deployed or tested on Azure.
+
 > **2026-11-03 local recheck:** See [the current verification checkpoint](../docs/evidence/2026-11-03-verification-checkpoint.md). It supersedes the 2026-11-01 test counts below: G1–G16 now runs 62 assertions and Terraform has five roots with 16 passing runs. Agent Hub is dropped from this repository's maintained scope and is retained only under `apps/agent-hub.dropped/`; it is not a CI or production gate. NetworkPolicy enforcement is inconclusive on kindnet; cloud and Compose gates remain open.
 
 > **Execution checkpoint (2026-11-01; local/CI + read-only cloud):** Full

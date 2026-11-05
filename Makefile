@@ -5,6 +5,7 @@ IMAGE_NAME ?= aks-sre-platform
 IMAGE_TAG ?= latest
 SBOM_FILE ?= sbom.json
 TRIVY_SEVERITY ?= CRITICAL
+PYTHON ?= python3
 
 # Docker-related targets
 docker-build:
@@ -39,14 +40,14 @@ sign: docker-push
 # Test target — run offline Python test suite (pytest)
 test:
 	@echo "Running offline test suite..."
-	@python -m pytest tests/ -q
+	@$(PYTHON) -m pytest -q
 
 # Lint target — syntax-check Python sources + render kustomize manifests
 lint:
 	@echo "Syntax-checking Python sources..."
-	@python -m py_compile tests/*.py scripts/*.py
+	@$(PYTHON) -m py_compile tests/*.py scripts/*.py
 	@echo "Rendering kustomize manifests..."
-	@kubectl kustomize deploy/base >/dev/null 2>&1 || echo "kubectl unavailable; skipping manifest render"
+	@kubectl kustomize deploy/base >/dev/null
 	@echo "Lint complete."
 
 # Default target

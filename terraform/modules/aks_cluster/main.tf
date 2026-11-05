@@ -25,6 +25,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     node_count                   = var.system_pool_node_count
     auto_scaling_enabled         = false
     zones                        = var.zones
+    upgrade_settings {
+      max_surge                     = "10%"
+      drain_timeout_in_minutes      = 0
+      node_soak_duration_in_minutes = 0
+    }
     # enable_zone_balancing = true  # not supported by azurerm v5.8.0
   }
 
@@ -84,6 +89,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "work" {
   min_count            = var.workload_pool_autoscaling.enabled ? var.workload_pool_autoscaling.min_nodes : null
   max_count            = var.workload_pool_autoscaling.enabled ? var.workload_pool_autoscaling.max_nodes : null
   priority             = "Regular"
+
+  upgrade_settings {
+    max_surge                     = "10%"
+    drain_timeout_in_minutes      = 0
+    node_soak_duration_in_minutes = 0
+  }
 
   node_labels = {
     workload = "portfolio"
