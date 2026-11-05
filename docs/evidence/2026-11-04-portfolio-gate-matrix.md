@@ -16,6 +16,7 @@
 - QuanLyKho: [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41971417370) completed `success` on `21366a1`; external SonarCloud gate passed at 81.8% new-code coverage. A documentation-only commit after this is awaiting its own CI.
 - [AKS preview](2026-11-05-cloudflare-preview-4cd930a.md): `https://e7728690.aks-sre-platform.pages.dev` embeds `release-sha=4cd930a9abcc1ed8b0a86ad3d7bc023a3606951d`.
 - [QuanLyKho preview](/Users/mainguyenbinhtan/Downloads/QuanLyKho/docs/qa/2026-11-05-cloudflare-preview-21366a1.md): `https://cdf21402.quan-ly-kho-tra-sua.pages.dev/release-manifest.json` reports source `21366a1`, synthetic mode and no API release.
+- [Render Free mirror](2026-11-05-render-free-mirror-1c4f9ec.md): `https://sre-demo-api.onrender.com` serves `/health/live`, `/health/ready` and `/metrics` on Render revision `dep-dbm14l1srm7s73eo9pr0`, source `1c4f9ec`. This is not AKS runtime proof.
 - CreditFlow ACA health: `https://creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io/health/live` responds HTTP 200
 
 The open gates include engineering, operational and governance work:
