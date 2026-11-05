@@ -396,7 +396,6 @@ jobs:
           if-no-files-found: error
 
   sonar:
-    if: ${{ secrets.SONAR_TOKEN != '' }}
     name: SonarCloud scan
     runs-on: ubuntu-latest
     needs: [kubernetes, python, security]
