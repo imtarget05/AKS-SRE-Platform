@@ -25,6 +25,18 @@ def test_validate_dns_label_rejects_injection():
             validate_dns_label(bad)
 
 
+def test_validate_dns_label_rejects_non_string():
+    with pytest.raises(ValueError, match="must be a string"):
+        validate_dns_label(123)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="must be a string"):
+        validate_dns_label(None)  # type: ignore[arg-type]
+
+
+def test_validate_dns_label_rejects_empty():
+    with pytest.raises(ValueError, match="must not be empty"):
+        validate_dns_label("")
+
+
 def test_validate_namespace_allowlist():
     assert validate_namespace("monitoring") == "monitoring"
     assert validate_namespace("flashsale") == "flashsale"
@@ -32,6 +44,11 @@ def test_validate_namespace_allowlist():
     for bad in ["kube-public", "default", "evil"]:
         with pytest.raises(ValueError):
             validate_namespace(bad)
+
+
+def test_validate_namespace_rejects_non_string():
+    with pytest.raises(ValueError, match="must be a string"):
+        validate_namespace(42)  # type: ignore[arg-type]
 
 
 def test_ensure_double_dash():
