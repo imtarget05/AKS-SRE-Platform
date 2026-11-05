@@ -1,6 +1,6 @@
 # Bàn giao AI: hoàn thành ba repo với portfolio >90%
 
-**Chốt trạng thái:** 2026-11-05 04:45 UTC. Đây là kế hoạch thực thi, không phải chứng nhận hoàn thành. Ma trận nguồn là [`docs/evidence/2026-11-04-portfolio-gate-matrix.md`](../docs/evidence/2026-11-04-portfolio-gate-matrix.md); mẫu số cố định: AKS 14, QuanLyKho 21, CreditFlow 22. Baseline được chấp nhận ở checkpoint là 12/14, 0/21, 0/22 = **28,57%**. Mọi PASS phải được kiểm tra lại trên release SHA cuối cùng. Điểm và quyết định go-live phải tách riêng.
+**Chốt trạng thái:** 2026-11-05 05:17 UTC. Đây là kế hoạch thực thi, không phải chứng nhận hoàn thành. Ma trận nguồn là [`docs/evidence/2026-11-04-portfolio-gate-matrix.md`](../docs/evidence/2026-11-04-portfolio-gate-matrix.md); mẫu số cố định: AKS 14, QuanLyKho 21, CreditFlow 22. Baseline được chấp nhận ở checkpoint là 12/14, 0/21, 0/22 = **28,57%**. Mọi PASS phải được kiểm tra lại trên release SHA cuối cùng. Điểm và quyết định go-live phải tách riêng.
 
 ## Quy tắc cho mọi AI nhận việc
 
@@ -14,13 +14,13 @@
 
 | Repo | HEAD khi lập plan | Bằng chứng đã chấp nhận | Vướng mắc chính |
 | --- | --- | --- | --- |
-| AKS-SRE-Platform | `addc72d` | 12/14 ở checkpoint; PR gate nội bộ xanh | A13 capable-CNI chưa chạy lại, A16 Azure private/tainted System pool, state và cost chưa xác nhận |
-| QuanLyKho | `b31dc99` | 0/21; CI nội bộ xanh, Preview synthetic | Backend/cloud UI chưa cùng release, migration 034 chưa chứng minh trên cloud, 21 hành trình chưa UAT |
-| CreditFlow | `015fcc9` | 0/22; CI nội bộ xanh trên `f40a5cc`, 14 control có hỗ trợ local | ACA chạy image `:latest` cũ; thiếu IdP, dữ liệu/mô hình, tích hợp và phê duyệt ngân hàng |
+| AKS-SRE-Platform | `639098f` | 12/14 ở checkpoint; A13 local Calico proof trên `6470094`; Pages Preview từ `4cd930a` | A13 cần recheck trên final release SHA; A16 Azure private runtime, state và cost chưa xác nhận |
+| QuanLyKho | `4f1f03d` | 0/21; CI và external Sonar xanh trên `21366a1`; Pages Preview synthetic cùng SHA | Backend/cloud UI chưa cùng release, migration 034 chưa chứng minh trên cloud, 21 hành trình chưa UAT |
+| CreditFlow | `98b8ab7` | 0/22; CI nội bộ xanh trên `98b8ab7`, 14 control có hỗ trợ local | ACA chạy image `:latest` cũ; thiếu IdP, dữ liệu/mô hình, tích hợp và phê duyệt ngân hàng |
 
-Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. Scanner job nội bộ đã chạy xanh, nhưng **external SonarCloud Code Analysis đỏ trên cả ba PR**: new-code coverage 0% so với gate 80%; QuanLyKho còn security rating 5/1 do ba issue được Sonar báo. Vì vậy CI phát hành chưa xanh. Không tắt hoặc nới gate.
+Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. Coverage XML đã được import vào cả ba Sonar scanner. **QuanLyKho external quality gate PASS** trên `21366a1`: new-code coverage 81,8% và security rating 1. **AKS và CreditFlow còn FAIL**: new-code coverage lần lượt 5,5% và 59,3%, ngưỡng 80%. CI trên các commit tài liệu mới phải chạy lại trước khi chốt release. Không tắt hoặc nới gate.
 
-**Bản vá chưa hoàn tất tại checkout hiện tại:** AKS `.github/workflows/pr-gate.yaml` đã thêm pytest coverage và artifact transfer; QuanLyKho `.github/workflows/ci.yml` đã thêm coverage artifact, `backend/tests/conftest.py` bỏ mật khẩu mặc định; CreditFlow `.github/workflows/ci.yml` đã tải coverage artifact vào scanner. Các file này còn **uncommitted, chưa có CI mới**, người nhận CI-1 phải kiểm tra diff, YAML, report path, chạy test cần thiết rồi commit/push theo từng repo. AKS `coverage.xml` là output local untracked, không đưa vào commit. QuanLyKho `docs/LOCAL_PROJECT_STATUS.md` là file untracked ngoài phạm vi CI-1, không tự xóa hoặc stage.
+**Cloud checkpoint:** AKS Pages Preview `e7728690.aks-sre-platform.pages.dev` nhúng SHA `4cd930a`; QuanLyKho Pages Preview `cdf21402.quan-ly-kho-tra-sua.pages.dev` có manifest SHA `21366a1`, mode synthetic và `api_release=null`. Production Pages của cả hai project không đổi. [Render Free mirror](../docs/evidence/2026-11-05-render-free-mirror-1c4f9ec.md) `sre-demo-api.onrender.com` đã Live trên commit `1c4f9ec`, chỉ chứng minh demo API. Azure A16 có [infra issue #19](https://github.com/imtarget05/AKS-SRE-Platform/issues/19), chưa có đường truy cập private được duyệt. QuanLyKho `docs/LOCAL_PROJECT_STATUS.md` vẫn là file untracked ngoài phạm vi này, không tự xóa hoặc stage.
 
 Điểm >90 có thể kiểm lại: nếu AKS 14/14 và QuanLyKho 21/21, CreditFlow cần tối thiểu 16/22 (90,91% tổng); nếu AKS 13/14 thì CreditFlow cần 18/22; nếu AKS giữ 12/14 thì cần 19/22. Đây là ngưỡng số học, **không** cho phép bỏ các gate còn lại hoặc phát hành khi P0 production còn mở. Mục tiêu thực thi là đóng đầy đủ mọi gate có thể, không tối ưu điểm bằng cách sửa mẫu số.
 
@@ -42,11 +42,11 @@ Ba PR là AKS #18, QuanLyKho #11, CreditFlow #2. Scanner job nội bộ đã ch�
 
 ### CI-1 — Sonar và release guard (CI; M)
 
-Tiếp quản bốn bản vá uncommitted nêu trên; xác nhận `coverage.xml` có thật trong artifact của từng workflow, path scanner đúng và project key đúng. Chạy CI trên SHA mới, xem log scanner để xác nhận Sonar đã import coverage; kiểm tra `new_coverage` bằng PR quality gate API. Với QuanLyKho, đối chiếu ba issue security Sonar (`githubactions:S8541`, `githubactions:S6506`, `secrets:S6698`) với dòng code ở scan mới trước khi sửa; xử lý nguyên nhân, không dùng false-positive suppression nếu issue còn thực. Kiểm chứng: `gh pr checks` xanh **cả internal lẫn external** trên từng SHA, scan không `skip`, quality gate không bị nới. Không in giá trị token.
+QuanLyKho đã xanh internal/external trên `21366a1`; recheck sau commit tài liệu. AKS Sonar đã import Python coverage nhưng còn 410/434 dòng mới chưa cover, tập trung ở `apps/sre-console/datafeed.js`, `app.js`, `simulation.js` và Node workload. CreditFlow còn 1.358/3.338 dòng mới chưa cover, nhiều nhất ở `backend/app.py`, notification/reconciliation adapters và scripts. Giao AI test riêng từng repo để bổ sung kiểm thử thực và LCOV cho JavaScript; không loại trừ mã sản phẩm khỏi `sonar.sources` để lấy điểm. Kiểm chứng: `gh pr checks` xanh **cả internal lẫn external** trên từng SHA, scan không `skip`, quality gate không bị nới.
 
 ### AKS-1 — A13 policy toggle (AKS; M)
 
-Tạo kind cô lập với `disableDefaultCNI: true`, cài Calico phiên bản tương thích Kubernetes 1.36, ghi CNI identity và chạy **cùng một** HTTP probe: trước policy 200 → default deny không truy cập được → allow 200. Dùng `--context` tường minh; không dùng script hiện tại nếu nó coi mọi exit code khác 0 là bằng chứng bị chặn. Lưu raw output cùng SHA và teardown. Kiểm chứng: `kind`/`kubectl` output, policy YAML, ba response và không còn cluster tạm. Gate A13 chỉ đóng cho LOCAL, không suy ra Azure.
+Đã chạy kind cô lập với Calico v3.33.0 trên `6470094`: cùng probe cho HTTP 200 → timeout/000 → HTTP 200, có [raw log và policy](../docs/evidence/2026-11-05-A13-calico-policy-6470094.md), cluster tạm đã xóa. Trên final release SHA, re-run và gắn log với SHA đó rồi mới chấm PASS. Gate A13 chỉ đóng cho LOCAL, không suy ra Azure.
 
 ### AKS-2a/2b/2c — A16 state/cost/runtime (AKS + H0; ba task M nối tiếp)
 

@@ -1,6 +1,6 @@
 # Portfolio cloud gate matrix — 2026-11-05 UTC
 
-**Decision: >90% with cloud evidence is not established. No production go-live.** The frozen denominators in [the baseline](2026-11-04-portfolio-cloud-baseline.md) remain 14/21/22. Local checks count only for gates whose required environment is LOCAL. A green CI run, public health response or synthetic frontend preview does not turn a cloud business gate into PASS. Current external SonarCloud PR quality gates fail on missing new-code coverage, and QuanLyKho also has a security issue.
+**Decision: >90% with cloud evidence is not established. No production go-live.** The frozen denominators in [the baseline](2026-11-04-portfolio-cloud-baseline.md) remain 14/21/22. Local checks count only for gates whose required environment is LOCAL. A green CI run, public health response or synthetic frontend preview does not turn a cloud business gate into PASS. As of 2026-11-05 05:49 UTC, external SonarCloud is green on [AKS PR #20](https://github.com/imtarget05/AKS-SRE-Platform/pull/20) and [QuanLyKho PR #11](https://github.com/imtarget05/QuanLyKho/pull/11), but red on [CreditFlow PR #2](https://github.com/imtarget05/CreditFlow/pull/2). QuanLyKho's merged `main` has a separate failing S11 E2E run; [PR #12](https://github.com/imtarget05/QuanLyKho/pull/12) is testing the fix. Synthetic textual outputs and placeholder signatures are not accepted as gate evidence.
 
 | Repository | PASS | FAIL | OPEN | Denominator | Accepted score |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -10,19 +10,20 @@
 
 `portfolio = (12/14 + 0/21 + 0/22) / 3 = 28.57%` under the fixed acceptance rule. The newer SHA/URL checks below support engineering triage, but no new gate has evidence sufficient to change these PASS counts.
 
-### Same-SHA evidence now confirmed
-- CreditFlow: GitHub Actions `CI` completed `success` on `f40a5cc9945874fd65c26cf7d6df7db89cc0aa20`
-- AKS-SRE-Platform: `pr-gate` completed `success` on `addc72d4aab19dc8195956ff2d0cc5bbf07d307b`
-- QuanLyKho: `CI` completed `success` on `b31dc993632b7338571c7bdd7af57b46b2fc9d82`
-- AKS preview: `https://codex-portfolio-evidence-202.aks-sre-platform.pages.dev` embeds `release-sha=addc72d4aab19dc8195956ff2d0cc5bbf07d307b`
-- QuanLyKho preview: `https://codex-portfolio-evidence-202.quan-ly-kho-tra-sua.pages.dev` embeds `app-build-number=b31dc993632b7338571c7bdd7af57b46b2fc9d82`
+### Same-SHA engineering evidence now confirmed
+- CreditFlow: [CI](https://github.com/imtarget05/CreditFlow/actions/runs/41970117116) completed `success` on `98b8ab7`; external SonarCloud gate remains red.
+- AKS-SRE-Platform: [pr-gate](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41973761148) and [SBOM](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41973761051) completed `success` on PR #20 head `68482f5`; external SonarCloud check passed. A16 Azure runtime remains open.
+- QuanLyKho: [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41972979276) and external SonarCloud passed on PR #11 head `4f1f03d`. After merge to `main` SHA `22ba2b1`, [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41974388125), [S9](https://github.com/imtarget05/QuanLyKho/actions/runs/41974388129), and [S10](https://github.com/imtarget05/QuanLyKho/actions/runs/41974388142) passed, while [S11](https://github.com/imtarget05/QuanLyKho/actions/runs/41974388146) failed at MLflow model inference (`1` feature supplied; model expects `3`). PR #12 contains a tested fix, pending its cloud S11 rerun.
+- [AKS preview](2026-11-05-cloudflare-preview-4cd930a.md): `https://e7728690.aks-sre-platform.pages.dev` embeds `release-sha=4cd930a9abcc1ed8b0a86ad3d7bc023a3606951d`.
+- [QuanLyKho preview](/Users/mainguyenbinhtan/Downloads/QuanLyKho/docs/qa/2026-11-05-cloudflare-preview-21366a1.md): `https://cdf21402.quan-ly-kho-tra-sua.pages.dev/release-manifest.json` reports source `21366a1`, synthetic mode and no API release.
+- [Render Free mirror](2026-11-05-render-free-mirror-1c4f9ec.md): `https://sre-demo-api.onrender.com` serves `/health/live`, `/health/ready` and `/metrics` on Render revision `dep-dbm14l1srm7s73eo9pr0`, source `1c4f9ec`. This is not AKS runtime proof.
 - CreditFlow ACA health: `https://creditflow-api.proudstone-70150af3.southeastasia.azurecontainerapps.io/health/live` responds HTTP 200
 
 The open gates include engineering, operational and governance work:
-- AKS A13 capable-CNI policy enforcement and A16 live Azure runtime, state ownership, cost and recovery.
+- AKS A13 now has [local Calico causal proof](2026-11-05-A13-calico-policy-6470094.md), but needs a final-release-SHA rerun; A16 live Azure runtime, state ownership, cost and recovery remain open in [infra issue #19](https://github.com/imtarget05/AKS-SRE-Platform/issues/19).
 - QuanLyKho 21 cloud API/UI/device MVP journeys from one backend/frontend release.
 - CreditFlow 14 controls on the required cloud revision plus 8 bank-owned gates.
-- Internal CI jobs passed on the listed SHAs, but the external SonarCloud PR quality gates currently fail. No final release has complete same-SHA evidence and go-live sign-off.
+- No final release has complete same-SHA cloud business evidence and go-live sign-off. Green PR checks do not supersede the failing S11 run on QuanLyKho `main` or the CreditFlow external SonarCloud failure.
 
 ## AKS-SRE-Platform
 
@@ -102,4 +103,4 @@ The open gates include engineering, operational and governance work:
 - QuanLyKho: migration from an empty isolated PostgreSQL database reaches `034_general_ledger_coa`; the full backend suite ended with **975 passed, 8 skipped, 1 xfailed, 0 failed** after fixing the idempotency collision. [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41848609393), [S9 kind](https://github.com/imtarget05/QuanLyKho/actions/runs/41848609354) and external SonarCloud passed on `18bd344`. A newer [synthetic Pages Preview](/Users/mainguyenbinhtan/Downloads/QuanLyKho/docs/qa/2026-11-04-cloudflare-preview-2f976dd.md) was browser checked on `2f976dd`, and its [CI](https://github.com/imtarget05/QuanLyKho/actions/runs/41853141712) passed. This is frontend demo evidence only; no 21-ID API/UI cloud/device UAT is recorded.
 - CreditFlow: [CI](https://github.com/imtarget05/CreditFlow/actions/runs/41846011816), [gateway checks](https://github.com/imtarget05/CreditFlow/actions/runs/41846011762) and external SonarCloud passed on `b5b69ea`; Python dependency audit, Gitleaks, Trivy and the 14 fictional demo prediction cases passed. ACA still serves image `:latest` at revision `creditflow-api--mbcr9yc`, so no source SHA can be proven for the live service. Azure deploy failed before rollout because required OIDC inputs are absent. The bank-input [handoff template](/Users/mainguyenbinhtan/Downloads/CreditFlow/docs/qa/SACOMBANK_INPUTS_FOR_PILOT.md) exists; no owner approvals supplied.
 - Go-live: **AKS OPEN, QuanLyKho OPEN, CreditFlow OPEN.** The respective cloud, product and bank owners must approve the release after their evidence is collected. No approval signature is recorded here. No production deploy or real applicant data use is authorized by this checkpoint.
-- Current internal scanner jobs passed on [AKS `addc72d`](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/41859967979), [QuanLyKho `b31dc99`](https://github.com/imtarget05/QuanLyKho/actions/runs/41859979193) and [CreditFlow `f40a5cc`](https://github.com/imtarget05/CreditFlow/actions/runs/41859960555). The external SonarCloud Code Analysis check **fails on all three PRs** because new-code coverage is reported as 0% against the 80% gate; QuanLyKho also has a failing security rating. Uncommitted CI patches now attempt to transfer coverage artifacts into scanner jobs, but are unverified and must not count until a new scan proves import and the external gate passes. Do not reuse credentials exposed in chat.
+- Coverage artifacts now reach all three scanners. AKS PR #20 and QuanLyKho PR #11 passed their external SonarCloud checks; CreditFlow PR #2 remains red at 59.3% new-code coverage. The Pages previews above are separate from backend/runtime acceptance. Do not reuse credentials exposed in chat.
