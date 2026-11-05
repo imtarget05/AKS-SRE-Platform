@@ -1,0 +1,72 @@
+started_utc=2026-11-05T04:55:30Z source_sha=6470094042686d3d660db0f6afc6ad22a748b8e6 context=kind-portfolio-a13 namespace=a13-verification target_ip=192.168.233.69
+clientVersion:
+  buildDate: "2026-05-12T09:54:35Z"
+  compiler: gc
+  gitCommit: 756939600b9a7180fc2df6550a4585b638875e67
+  gitTreeState: clean
+  gitVersion: v1.36.1
+  goVersion: go1.26.2
+  major: "1"
+NAME                          STATUS   ROLES           AGE     VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE                       KERNEL-VERSION             CONTAINER-RUNTIME
+portfolio-a13-control-plane   Ready    control-plane   3m49s   v1.36.1   172.18.0.5    <none>        Debian GNU/Linux 13 (trixie)   6.12.76-linuxkit (arm64)   containerd://2.3.1
+NAME          DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE     CONTAINERS    IMAGES                        SELECTOR
+calico-node   1         1         1       1            1           kubernetes.io/os=linux   2m16s   calico-node   quay.io/calico/node:v3.33.0   k8s-app=calico-node
+NAME                READY   STATUS    RESTARTS   AGE     IP           NODE                          NOMINATED NODE   READINESS GATES
+calico-node-ng5gg   1/1     Running   0          2m16s   172.18.0.5   portfolio-a13-control-plane   <none>           <none>
+NAME     READY   STATUS    RESTARTS   AGE   IP               NODE                          NOMINATED NODE   READINESS GATES
+client   1/1     Running   0          55s   192.168.233.68   portfolio-a13-control-plane   <none>           <none>
+target   1/1     Running   0          55s   192.168.233.69   portfolio-a13-control-plane   <none>           <none>
+2026-11-05T04:55:30Z UTC stage=before exit=0 output=200
+networkpolicy.networking.k8s.io/a13-ingress created
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"name":"a13-ingress","namespace":"a13-verification"},"spec":{"ingress":[],"podSelector":{"matchLabels":{"app":"a13-target"}},"policyTypes":["Ingress"]}}
+  creationTimestamp: "2026-11-05T04:55:30Z"
+  generation: 1
+  name: a13-ingress
+  namespace: a13-verification
+  resourceVersion: "1014"
+  uid: 67921b79-c4ed-4d0b-88b0-051889f3032c
+spec:
+  podSelector:
+    matchLabels:
+      app: a13-target
+  policyTypes:
+  - Ingress
+2026-11-05T04:55:40Z UTC stage=deny exit=28 output=$'curl: (28) Connection timed out after 3003 milliseconds\n000command terminated with exit code 28'
+networkpolicy.networking.k8s.io/a13-ingress configured
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"name":"a13-ingress","namespace":"a13-verification"},"spec":{"ingress":[{"from":[{"podSelector":{"matchLabels":{"app":"a13-client"}}}],"ports":[{"port":80,"protocol":"TCP"}]}],"podSelector":{"matchLabels":{"app":"a13-target"}},"policyTypes":["Ingress"]}}
+  creationTimestamp: "2026-11-05T04:55:30Z"
+  generation: 2
+  name: a13-ingress
+  namespace: a13-verification
+  resourceVersion: "1029"
+  uid: 67921b79-c4ed-4d0b-88b0-051889f3032c
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: a13-client
+    ports:
+    - port: 80
+      protocol: TCP
+  podSelector:
+    matchLabels:
+      app: a13-target
+  policyTypes:
+  - Ingress
+2026-11-05T04:55:46Z UTC stage=allow exit=0 output=200
+finished_utc=2026-11-05T04:55:46Z verdict=PASS expected=200,blocked,200 actual=200,blocked,200
+quay.io/calico/node@sha256:565d8db3200e443955557f8f28ff44ab8a4a456754bc74a19c4f2f3444af9b1c
+target docker.io/library/nginx@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+client docker.io/curlimages/curl@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40
+teardown_utc=2026-11-05T04:56:15Z kind_cluster=portfolio-a13 result=deleted remaining_clusters=local-platform,
