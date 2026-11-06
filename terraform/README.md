@@ -20,6 +20,9 @@
 2. Raw Terraform plans (`*.tfplan`, `plan.out`, `plan.json`) may contain
    sensitive values — keep them in `.local/` (gitignored), never commit them.
    Committed evidence is the sanitized `docs/evidence/<phase>/` material.
-3. `apply` requires explicit user approval per phase (Cost Safety Mode).
-   Approved scope so far: **nothing has been applied successfully yet** — see
-   `../tasks/current.md`.
+3. `apply` and `destroy` require explicit user approval per phase (Cost Safety
+   Mode). The owner-approved 2026-11-05 teardown applied a reviewed plan and
+   destroyed four AKS resources; the Terraform state then had no tracked
+   resources. No Terraform mutation was run during the 2026-11-06 offline
+   validation. The state storage account and other separately scoped Azure
+   resources remain. See the [teardown execution record](../docs/runbooks/azure-teardown-runbook.md#10-execution-record--2026-11-05).

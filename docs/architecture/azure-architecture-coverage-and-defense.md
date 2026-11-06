@@ -112,5 +112,5 @@ xychart-beta
 
 When presenting this project to interviewers:
 1. **Show the ByteByteGo diagram** as the holistic Enterprise Vision.
-2. **Highlight the ~88.6% Core Implementation** as proof of production-grade hands-on execution (Clean Architecture, Concurrency, GitOps, Supply Chain Security, Observability).
+2. Present implementation-coverage figures only with their scoring definition and source revision. They describe portfolio scope, not production readiness. CI, local integration, GitOps, supply-chain and observability checks demonstrate engineering practices; live cloud runtime, recovery, cost controls and operational approvals remain separate promotion gates.
 3. **Walk through the ~75.3% Enterprise PaaS mapping** to demonstrate **Architectural Maturity and Financial Pragmatism**—explaining that knowing when *not* to use expensive cloud services is what distinguishes a Senior/Staff Engineer from a junior developer.

@@ -2,6 +2,16 @@
 
 Xem [phân công, acceptance và lệnh verify](plan.md). Ma trận điểm: [`docs/evidence/2026-11-04-portfolio-gate-matrix.md`](../docs/evidence/2026-11-04-portfolio-gate-matrix.md). Mọi ô chỉ tick khi có evidence cùng release SHA.
 
+## Offline checkpoint — 2026-11-06
+
+The offline validation slice is recorded in
+[`docs/evidence/2026-11-06-offline-validation.md`](../docs/evidence/2026-11-06-offline-validation.md)
+against base SHA `3fac87e1ad867940946a36e04d3afb3ffe71722e`. Terraform,
+maintained Kustomize rendering, Python tests, GitOps gate tests and static
+policy checks were exercised; these results do not close cloud or business
+gates. A2/A3 and live Azure Monitor remain OPEN without runtime. The current
+plan defines C0-C3 only; C4 has no acceptance definition and remains unscored.
+
 ## C0 — nền phát hành
 
 - [ ] H0: chủ tài khoản rotate token đã lộ, cập nhật GitHub Secrets; xác nhận Azure state/cost/quota, tài khoản UAT và chủ ngân hàng.
