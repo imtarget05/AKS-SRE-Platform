@@ -7,8 +7,8 @@ This plan uses the current cloud state. The owner confirmed `GO` for the portfol
 | Repository | Proven now | Open release gate |
 | --- | --- | --- |
 | AKS-SRE-Platform | CI `pr-gate` and SBOM succeeded at `c1baf58`; 3 AKS nodes Ready; Azure monthly USD 100 alert budget exists. | Argo CD is Synced at old revision `7633cad` but Degraded; Prometheus and Alertmanager Pending; placeholder FlashSale image; no production telemetry/rollback proof. |
-| QuanLyKho | CI succeeded at `4e812ba`; Render Docker service live and liveness 200; empty login returns 422. The separate native Python staging build now succeeds with Python 3.11.11; source pin is in PR #19. | Native staging runtime fails closed without `BANKOPS_SIGNING_KEY`; valid login, database migration/restore and 21 cloud UAT journeys on a pinned candidate are unverified. |
-| FlashSale-Backend | Java CI succeeded at remote `469ee7d`; preview PostgreSQL and Redis resources exist. PR #20 passed CI and was merged. PR #21 now records owner-approved portfolio demo scope with production HOLD. | Latest Render preview deploy at `469ee7d` failed because PostgreSQL host resolves as `postgres`; RabbitMQ/OIDC configuration, payment E2E, restore and rollback are unverified. |
+| QuanLyKho | CI succeeded at `4e812ba`; Render Docker service live and liveness 200; empty login returns 422. Native Python staging build succeeds with Python 3.11.11; PR #19 merged and `backend/.python-version` is on `main`. | Native staging runtime fails closed without `BANKOPS_SIGNING_KEY`; valid login, database migration/restore and 21 cloud UAT journeys on a pinned candidate are unverified. |
+| FlashSale-Backend | Java CI succeeded at remote `469ee7d`; preview PostgreSQL and Redis resources exist. PR #20 merged. PR #22 corrected the signed approval on `main` to portfolio demo GO and production HOLD. Flyway schema migration PR #23 is open; local `mvn verify` passed 137/137 tests. | Preview deploy at `469ee7d` failed because PostgreSQL host resolves as `postgres`; PR #23 CI, RabbitMQ/OIDC configuration, payment E2E, restore and rollback are unverified. |
 
 ## Ordered tasks and proof
 

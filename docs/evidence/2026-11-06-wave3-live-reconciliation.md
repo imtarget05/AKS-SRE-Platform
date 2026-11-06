@@ -35,3 +35,8 @@ Commands used: `gh run list`, `render deploys list`, `render logs`, `render serv
 ## Later FlashSale deploy check — 2026-11-06T12:13Z
 
 - Render preview deploy `dep-dbms7cdckfvc738vq740` at `469ee7dd760db5e8d7a097b35beadc4836bcbf12` finished `update_failed`. Application logs again show `java.net.UnknownHostException: postgres`. GitHub's FlashSale Preview and Production Deploy workflow for this SHA also failed. This is a configuration blocker at the current remote `main`, not a missing Render PostgreSQL resource.
+
+## Follow-up — 2026-11-06T13:00Z
+
+- QuanLyKho native Python staging service `srv-dbmpm5e7bikc73bmk0gg` used Python 3.14.10 when `pyarrow==19.0.1` lacked a compatible wheel; source build failed because Arrow C++ `ArrowConfig.cmake` was absent. Render `PYTHON_VERSION=3.11.11` and a main-only Poetry install let deploy `dep-dbmsjpijnfac73bc85dg` build successfully. It then failed at startup with `RuntimeError: JWT signing key must be set via BANKOPS_SIGNING_KEY environment variable`. That is a runtime secret gate, not a pyarrow failure. PR #19 merged; `backend/.python-version` on remote `main` contains `3.11.11`. The separate Docker service remains the only proven live QuanLyKho path.
+- FlashSale PR #22 merged a corrected signed approval: GO for portfolio demo and HOLD for production, with unverified gates unchecked. PR #23 contains Flyway migrations for empty and existing PostgreSQL schemas. Local `mvn -B -f src/payment-service-java/pom.xml verify` passed 137/137 tests with Docker available; remote PR CI was pending when recorded. Neither PR establishes a working Render preview deployment or production GO.
