@@ -64,6 +64,17 @@ The CI links prove those jobs on the base SHA only. They do not prove a live
 AKS workload, Azure Monitor delivery, data migration, backup restore, cost
 ceiling, or production approval.
 
+## PR candidate CI
+
+PR [#30](https://github.com/imtarget05/AKS-SRE-Platform/pull/30) was first
+validated on candidate SHA `25b8e9f3e246f51251f77c8e5a44ae8cc34d9072`.
+Its [PR-gate run](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42157000452)
+passed the Kubernetes, security, Python, Terraform, and console jobs. SonarCloud
+failed with `Not authorized`; no token value was inspected or changed. The
+[source SBOM scan](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42157000461)
+passed on the same candidate SHA. The SonarCloud check remains blocked on
+credential/project authorization and must not be represented as a code pass.
+
 ## Azure inventory and evidence classification
 
 Read-only queries ran against the Azure subscription selected by the local
