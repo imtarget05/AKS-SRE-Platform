@@ -24,3 +24,10 @@ This snapshot supersedes the status claims in the external Wave 3 summary where 
 5. Obtain named release/security/system owners, cost-export ownership, UAT/security sign-off, and separate human go/no-go decisions. Demo payment cannot be described as real PSP production processing.
 
 Commands used: `gh run list`, `render deploys list`, `render logs`, `render services`, `az account show`, `az consumption budget show`, `az group show`, `kubectl get/describe`, and public `curl` health probes. No credential values were read into this file.
+
+## Follow-up — 2026-11-06T12:10Z
+
+- Render deploy `dep-dbmrhurm8hqs73b8l140` for `sre-demo-api` is `live` at older SHA `f064ad3`; public `/health/live` returned HTTP 200. This is not the current AKS local HEAD.
+- Render deploy `dep-dbmrhv49v7es73ail6v0` for the separate Docker service `kho-tra-sua-fastapi` is `live` at QuanLyKho SHA `4e812ba`; public `/api/v1/health/live` returned HTTP 200 after the free-tier instance woke. An empty login request returned HTTP 422, establishing that the endpoint responds without a 503 for this negative case. Valid login and 21 UAT journeys remain untested. The older Python staging service remains a separate failed configuration.
+- FlashSale preview deploy `dep-dbmrnc6i0phs73clta20` is `update_failed` at SHA `332859c`; logs still show `UnknownHostException: postgres`. A Render PostgreSQL database and Redis instance for preview already exist and are `available`; their existence does not establish that the app uses their connection settings. No verified RabbitMQ or approved OIDC configuration was found.
+- FlashSale PR #20 was reduced to the F04 evidence file plus removal of `JWT_SIGNING_KEY` from the two production-profile Render service declarations. Its blueprint `verify` check passed on head `ac3d575`; Java CI was still running at this snapshot. An unsigned, unchecked approval template is in draft PR #21. Neither PR is a go-live approval.
