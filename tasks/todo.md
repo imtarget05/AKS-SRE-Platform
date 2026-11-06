@@ -10,7 +10,7 @@ Xem [phân công, acceptance và lệnh verify](plan.md). Ma trận điểm: [`d
 
 ## C1 — hạ tầng và cloud release
 
-- [ ] AKS-1: A13 policy toggle trên kind+Calico, raw log và teardown.
+- [x] AKS-1: A13 policy toggle trên kind+Calico, raw log và teardown (SHA 3fac87e, LOCAL only).
 - [ ] AKS-2a: A16 đối chiếu state/quota/cost và nhận phê duyệt trước mutate.
 - [ ] AKS-2b: A16 private-cluster runtime, GitOps, workload, policy và observability.
 - [ ] AKS-2c: A16 Azure restore và rollback với before/after.
