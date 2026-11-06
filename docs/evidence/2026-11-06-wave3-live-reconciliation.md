@@ -44,3 +44,4 @@ Commands used: `gh run list`, `render deploys list`, `render logs`, `render serv
 ## FlashSale PR #23 result — 2026-11-06T13:02Z
 
 - PR #23 passed `verify`, `build-and-unit`, `integration-tests`, `java-build-and-test`, and `docker-build-scan`; it was squash-merged to remote `main` as `2cd79c425678ada0811b01435339bc73e5276052`. Preview and production deploy jobs were skipped on the PR. No Render deployment or payment flow was verified at this new SHA; production remains HOLD.
+- QuanLyKho auto-deploy `dep-dbmss00u01pc739ghbqg` on merged Python-pin SHA `935aac8` finished `update_failed`. Its 12:56Z Render log says `BANKOPS_SIGNING_KEY` is required. This confirms the source pin is deployed but the native staging service remains unavailable until its signing key is set in Render.
