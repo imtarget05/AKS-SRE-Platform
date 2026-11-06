@@ -1,4 +1,3 @@
-# Worker deployment cho AKS (Service Bus topology). KEDA scale theo queue depth.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -8,7 +7,7 @@ metadata:
     app: order-worker
     project: flash-sale
 spec:
-  replicas: 1   # KEDA controls this (min 0, max 10 - see keda-autoscaler.yaml:9-10)
+  replicas: 1
   selector:
     matchLabels:
       app: order-worker
@@ -19,22 +18,12 @@ spec:
     spec:
       containers:
         - name: order-worker
-          image: acrflashsale-placeholder.azurecr.io/order-worker:latest  # kustomize override
-          env:
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: flashsale-secrets
-                  key: pg-connection
-            - name: ConnectionStrings__ServiceBus
-              valueFrom:
-                secretKeyRef:
-                  name: flashsale-secrets
-                  key: servicebus-connection
+          image: gcr.io/google-containers/pause:3.6
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: 100m
-              memory: 256Mi
+              memory: 64Mi
             limits:
               cpu: 500m
-              memory: 512Mi
+              memory: 256Mi
