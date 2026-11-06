@@ -28,10 +28,13 @@ spec:
       namespace: quanlykho
     - server: https://kubernetes.default.svc
       namespace: portfolio
+    - server: https://kubernetes.default.svc
+      namespace: flashsale
 
-  # Namespaced resources only: the two workload repos carry Deployments, StatefulSets,
-  # Jobs, Services, ConfigMaps, Secrets and HTTPRoutes — no cluster-scoped
-  # objects, so no clusterResourceWhitelist entry is needed.
+  # Namespaced resources: the two workload repos carry Deployments, StatefulSets,
+  # Jobs, Services, ConfigMaps, Secrets and HTTPRoutes. kubernetes/ also carries
+  # a Namespace (cluster-scoped, whitelisted below) and KEDA ScaledObject +
+  # TriggerAuthentication (namespaced, whitelisted below).
   namespaceResourceWhitelist:
     - group: ""
       kind: "*"
@@ -47,10 +50,12 @@ spec:
       kind: HTTPRoute
     - group: keda.sh
       kind: ScaledObject
+    - group: keda.sh
+      kind: TriggerAuthentication
 
-  # A local kind cluster has no LoadBalancer/Ingress controller to hand out
-  # cluster-scoped objects from these repos; deny them explicitly rather than
-  # leaving the door open.
-  clusterResourceBlacklist:
-    - group: "*"
-      kind: "*"
+  # Namespace is cluster-scoped; whitelist it explicitly so Argo CD can create
+  # the target namespace. No clusterResourceBlacklist: whitelist alone controls
+  # which cluster-scoped resources are permitted (Namespace only).
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
