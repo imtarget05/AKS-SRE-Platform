@@ -6,7 +6,11 @@
 **SHA (FlashSale-Backend):** `0eb8f518a531ccdc86294e1a41236c54c531c325` (main)
 **SHA (QuanLyKho):** `5f0890b` (main)
 **Date:** 2026-11-06
-**Status:** DONE — GO with conditions
+**Status:** DONE as a rehearsal; production HOLD
+
+## Current interpretation — 2026-11-06
+
+The “GO with conditions” below is the historical scoring outcome of a rehearsal, not authorization to deploy production. The owner subsequently accepted **portfolio demo only** and explicitly kept **production HOLD** in FlashSale `APPROVAL.md` on remote `main`. The T13 validation cluster and managed node resource group were deleted after the drill; its Basic ACR was deliberately retained. An Azure USD 100 monthly alert budget now exists, but no verified Cost Management export or hard spending cap exists. Release, security and system roles are named in FlashSale's demo approval, while the separate production sign-offs, cost/state owner and UAT evidence remain open. The tables below preserve the rehearsal's recorded observations and conditions at the time; current release status is governed by this paragraph and the later live reconciliation evidence.
 
 ---
 
@@ -129,9 +133,9 @@ No sign-offs recorded. T14 go decision is conditional on these owners being name
 
 ## 6. Constraints Honored
 
-- No secrets committed to the repository.
+- No live service credentials were intentionally committed. A raw local database dump containing seeded password/PIN hashes and one email was initially added to this PR branch; it has been removed from the PR diff and excluded from Git going forward. Earlier branch history may still retain the blob and should not be treated as sanitized evidence.
 - No production Azure resources mutated (validation cluster only, transient).
 - No force-push.
 - All evidence from actual commands; no fabricated results.
-- T13 validation cluster to be destroyed after evidence capture to limit cost.
+- T13 validation cluster and managed node resource group were deleted after evidence capture; the Basic ACR was retained by choice.
 

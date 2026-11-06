@@ -111,7 +111,7 @@
 | End (UTC) | `2026-11-06T09:24:31Z` |
 | Duration | <1 second |
 | Exit code | `0` |
-| Output file | `docs/labs/t12-evidence/bankops.dump` |
+| Output file | Local-only `docs/labs/t12-evidence/bankops.dump` (excluded from Git; regenerate for a new rehearsal) |
 | File size | 150,289 bytes |
 | Format | custom (pg_restore compatible) |
 
@@ -176,7 +176,7 @@ All row counts match after rollback. Rollback verified.
 
 | Artifact | Path | Description |
 |---|---|---|
-| pg_dump output | `docs/labs/t12-evidence/bankops.dump` | Custom-format dump, 150,289 bytes, exit code 0 |
+| pg_dump output | Local-only artifact; not in Git | Custom-format dump, 150,289 bytes, exit code 0; SHA-256 `8b4fa097e17617ce50602a4f16a6fb65a63706081e24f7d5bdc477f40106a6c3`. The dump contains seeded user password/PIN hashes and one email, so retain it only in a controlled local evidence store. The recorded row counts and timings remain historical observations, not a substitute for a new restore drill. |
 
 ---
 
