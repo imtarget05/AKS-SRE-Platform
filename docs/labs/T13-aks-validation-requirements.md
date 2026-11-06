@@ -88,7 +88,7 @@ T13 is **BLOCKED**. It cannot be executed without Azure credentials, a live AKS 
 ### Statement
 
 > The AKS cluster from phase7a (2026-09-21) was destroyed. No persistent cluster, no live Azure CI login.
->
+> 
 > T13 cannot deploy anything to AKS validation without: (1) an Azure subscription with budget and cost cap approval, (2) deploy rights (service principal or federated identity), (3) a live AKS cluster, (4) an ACR with the FlashSale image pushed by digest, (5) PostgreSQL/Redis/RabbitMQ endpoints, and (6) secrets provisioned outside Git. All of the above require Azure credentials which are not available in this session.
 
 ---

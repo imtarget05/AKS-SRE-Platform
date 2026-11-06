@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: payment-service
-          image: acrflashsalevalidation.azurecr.io/flashsale/payment-service@sha256:873ec4622c0336466d05fa8bad6ef9a012edd8bf9cfa0da6c8947ca147c92009
+          image: acrflashsalevalidation.azurecr.io/flashsale/payment-service@sha256:da0223892f59394f2c512bdae5c3f520514950625b22c3d393f2081960d3f1d3
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false

@@ -1,0 +1,125 @@
+{
+  "eTag": null,
+  "location": null,
+  "properties": {
+    "columns": [
+      {
+        "name": "PreTaxCost",
+        "type": "Number"
+      },
+      {
+        "name": "ResourceGroupName",
+        "type": "String"
+      },
+      {
+        "name": "ServiceName",
+        "type": "String"
+      },
+      {
+        "name": "Currency",
+        "type": "String"
+      }
+    ],
+    "nextLink": null,
+    "rows": [
+      [
+        0.0,
+        "defaultresourcegroup-ea",
+        "Log Analytics",
+        "USD"
+      ],
+      [
+        0.192116214097969,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Azure DNS",
+        "USD"
+      ],
+      [
+        0.000241636037826538,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Bandwidth",
+        "USD"
+      ],
+      [
+        0.0,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Load Balancer",
+        "USD"
+      ],
+      [
+        9.20172912,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Storage",
+        "USD"
+      ],
+      [
+        42.059099967,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Virtual Machines",
+        "USD"
+      ],
+      [
+        0.959164610612392,
+        "mc_rg-aks-platform-dev_aks-portfolio-dev_eastasia",
+        "Virtual Network",
+        "USD"
+      ],
+      [
+        3.67798955789675,
+        "rg-aks-platform-dev",
+        "Azure Kubernetes Service",
+        "USD"
+      ],
+      [
+        6e-06,
+        "rg-aks-platform-dev",
+        "Key Vault",
+        "USD"
+      ],
+      [
+        0.0,
+        "rg-aks-platform-dev",
+        "Storage",
+        "USD"
+      ],
+      [
+        0.0,
+        "rg-aks-tfstate",
+        "Bandwidth",
+        "USD"
+      ],
+      [
+        4.8e-05,
+        "rg-aks-tfstate",
+        "Storage",
+        "USD"
+      ],
+      [
+        0.8815987194,
+        "rg-flashsale",
+        "Container Registry",
+        "USD"
+      ],
+      [
+        0.618012,
+        "rg-portfolio-prod",
+        "Azure Container Apps",
+        "USD"
+      ],
+      [
+        0.8815987194,
+        "rg-portfolio-prod",
+        "Container Registry",
+        "USD"
+      ],
+      [
+        0.0,
+        "rg-portfolio-prod",
+        "Log Analytics",
+        "USD"
+      ]
+    ]
+  },
+  "sku": null,
+  "type": "Microsoft.CostManagement/query"
+}

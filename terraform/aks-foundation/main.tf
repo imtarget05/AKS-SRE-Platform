@@ -9,6 +9,7 @@ module "aks" {
   location                  = var.location
   cluster_name              = var.cluster_name
   kubernetes_version        = var.kubernetes_version
+  sku_tier                  = var.sku_tier
   system_pool_vm_size       = var.system_pool_vm_size
   system_pool_node_count    = var.system_pool_node_count
   enable_workload_pool      = var.enable_workload_pool

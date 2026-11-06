@@ -228,3 +228,4 @@ Result: Rollback executed successfully; service returned to 2/2 Ready. PASS.
 - The validation cluster (`rg-aks-validation-t13`) and ACR (`acrflashsalevalidation`) are temporary and should be destroyed after evidence capture to avoid ongoing Azure cost.
 - The `imagePullSecret` uses ACR admin credentials (temporary); consider removing admin enablement after validation.
 - `kubectl` context left on `aks-validation-t13`.
+

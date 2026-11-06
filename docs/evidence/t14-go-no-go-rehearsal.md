@@ -138,3 +138,4 @@ No sign-offs recorded. T14 go decision is conditional on these owners being name
 - No force-push.
 - All evidence from actual commands; no fabricated results.
 - T13 validation cluster and managed node resource group were deleted after evidence capture; the Basic ACR was retained by choice.
+
