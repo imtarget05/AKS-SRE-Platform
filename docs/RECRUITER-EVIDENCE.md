@@ -1,5 +1,20 @@
 # Recruiter Evidence — AKS-SRE-Platform (AKS section)
 
+> **Current-state update (2026-11-05).** The current `main` revision is
+> `3fac87e1ad867940946a36e04d3afb3ffe71722e`. On that exact SHA, the
+> [PR gate](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42070399687),
+> [GitOps validation](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42070399926),
+> [OIDC workflow](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42070399516),
+> and [source SBOM scan](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42070399700)
+> completed successfully. The PR gate includes Terraform formatting, validation,
+> and test roots. The remaining details below are a historical audit snapshot
+> at `513df730776939c15895eaa56e77e60b27a823a7`; its tool-availability and
+> test-count statements are not current-main results.
+>
+> The AKS cluster remains destroyed. Current CI and the local
+> [`kind-local-platform` observability evidence](./evidence/local-platform/l10-observability-PASS.md)
+> do not establish live AKS, Azure Monitor, cloud cost, or migration evidence.
+
 > **Repository note (2026-10-29).** This document is the AKS-SRE-Platform section of
 > the Phase 3 (Python Evaluation Harvest) recruiter package. It records claims that
 > can be verified by opening the cited artefact and re-running the stated command on
