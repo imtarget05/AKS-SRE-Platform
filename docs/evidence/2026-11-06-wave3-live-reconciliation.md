@@ -45,3 +45,8 @@ Commands used: `gh run list`, `render deploys list`, `render logs`, `render serv
 
 - PR #23 passed `verify`, `build-and-unit`, `integration-tests`, `java-build-and-test`, and `docker-build-scan`; it was squash-merged to remote `main` as `2cd79c425678ada0811b01435339bc73e5276052`. Preview and production deploy jobs were skipped on the PR. No Render deployment or payment flow was verified at this new SHA; production remains HOLD.
 - QuanLyKho auto-deploy `dep-dbmss00u01pc739ghbqg` on merged Python-pin SHA `935aac8` finished `update_failed`. Its 12:56Z Render log says `BANKOPS_SIGNING_KEY` is required. This confirms the source pin is deployed but the native staging service remains unavailable until its signing key is set in Render.
+
+## Azure and PR recheck — 2026-11-06T13:04Z
+
+- FlashSale PRs #20, #21, #22 and #23 are all merged. Remote `main` is `2cd79c4`; the corrected `APPROVAL.md` on `main` says portfolio demo GO and production HOLD. No production deploy was triggered by PR #23.
+- `az aks list` reports `aks-portfolio-dev` in `rg-aks-platform-dev` as Running/Succeeded. `rg-aks-validation-t13` currently exists and contains a Basic SKU registry `acrflashsalevalidation`, created 11:26Z. The earlier 11:13Z `ResourceGroupNotFound` observation was true at that time but no longer describes current state. Do not infer zero Azure cost or completed teardown from the earlier check. Registry ownership and necessity should be established before removal.
