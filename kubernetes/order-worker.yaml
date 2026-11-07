@@ -1,5 +1,4 @@
 # Worker deployment cho AKS (Service Bus topology). KEDA scale theo queue depth.
-# Demo image: nginx (lightweight, always-ready scale target for KEDA).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -9,7 +8,7 @@ metadata:
     app: order-worker
     project: flash-sale
 spec:
-  replicas: 1   # KEDA controls this (min 1, max 10 - see keda-autoscaler.yaml:9-10)
+  replicas: 1   # KEDA controls this (min 0, max 10 - see keda-autoscaler.yaml:9-10)
   selector:
     matchLabels:
       app: order-worker
@@ -20,14 +19,22 @@ spec:
     spec:
       containers:
         - name: order-worker
-          image: nginx:alpine
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 80
+          image: acrflashsale-placeholder.azurecr.io/order-worker:latest  # kustomize override
+          env:
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: flashsale-secrets
+                  key: pg-connection
+            - name: ConnectionStrings__ServiceBus
+              valueFrom:
+                secretKeyRef:
+                  name: flashsale-secrets
+                  key: servicebus-connection
           resources:
             requests:
               cpu: 100m
-              memory: 64Mi
+              memory: 256Mi
             limits:
               cpu: 500m
-              memory: 256Mi
+              memory: 512Mi

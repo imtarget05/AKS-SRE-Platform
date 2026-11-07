@@ -12,7 +12,6 @@ crash.log
 
 # Raw local artifacts (terraform plans, scratch) — never commit; sanitized evidence goes to docs/evidence/
 **/.local/
-*.dump
 
 # Sanitized plan snapshots must not live in the Terraform source area — they are
 # historical evidence and belong under docs/evidence/<phase>/. Regenerate with

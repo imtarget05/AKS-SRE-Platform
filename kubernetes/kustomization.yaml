@@ -3,6 +3,5 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - order-worker.yaml
   - keda-autoscaler.yaml
   - keda-trigger-auth.yaml

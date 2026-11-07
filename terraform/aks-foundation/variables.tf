@@ -19,12 +19,6 @@ variable "kubernetes_version" {
   description = "AKS minor version from the live eastasia version query (1.36 GA)."
 }
 
-variable "sku_tier" {
-  type        = string
-  default     = "Free"
-  description = "AKS management tier; Free is sufficient for temporary validation."
-}
-
 variable "system_pool_vm_size" {
   type        = string
   default     = "Standard_D2s_v6" # Sized for 10 vCPU quota envelope (ADR-014)
@@ -39,7 +33,7 @@ variable "system_pool_node_count" {
 
 variable "enable_workload_pool" {
   type        = bool
-  default     = true
+  default     = false
   description = "Temporary user pool for placement/workload proof."
 }
 
