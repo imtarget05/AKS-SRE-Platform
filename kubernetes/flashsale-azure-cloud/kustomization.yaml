@@ -7,7 +7,6 @@ resources:
   - service.yaml
   - hpa.yaml
   - pdb.yaml
-  - rabbitmq.yaml
 
 images:
   - name: acrflashsalebinh.azurecr.io/flashsale/payment-service
