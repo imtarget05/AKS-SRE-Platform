@@ -21,4 +21,5 @@ data:
   REDIS_PORT: "10000"
   REDIS_CONNECT_TIMEOUT: "1s"
   REDIS_COMMAND_TIMEOUT: "1s"
+  SPRING_DATA_REDIS_SSL_ENABLED: "true"
   MONGODB_URI: "mongodb://mongodb.flashsale.privatelink.mongo.azure.com:27017/flashsale_audit"
