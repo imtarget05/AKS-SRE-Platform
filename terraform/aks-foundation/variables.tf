@@ -140,18 +140,6 @@ variable "private_dns_zone_name" {
   description = "Private DNS zone name for private endpoints."
 }
 
-variable "storage_account_name" {
-  type        = string
-  default     = "sakplatformlogs"
-  description = "Storage account name for NSG flow logs."
-}
-
-variable "flow_log_retention_days" {
-  type        = number
-  default     = 30
-  description = "NSG flow log retention in days."
-}
-
 variable "zones" {
   type        = list(string)
   default     = ["1", "2", "3"]

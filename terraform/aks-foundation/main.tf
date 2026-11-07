@@ -15,8 +15,6 @@ module "networking" {
   subnet_private_endpoint_prefix = var.subnet_private_endpoint_prefix
   nsg_name                       = var.nsg_name
   private_dns_zone_name          = var.private_dns_zone_name
-  storage_account_name           = var.storage_account_name
-  flow_log_retention_days        = var.flow_log_retention_days
 }
 
 module "aks" {
