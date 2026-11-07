@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quanlykho-config
+  namespace: quanlykho
+  labels:
+    app: quanlykho
+    env: azure-cloud
+data:
+  APP_NAME: "quanlykho"
+  APP_ENV: "azure-cloud"
+  DEMO_MODE: "true"
+  LOG_LEVEL: "info"
+  DATABASE_URL: "postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/quanlykho"
+  REDIS_URL: "rediss://:${REDIS_PASSWORD}@${REDIS_HOST}:6379/0"
+  # Placeholder values — replaced by Azure PaaS connection strings at deploy time
+  POSTGRES_HOST: "quanlykho-postgres.flashsale.privatelink.database.azure.com"
+  REDIS_HOST: "quanlykho-redis.redis.cache.windows.net"
+  POSTGRES_USER: "placeholder"
+  POSTGRES_PASSWORD: "placeholder"
+  REDIS_PASSWORD: "placeholder"

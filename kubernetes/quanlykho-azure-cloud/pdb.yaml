@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: quanlykho-pdb
+  namespace: quanlykho
+  labels:
+    app: quanlykho
+    env: azure-cloud
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: quanlykho

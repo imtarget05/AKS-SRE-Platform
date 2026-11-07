@@ -1,9 +1,5 @@
 output "resource_group_name" {
-  value = azurerm_resource_group.networking.name
-}
-
-output "resource_group_id" {
-  value = azurerm_resource_group.networking.id
+  value = var.resource_group_name
 }
 
 output "vnet_id" {
@@ -40,8 +36,4 @@ output "private_dns_zone_id" {
 
 output "private_dns_zone_name" {
   value = azurerm_private_dns_zone.dns.name
-}
-
-output "flow_log_id" {
-  value = azurerm_network_watcher_flow_log.deny_events.id
 }

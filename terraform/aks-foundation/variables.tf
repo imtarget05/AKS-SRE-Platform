@@ -97,3 +97,69 @@ variable "acr_resource_group_name" {
   default     = "rg-flashsale-release"
   description = "Target ACR resource group."
 }
+
+variable "vnet_name" {
+  type        = string
+  default     = "aks-sre-vnet"
+  description = "VNet name for the AKS platform network."
+}
+
+variable "vnet_address_space" {
+  type        = list(string)
+  default     = ["10.0.0.0/16"]
+  description = "VNet address space."
+}
+
+variable "subnet_apps_prefix" {
+  type        = string
+  default     = "10.0.1.0/24"
+  description = "AKS subnet prefix."
+}
+
+variable "subnet_monitoring_prefix" {
+  type        = string
+  default     = "10.0.2.0/24"
+  description = "App Gateway / monitoring subnet prefix."
+}
+
+variable "subnet_private_endpoint_prefix" {
+  type        = string
+  default     = "10.0.3.0/24"
+  description = "PaaS private endpoint subnet prefix."
+}
+
+variable "nsg_name" {
+  type        = string
+  default     = "nsg-aks-platform"
+  description = "Network security group name."
+}
+
+variable "private_dns_zone_name" {
+  type        = string
+  default     = "privatelink.aksplatform.local"
+  description = "Private DNS zone name for private endpoints."
+}
+
+variable "storage_account_name" {
+  type        = string
+  default     = "sakplatformlogs"
+  description = "Storage account name for NSG flow logs."
+}
+
+variable "flow_log_retention_days" {
+  type        = number
+  default     = 30
+  description = "NSG flow log retention in days."
+}
+
+variable "zones" {
+  type        = list(string)
+  default     = ["1", "2", "3"]
+  description = "Availability zones for AKS system pool."
+}
+
+variable "environment" {
+  type        = string
+  default     = "validation"
+  description = "Environment tag for all Azure resources."
+}

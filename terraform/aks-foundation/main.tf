@@ -1,6 +1,23 @@
 # Phase 7A — AKS foundation (system pool + OPTIONAL temporary user pool).
 # Ownership (ADR-011/012/014): Terraform owns AZURE infrastructure only.
-# Decoupled into reusable modules: aks_cluster and acr_attachment.
+# Decoupled into reusable modules: aks_cluster, networking, acr_attachment.
+
+module "networking" {
+  source = "../modules/networking"
+
+  location                       = var.location
+  resource_group_name            = var.resource_group_name
+  environment                    = var.environment
+  vnet_name                      = var.vnet_name
+  vnet_address_space             = var.vnet_address_space
+  subnet_apps_prefix             = var.subnet_apps_prefix
+  subnet_monitoring_prefix       = var.subnet_monitoring_prefix
+  subnet_private_endpoint_prefix = var.subnet_private_endpoint_prefix
+  nsg_name                       = var.nsg_name
+  private_dns_zone_name          = var.private_dns_zone_name
+  storage_account_name           = var.storage_account_name
+  flow_log_retention_days        = var.flow_log_retention_days
+}
 
 module "aks" {
   source = "../modules/aks_cluster"
@@ -16,6 +33,7 @@ module "aks" {
   workload_pool_vm_size     = var.workload_pool_vm_size
   workload_pool_node_count  = 1
   workload_pool_autoscaling = var.workload_pool_autoscaling
+  zones                     = var.zones
 }
 
 # Decoupled ACR integration boundary (gated by enable_acr_integration)

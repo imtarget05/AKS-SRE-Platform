@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: quanlykho-ingress
+  namespace: quanlykho
+  labels:
+    app: quanlykho
+    env: azure-cloud
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    appgw.ingress.kubernetes.io/use-private-ip: "false"
+    appgw.ingress.kubernetes.io/request-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+spec:
+  ingressClassName: azure-application-gateway
+  rules:
+    - host: api.quanlykho.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: quanlykho
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - api.quanlykho.example.com
+      secretName: quanlykho-tls
