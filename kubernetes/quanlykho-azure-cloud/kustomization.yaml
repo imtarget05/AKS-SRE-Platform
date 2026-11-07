@@ -5,13 +5,9 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
   - hpa.yaml
   - pdb.yaml
-  - secret-example.yaml
 
 images:
-  - name: acrflashsalep6.azurecr.io/quanlykho/quanlykho-api
-    newName: acrflashsalep6.azurecr.io/quanlykho/quanlykho-api
-    # Digest-pinned image set in deployment.yaml (@sha256:...).
-    # Replace the placeholder digest with the real ACR digest after `docker push`.
+  - name: acrflashsalebinh.azurecr.io/quanlykho/quanlykho-api
+    newName: acrflashsalebinh.azurecr.io/quanlykho/quanlykho-api

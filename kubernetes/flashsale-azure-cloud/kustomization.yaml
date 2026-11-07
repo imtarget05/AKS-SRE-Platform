@@ -5,13 +5,10 @@ resources:
   - configmap.yaml
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
   - hpa.yaml
   - pdb.yaml
-  - secret-example.yaml
+  - rabbitmq.yaml
 
 images:
-  - name: acrflashsalep6.azurecr.io/flashsale/payment-service
-    newName: acrflashsalep6.azurecr.io/flashsale/payment-service
-    # Digest-pinned image set in deployment.yaml (@sha256:...).
-    # Replace the placeholder digest with the real ACR digest after `docker push`.
+  - name: acrflashsalebinh.azurecr.io/flashsale/payment-service
+    newName: acrflashsalebinh.azurecr.io/flashsale/payment-service
