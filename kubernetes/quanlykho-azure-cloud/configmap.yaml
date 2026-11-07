@@ -17,5 +17,3 @@ data:
   POSTGRES_HOST: "quanlykho-postgres.flashsale.privatelink.database.azure.com"
   REDIS_HOST: "quanlykho-redis.redis.cache.windows.net"
   POSTGRES_USER: "placeholder"
-  POSTGRES_PASSWORD: "placeholder"
-  REDIS_PASSWORD: "placeholder"
