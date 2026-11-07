@@ -7,7 +7,6 @@ metadata:
     app: quanlykho
     env: azure-cloud
   annotations:
-    kubernetes.io/ingress.class: azure/application-gateway
     appgw.ingress.kubernetes.io/use-private-ip: "false"
     appgw.ingress.kubernetes.io/request-timeout: "30"
     nginx.ingress.kubernetes.io/proxy-body-size: "16m"

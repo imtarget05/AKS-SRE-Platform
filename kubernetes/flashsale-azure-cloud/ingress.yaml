@@ -7,7 +7,6 @@ metadata:
     app: payment-service
     env: azure-cloud
   annotations:
-    kubernetes.io/ingress.class: azure/application-gateway
     appgw.ingress.kubernetes.io/use-private-ip: "false"
     appgw.ingress.kubernetes.io/request-timeout: "30"
     appgw.ingress.kubernetes.io/connection-drain-timeout: "30"
