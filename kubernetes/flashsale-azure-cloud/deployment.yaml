@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: payment-service
-          image: acrflashsalep6.azurecr.io/flashsale/payment-service@sha256:placeholder-digest-to-replace
+          image: acrflashsalebinh.azurecr.io/flashsale/payment-service@sha256:74305a37e05bbbe9d345246bcc852b41c48ebf3b7a76f327a34ef7418370531b
           imagePullPolicy: Always
           securityContext:
             allowPrivilegeEscalation: false
@@ -80,3 +80,5 @@ spec:
         - name: tmp
           emptyDir:
             sizeLimit: 64Mi
+      imagePullSecrets:
+        - name: acr-auth
