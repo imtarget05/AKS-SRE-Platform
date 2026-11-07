@@ -1,0 +1,30 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-gateway-to-flashsale
+  namespace: flashsale
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/envoy-gateway-system/sa/envoy-gateway"]
+      to:
+        - operation:
+            methods: ["GET", "POST"]
+            paths: ["/api/*", "/health/*", "/actuator/*"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-cross-namespace-default
+  namespace: flashsale
+spec:
+  action: DENY
+  rules:
+    - from:
+        - source:
+            notNamespaces: ["flashsale", "envoy-gateway-system", "monitoring"]
