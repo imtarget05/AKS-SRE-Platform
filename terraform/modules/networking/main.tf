@@ -114,3 +114,61 @@ resource "azurerm_private_dns_zone_virtual_network_link" "link" {
     purpose     = "platform-networking"
   }
 }
+
+resource "azurerm_network_watcher" "deny_events_watcher" {
+  name                = "nw-deny-events"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = {
+    environment = var.environment
+    owner       = "student"
+    purpose     = "platform-networking-flow-logs"
+  }
+}
+
+resource "azurerm_network_watcher_flow_log" "deny_events" {
+  name                 = "flowlog-deny-events"
+  location             = var.location
+  resource_group_name  = var.resource_group_name
+  network_watcher_name = azurerm_network_watcher.deny_events_watcher.name
+  target_resource_id   = azurerm_network_security_group.nsg.id
+  storage_account_id   = azurerm_storage_account.flow_logs.id
+  enabled              = true
+
+  retention_policy {
+    enabled = true
+    days    = var.flow_log_retention_days
+  }
+
+  tags = {
+    environment = var.environment
+    owner       = "student"
+    purpose     = "platform-networking-flow-logs"
+  }
+}
+
+resource "azurerm_storage_account" "flow_logs" {
+  name                     = var.storage_account_name
+  resource_group_name      = var.resource_group_name
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  network_rules {
+    default_action             = "Deny"
+    bypass                     = ["AzureServices"]
+    ip_rules                   = []
+    virtual_network_subnet_ids = []
+  }
+
+  tags = {
+    environment = var.environment
+    owner       = "student"
+    purpose     = "platform-networking-flow-logs"
+  }
+}

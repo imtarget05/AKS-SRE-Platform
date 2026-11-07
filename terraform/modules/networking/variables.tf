@@ -48,4 +48,14 @@ variable "private_dns_zone_name" {
   default = "privatelink.aksplatform.local"
 }
 
+variable "storage_account_name" {
+  type    = string
+  default = "sakplatformlogs"
+}
+
+variable "flow_log_retention_days" {
+  type    = number
+  default = 30
+}
+
 
