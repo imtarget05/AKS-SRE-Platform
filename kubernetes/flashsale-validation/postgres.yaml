@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: validation
+  labels:
+    app: postgres
+    env: validation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 5432
+              name: postgres
+          envFrom:
+            - secretRef:
+                name: payment-service-secrets
+          env:
+            - name: POSTGRES_DB
+              value: "FlashSaleDb"
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+            - name: init-schema
+              mountPath: /docker-entrypoint-initdb.d/01-payment-schema.sql
+              subPath: 01-payment-schema.sql
+              readOnly: true
+      volumes:
+        - name: pgdata
+          emptyDir: {}
+        - name: init-schema
+          configMap:
+            name: payment-schema
+            items:
+              - key: 01-payment-schema.sql
+                path: 01-payment-schema.sql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: validation
+  labels:
+    app: postgres
+    env: validation
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432

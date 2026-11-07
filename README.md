@@ -1,61 +1,26 @@
-# AKS / SRE Platform Blueprint
+# AKS-SRE-Platform — Azure Kubernetes Platform Blueprint (Demo)
 
-This repository is the platform-engineering blueprint for a shared Azure Kubernetes Service stack used to host multiple portfolio workloads. It contains the infrastructure code, GitOps manifests, bootstrapping automation, and the recorded validation evidence used to judge whether the platform is ready to move beyond prototype status.
+Portfolio demo: shared Azure Kubernetes platform (IaC + GitOps + SRE). **Demo only** — no production sign-off.
 
-## What is in this repo
+## Evidence (verified 2026-11-07)
 
-- Terraform for the AKS foundation and cluster configuration
-- bootstrap automation for Argo CD and KEDA
-- GitOps manifests under `kubernetes/` and `platform/`
-- deployment and validation notes in `docs/`
-- portfolio integration points for Azure, Cloudflare, and Render
+- Release SHA: `0542ac140c36efaf38df8cfa2ec3a4c3d40af261`
+- pr-gate: https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42236134325 (success)
+- GitOps: https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42236134262 (success)
+- SBOM: https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42236134372 (success)
+- Azure OIDC: https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/42236134355 (success)
+- AKS `aks-portfolio-dev`: 4 Ready nodes; ArgoCD app `aks-sre-platform` Synced Healthy at this SHA (2026-11-06 18:30 UTC); KEDA `order-worker-scaler` Ready=True
+- Render `sre-demo-api` live on this SHA; Cloudflare Pages https://aks-sre-platform.pages.dev/ serves SRE console build
+- Full evidence: see `INTERVIEW_CLOUD_EVIDENCE_2026-11-07.md`
 
-## What is proven
+## Open (not claimed)
 
-The strongest evidence in this repository is the real AKS validation completed on 2026-09-21. The validation covered:
+RabbitMQ `orders` queue created manually (no persistent volume); `order-worker` runs `nginx:alpine` (KEDA healthy != business processing). Cluster cost/owner, recovery drill, production approval remain open. Azure production NO-GO.
 
-- system pool setup with Azure-managed control and workload isolation
-- user pool placement for application workloads
-- private ACR pull by digest without a stored image pull secret
-- Workload Identity token exchange and scoped access validation
-- full teardown with the temporary validation cluster removed
+## Stack
 
-Evidence is stored in:
+Terraform, AKS, ArgoCD, KEDA, Prometheus/Grafana, Cloudflare Pages, Render.
 
-- `docs/evidence/phase7a/`
-- `docs/adr/014-azure-first-verification.md`
-- `docs/adr/021-three-project-azure-rollout.md`
+## Run locally
 
-This repo also includes local kind-based validation for GitOps, Gateway API, and observability. Those results are valid as pre-Azure dry runs, not as proof of production Azure runtime behavior.
-
-## Important boundaries
-
-This is not a claim that the platform is already running as a persistent production cluster. The current repository is intentionally evidence-gated:
-
-- no persistent Azure cluster is claimed as live
-- no HPA proof is claimed as completed
-- no NetworkPolicy enforcement proof is claimed as completed
-- no live Azure CI login or production SLO history is claimed
-
-The project status and remaining gaps are tracked in `tasks/current.md`.
-
-## Quick start
-
-```bash
-# review the Terraform and platform model
-cd terraform && ls
-
-# inspect the bootstrap flow
-bash scripts/bootstrap.sh --help 2>/dev/null || bash scripts/bootstrap.sh
-
-# review the validation evidence
-ls docs/evidence/phase7a/
-```
-
-## Evidence and portfolio links
-
-- `docs/INTERVIEW_RELEASE.md` — interview-ready summary and boundaries
-- `docs/architecture/cloud-deploy-targets.md` — target architecture across Azure/Cloudflare/Render
-- `docs/adr/014-azure-first-verification.md` — proof standard for Azure vs local validation
-
-This repository should be presented as a platform blueprint with real evidence, not as a fully deployed production system.
+See `docs/` and `tasks/current.md`.
