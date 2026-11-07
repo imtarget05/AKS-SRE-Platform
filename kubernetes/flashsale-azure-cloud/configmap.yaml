@@ -13,7 +13,7 @@ data:
   SPRING_JPA_HIBERNATE_DDL_AUTO: "validate"
   APP_JWT_EXPIRATION_MS: "86400000"
   GRPC_SERVER_ENABLED: "false"
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-flexible.flashsale.privatelink.database.azure.com:5432/FlashSaleDb"
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://flashsale-db.postgres.database.azure.com:5432/FlashSaleDb"
   RABBITMQ_HOST: "rabbitmq.flashsale.svc.cluster.local"
   RABBITMQ_PORT: "5672"
   REDIS_HOST: "flashsale-redis.redis.cache.windows.net"
