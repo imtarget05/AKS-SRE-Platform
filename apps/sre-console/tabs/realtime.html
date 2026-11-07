@@ -1,13 +1,13 @@
 
       <!-- Chaos & Traffic Control Toolbar -->
       <div class="p-4 rounded-xl bg-gray-900/80 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div class="flex flex-col gap-1">
           <h2 class="text-sm font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-sliders text-cyan-400" aria-hidden="true"></i>
             <span>Interactive Chaos &amp; Traffic Simulation Model</span>
           </h2>
           <p class="text-xs text-gray-400 mt-0.5">
-            Mô phỏng hành vi microservice (circuit breaker, HPA burst, probe isolation) trên trình duyệt theo quy luật thực nghiệm đo lường được từ kịch bản local &amp; AKS.
+            Mô phỏng hành vi microservice (circuit breaker, HPA burst, probe isolation) trên trình duyệt để giảng dạy mẫu thiết kế SRE. <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30 ml-2">MÔ PHỎNG</span>
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2.5">
@@ -37,6 +37,7 @@
                 <span>Throughput &amp; Error Rate (RED Method)</span>
               </h3>
               <p class="text-xs text-gray-400">Simulated requests/sec (blue) vs HTTP 5xx errors/sec (red) &bull; illustrative synthetic model</p>
+              <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30 mt-1">MÔ PHỎNG</span>
             </div>
             <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Simulation (1s tick)</span>
           </div>
@@ -56,6 +57,7 @@
                 <span>Duration &amp; Latency Percentiles (P50, P90, P99)</span>
               </h3>
               <p class="text-xs text-gray-400">Service response time model &bull; Illustrative target P99 &lt; 50ms &bull; synthetic histogram</p>
+              <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30 mt-1">MÔ PHỎNG</span>
             </div>
             <span class="px-2 py-0.5 text-[11px] font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Histogram Model</span>
           </div>
@@ -74,10 +76,11 @@
           <div class="flex items-center justify-between mb-3">
             <div>
               <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-server text-blue-400" aria-hidden="true"></i>
+                <i class="fa-solid fa-server text-blue-400" aria-hidden=" true"></i>
                 <span>Node &amp; Pod Resource Saturation (USE Method)</span>
               </h3>
               <p class="text-xs text-gray-400">Historical profile: aks-sys-13411604-vmss000000 &bull; Ubuntu 24.04 &bull; 4 vCPU / 16GB</p>
+              <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30 mt-1">MÔ PHỎNG · Lịch sử</span>
             </div>
             <span class="text-xs font-mono text-gray-400">Model Sampling: 1000ms</span>
           </div>
@@ -90,14 +93,15 @@
 
         <!-- Edge Network & SLA Health Box -->
         <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 flex flex-col justify-between">
-          <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
-              <i class="fa-solid fa-satellite-dish text-cyan-400" aria-hidden="true"></i>
-              <span>Live Edge Probing</span>
-            </h3>
-            <p class="text-xs text-gray-400">Direct client HTTP/2 probe to Cloudflare Edge PoP</p>
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                <i class="fa-solid fa-satellite-dish text-cyan-400" aria-hidden="true"></i>
+                <span>Live Edge Probing</span>
+              </h3>
+              <p class="text-xs text-gray-400">RTT bên dưới là đo thực từ trình duyệt lên Cloudflare Edge PoP; downstream model &amp; khu vực mục tiêu là mô hình mô phỏng.</p>
+              <span class="inline-block px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/30 mt-1">RTT: THỰC · Dowstream: MÔ PHỎNG</span>
 
-            <div class="mt-4 space-y-3 font-mono text-xs">
+              <div class="mt-4 space-y-3 font-mono text-xs">
               <div class="flex items-center justify-between p-2.5 rounded bg-gray-950 border border-gray-800">
                 <span class="text-gray-400">Client Edge RTT:</span>
                 <span id="stat-rtt" class="text-emerald-400 font-bold">18.4 ms</span>
@@ -127,6 +131,7 @@
             <span class="h-2 w-2 rounded-full bg-cyan-400 pulse-live" aria-hidden="true"></span>
             <h3 class="text-sm font-bold text-white font-mono">Simulated Cluster Event Stream (Empirical Event Pool)</h3>
           </div>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
           <button data-action="clear-events" class="text-xs font-mono text-gray-400 hover:text-white px-2 py-1 rounded bg-gray-800 hover:bg-gray-700">Clear Feed</button>
         </div>
         <div id="live-event-stream" class="p-3 bg-gray-950 rounded-lg border border-gray-800 font-mono text-xs overflow-y-auto max-h-48 space-y-1.5 terminal-scroll">

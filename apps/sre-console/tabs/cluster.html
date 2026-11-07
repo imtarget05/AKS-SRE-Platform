@@ -1,14 +1,15 @@
 
       <!-- Node Status Card -->
       <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-server text-cyan-400" aria-hidden="true"></i>
-              <span>System Node Pool: aks-sys-vmss (Historical Snapshot)</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-0.5">Snapshot recorded during Azure AKS v1.36.4 validation run &bull; Teardown Verified</p>
-          </div>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-server text-cyan-400" aria-hidden="true"></i>
+                <span>System Node Pool: aks-sys-vmss (Historical Snapshot)</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-0.5">Snapshot được ghi nhận trong lần chạy xác thực Azure AKS v1.36.4 &bull; Đã hủy cluster</p>
+              <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 mt-1">THỰC TẾ · Lịch sử</span>
+            </div>
           <span class="px-2.5 py-1 text-xs font-mono rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
             NodeReady: 100%
           </span>
@@ -44,16 +45,17 @@
 
       <!-- System Pods Inventory Table -->
       <div class="p-5 rounded-xl bg-gray-900/60 border border-gray-800 space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-network-wired text-blue-400" aria-hidden="true"></i>
-              <span>Core System &amp; Security Pods (kube-system Inventory)</span>
-            </h3>
-            <p class="text-xs text-gray-400 mt-0.5">Azure CNI, Network Policy Manager, CoreDNS &amp; Workload Identity Webhook</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-network-wired text-blue-400" aria-hidden="true"></i>
+                <span>Core System &amp; Security Pods (kube-system Inventory)</span>
+              </h3>
+              <p class="text-xs text-gray-400 mt-0.5">Azure CNI, Network Policy Manager, CoreDNS &amp; Workload Identity Webhook</p>
+            </div>
+            <span class="text-xs font-mono text-gray-400">11/11 Running &bull; 0 Restarts</span>
+            <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 ml-2">THỰC TẾ · Lịch sử</span>
           </div>
-          <span class="text-xs font-mono text-gray-400">11/11 Running &bull; 0 Restarts</span>
-        </div>
 
         <div class="overflow-x-auto">
           <table class="w-full text-left font-mono text-xs">

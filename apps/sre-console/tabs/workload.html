@@ -6,8 +6,9 @@
             <span>Kubernetes Probe Split Pattern (Anti-Cascading Restarts)</span>
           </h3>
           <p class="text-xs text-gray-400 mt-1">
-            Minh chứng quy chuẩn kiến trúc SRE: Phân lập tuyệt đối giữa <code>/health/live</code> (kiểm tra event loop) và <code>/health/ready</code> (phụ thuộc downstream). Khi dependency chết, Service cô lập traffic với <strong>0 lần restart pod</strong>.
+            Mẫu thiết kế SRE đã áp dụng trong mã nguồn: phân isolates tuyệt đối giữa <code>/health/live</code> (kiểm tra event loop) và <code>/health/ready</code> (phụ thuộc downstream). Khi dependency chết, Service cô isolates traffic với <strong>0 lần restart pod</strong>.
           </p>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30 mt-1">THỰC TẾ · Kiến trúc SRE</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -40,7 +41,10 @@
 
         <!-- Interactive Probe Sandbox -->
         <div class="pt-4 border-t border-gray-800 space-y-3">
-          <p class="text-xs font-semibold text-white">Thao tác mô phỏng Probe Sandbox (Đồng bộ toàn hệ thống):</p>
+          <div class="flex items-center justify-between">
+            <p class="text-xs font-semibold text-white">Thao tác mô phỏng Probe Sandbox (đồng bộ toàn hệ thống):</p>
+            <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
+          </div>
           <div class="flex flex-wrap items-center gap-3">
             <button data-action="restore-readiness" class="px-3 py-1.5 text-xs font-mono rounded bg-emerald-600 hover:bg-emerald-500 text-white transition focus:outline-none focus:ring-2 focus:ring-emerald-300">Restore Dependency (Ready = true)</button>
             <button data-action="sever-readiness" class="px-3 py-1.5 text-xs font-mono rounded bg-amber-600 hover:bg-amber-500 text-white transition focus:outline-none focus:ring-2 focus:ring-amber-300">Sever Dependency (Ready = false)</button>

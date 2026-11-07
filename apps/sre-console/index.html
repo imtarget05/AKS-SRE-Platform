@@ -27,8 +27,9 @@
     Skip to main content
   </a>
 
-  <div class="w-full bg-amber-500/90 text-amber-950 border-b border-amber-300 px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.18em]">
-    DEMO ONLY — Not production · Synthetic data only · For demonstration purposes only
+  <!-- Honest framing banner: this console is a client-side architectural simulation, not live AKS telemetry -->
+  <div class="w-full bg-orange-500/90 text-orange-950 border-b border-orange-300 px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.18em]">
+    🎓 MÔ PHỎNG KIẾN TRÚC KHÁCH — Dữ liệu biểu đồ &amp; telemetry là mô hình client-side, KHÔNG kết nối cụm AKS thực · Bằng chứng thực tế (Gates, GitOps, Terraform) được đánh dấu [THỰC TẾ]
   </div>
 
   <!-- Top Navigation Bar -->
@@ -42,13 +43,13 @@
           <h1 class="font-bold text-base tracking-tight text-white m-0 p-0 leading-tight">
             AKS SRE Platform
           </h1>
-          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5" title="Illustrative client-side simulation; not a live benchmark">
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 flex items-center gap-1.5" title="Mô hình kiến trúc mô phỏng trên trình duyệt, không phải telemetry live">
             <span class="h-1.5 w-1.5 rounded-full bg-cyan-400 pulse-live" aria-hidden="true"></span>
-            INTERACTIVE SIMULATION
+            MÔ PHỎNG KIẾN TRÚC
           </span>
-          <span class="px-2 py-0.5 text-xs font-mono rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">v1.36.4 model</span>
+          <span class="px-2 py-0.5 text-xs font-mono rounded bg-blue-500/10 text-blue-400 border border-blue-500/30">Console v1.3</span>
         </div>
-        <p class="text-xs text-gray-400 font-mono">Illustrative client-side model · historical AKS validation evidence is documented separately</p>
+        <p class="text-xs text-gray-400 font-mono">Biểu đồ &amp; sự kiện là mô hình mô phỏng để giảng dạy mẫu thiết kế SRE · bằng chứng thực tế xem tab Gates &amp; GitOps</p>
       </div>
     </div>
 
@@ -90,28 +91,25 @@
   <!-- Main View Container -->
   <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
 
-    <!-- Simulation Disclaimer Banner -->
-    <div role="region" aria-label="Simulation Environment Notice" class="p-4 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 shadow-sm">
-      <div class="flex items-start gap-3">
-        <div class="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0 mt-0.5 md:mt-0 text-base">
-          <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-        </div>
-        <div>
-          <p class="font-bold text-white text-sm">Interactive Architectural Simulation &amp; Telemetry Replay</p>
-          <p class="text-cyan-300/80 mt-0.5 leading-relaxed">
-            Số liệu telemetry trên console là mô hình mô phỏng kiến trúc client-side (Synthetic Architectural Model) nhằm minh họa hành vi SLO (mục tiêu 1.000+ QPS, P99 &lt; 15ms). Trạng thái workload AKS hiện tại chưa được xác minh từ console này; các biểu đồ chỉ là số liệu mô phỏng, không phải đo trực tiếp từ cụm live.
-          </p>
-        </div>
+    <!-- Compact simulation notice (detail in top banner) -->
+    <div role="region" aria-label="Simulation Environment Notice" class="p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-xs text-cyan-300 flex items-center gap-3 shadow-sm">
+      <div class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0 text-base">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      </div>
+      <div>
+        <p class="font-bold text-white text-sm leading-tight">Biểu đồ, sự kiện &amp; KPI trên trang này là mô hình mô phỏng client-side.</p>
+        <p class="text-cyan-300/80 mt-0.5 leading-relaxed">Không đo trực tiếp từ cụm AKS live. Các tab <strong>Gates</strong> và <strong>GitOps</strong> hiển thị bằng chứng xác minh thực tế từ repository.</p>
       </div>
     </div>
 
     <!-- Hero Stats Grid with Real Ticking Values -->
     <section aria-label="Key Performance Indicators" class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
+        <div class="flex flex-col gap-1">
           <p class="text-xs text-gray-400 font-medium">Control Plane</p>
           <p class="text-lg font-bold text-white mt-1">Azure AKS</p>
-          <p class="text-xs text-cyan-400 font-mono mt-0.5">Runtime chưa xác minh</p>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
+          <p class="text-xs text-gray-400 font-mono mt-0.5">Tenancy &amp; node pool là mô hình kiến trúc; không lấy từ live cluster</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg" aria-hidden="true">
           <i class="fa-solid fa-dharmachakra"></i>
@@ -119,9 +117,10 @@
       </div>
 
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
+        <div class="flex flex-col gap-1">
           <p class="text-xs text-gray-400 font-medium">Throughput (Model)</p>
           <p id="kpi-qps" class="text-lg font-bold text-cyan-400 font-mono mt-1">1,240 req/s</p>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
           <p id="kpi-errors" class="text-xs text-emerald-400 font-mono mt-0.5">0.00% Error Rate</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-lg" aria-hidden="true">
@@ -130,9 +129,10 @@
       </div>
 
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
+        <div class="flex flex-col gap-1">
           <p class="text-xs text-gray-400 font-medium">P99 Latency (Model)</p>
           <p id="kpi-p99" class="text-lg font-bold text-emerald-400 font-mono mt-1">11.8 ms</p>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
           <p class="text-xs text-gray-400 font-mono mt-0.5">Illustrative threshold: &lt; 50.0 ms</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg" aria-hidden="true">
@@ -141,10 +141,11 @@
       </div>
 
       <div class="p-4 rounded-xl bg-gray-900/60 border border-gray-800 flex items-center justify-between">
-        <div>
+        <div class="flex flex-col gap-1">
           <p class="text-xs text-gray-400 font-medium">Local Regression Gates</p>
           <p class="text-lg font-bold text-emerald-400 mt-1">Local historical checks</p>
-          <p class="text-xs text-gray-400 font-mono mt-0.5">Xem evidence theo release SHA</p>
+          <span class="inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">THỰC TẾ</span>
+          <p class="text-xs text-gray-400 font-mono mt-0.5">Xem chi tiết tab Gates (G1–G14)</p>
         </div>
         <div class="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg" aria-hidden="true">
           <i class="fa-solid fa-shield-halved"></i>
@@ -157,22 +158,27 @@
       <button role="tab" id="tab-realtime" aria-selected="true" aria-controls="view-realtime" tabindex="0" data-action="switch-tab" data-tab="realtime" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-cyan-400 text-cyan-400 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
         <span>Telemetry &amp; RED Model</span>
+        <span class="ml-auto inline-block px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold border border-orange-500/30">MÔ PHỎNG</span>
       </button>
       <button role="tab" id="tab-cluster" aria-selected="false" aria-controls="view-cluster" tabindex="-1" data-action="switch-tab" data-tab="cluster" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-cubes" aria-hidden="true"></i>
         <span>Cluster Pod Snapshot</span>
+        <span class="ml-auto inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">THỰC TẾ · Lịch sử</span>
       </button>
       <button role="tab" id="tab-workload" aria-selected="false" aria-controls="view-workload" tabindex="-1" data-action="switch-tab" data-tab="workload" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-heart-pulse" aria-hidden="true"></i>
         <span>Probe Split &amp; Chaos Sandbox</span>
+        <span class="ml-auto inline-block px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/30">Kiến trúc + Mô phỏng</span>
       </button>
       <button role="tab" id="tab-gitops" aria-selected="false" aria-controls="view-gitops" tabindex="-1" data-action="switch-tab" data-tab="gitops" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-code-compare" aria-hidden="true"></i>
         <span>ArgoCD GitOps Sync</span>
+        <span class="ml-auto inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">THỰC TẾ</span>
       </button>
       <button role="tab" id="tab-gates" aria-selected="false" aria-controls="view-gates" tabindex="-1" data-action="switch-tab" data-tab="gates" class="tab-btn px-4 py-2.5 text-sm font-semibold border-b-2 border-transparent text-gray-400 hover:text-gray-200 flex items-center gap-2 transition focus:outline-none focus:ring-1 focus:ring-cyan-400">
         <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-        <span>Local Gate Matrix (G1-G14)</span>
+        <span>Local Gate Matrix (G1–G14)</span>
+        <span class="ml-auto inline-block px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">THỰC TẾ</span>
       </button>
     </div>
 

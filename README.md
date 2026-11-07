@@ -5,7 +5,7 @@
 [![Microservice Tests](https://img.shields.io/badge/API%20Tests-12%2F12%20Passed-brightgreen?style=flat-square)](app/sre-demo-api/)
 [![GitOps Engine](https://img.shields.io/badge/Argo%20CD-v3.5.5%20(Zero%20Wildcards)-orange?style=flat-square)](platform/argocd/VERSION)
 [![Policy Gate](https://img.shields.io/badge/Policy%20Gate-121%20Objects%20Passed-teal?style=flat-square)](scripts/policy-gate.py)
-[![Terraform IaC](https://img.shields.io/badge/Terraform%20IaC-AzureRM%20~%3E%205.0%20(5%20Modules)-623CE4?style=flat-square)](terraform/)
+[![Terraform IaC](https://img.shields.io/badge/Terraform%20IaC-AzureRM%20~%3E%205.0%20(4%20Roots)-623CE4?style=flat-square)](terraform/)
 
 > **A production-engineered Azure Kubernetes Service (AKS) platform blueprint demonstrating cloud-native infrastructure, automated GitOps delivery, multi-layer admission policy gates, high-resilience backend API patterns, and an automated read-only SRE incident response agent.**
 
@@ -16,7 +16,7 @@
 - **Target Engineering Roles:** Senior Backend Software Engineer, Platform / DevOps Engineer, Site Reliability Engineer (SRE).
 - **Core Engineering Philosophy:** Reliability is an architectural property, not an operational afterthought. Concurrency control, failure containment, zero-trust network boundaries, and deterministic policy gates must be enforced in code, verified by automated test suites, and audited before cloud deployment.
 - **What Was Built:**
-  - **Modular Cloud Infrastructure:** 5 decoupled Terraform modules (AKS cluster, networking, ACR identity attachment, and observability) running on AzureRM provider `~> 5.0` with Azure AD-authenticated remote state and OIDC Workload Identity.
+  - **Modular Cloud Infrastructure:** Modular Terraform foundation (4 roots / 3 reusable modules: AKS cluster, virtual networking, ACR identity attachment) running on AzureRM provider `~> 5.0` with Azure AD-authenticated remote state and OIDC Workload Identity.
   - **Zero-Trust GitOps Pipeline:** Declarative continuous delivery via Argo CD `v3.5.5` using server-side apply and strictly bounded `AppProject` RBAC with **zero wildcard permissions (`*`)**.
   - **Multi-Layer Static Policy Gates:** Automated admission gate (`scripts/policy-gate.py`) scanning 121 objects across 6 Kustomize roots to enforce Kubernetes Pod Security Standards, immutable digest/tag pinning, and mandatory resource envelopes.
   - **Resilient Backend Workload (`sre-demo-api`):** Production-grade Node.js 22 microservice implementing **decoupled health probes** (`/health/live` vs `/health/ready`) to prevent cascading restart loops, Prometheus RED metrics, and OpenTelemetry distributed tracing.
@@ -29,11 +29,11 @@
 | :--- | :--- | :--- |
 | **Policy Enforcement** | **121 objects passed** across 6 Kustomize roots | `python3 scripts/policy-gate.py` (`scripts/policy-gate.py:70-160`) |
 | **GitOps Integrity** | **38 passed checks**, zero wildcard permissions | `python3 gitops/validate-gitops.py` (`platform/argocd/appproject.yaml`) |
-| **Gate Regression** | **62 assertions** across G1–G16 test matrix | `.venv/bin/python tests/test_gates.py` (`tests/test_gates.py`) |
-| **SRE Agent Coverage** | **86.74% statement coverage** (52 unit tests) | `.venv/bin/python -m pytest tests/` (`app/sre_incident_agent/`) |
+| **Gate Regression** | **62 assertions total** (G1–G16 matrix, 61 passing, 1 known CI-root sync gap) | `.venv/bin/python tests/test_gates.py` (`tests/test_gates.py`) |
+| **SRE Agent Coverage** | **86.74% statement coverage** (14 unit tests) | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` |
 | **Microservice Suite** | **12/12 unit tests passing** (0 failures) | `npm --prefix app/sre-demo-api test` (`app/sre-demo-api/`) |
 | **Edge Router Contract**| **7/7 unit tests passing** (0 failures) | `node --test platform/cloudflare/api-edge/test/*.test.mjs` |
-| **Terraform Validity** | **5/5 modules validated** (AzureRM v5) | `terraform -chdir=terraform/<module> validate` |
+| **Terraform Validity** | **4/4 roots validated** (AzureRM v5) | `terraform -chdir=terraform/<root> validate` |
 | **Legacy Tech Parity** | **0 .NET files** (`.cs`, `.csproj`, `.sln`) | Repository root static search (Clean stack) |
 
 ### Live Interactive Mirrors & Infrastructure Boundaries
@@ -192,29 +192,28 @@ To eliminate human latency during production incidents, the platform embeds an a
 
 - **Fail-Safe Design:** Strictly read-only adapters (`AlertmanagerAdapter`, `PrometheusAdapter`, `KubectlAdapter`, `ArgoAdapter`, `RunbookAdapter`). The agent has **zero write permissions** (no `kubectl apply/delete`, no Argo CD mutation, no secret access).
 - **Deterministic Execution:** Operates completely offline without external network or LLM dependencies for core evaluation.
-- **Test Coverage:** Verified by 52 automated tests in pytest achieving **86.74% statement coverage** (exceeding the 75% baseline requirement in `pyproject.toml`).
+- **Test Coverage:** Verified by 14 automated tests in pytest achieving **86.74% statement coverage** (exceeding the 75% baseline requirement in `pyproject.toml`).
 
 ---
 
 ## 4. Platform Engineering & Supply-Chain Security
 
 ### 4.1 Modular Infrastructure as Code (Terraform)
-The infrastructure is decomposed into 5 reusable, independently verifiable modules (`terraform/aks-foundation`):
+The infrastructure is decomposed into reusable, independently verifiable Terraform modules (`terraform/aks-foundation`):
 - `modules/aks_cluster`: Manages AKS cluster lifecycle, system node pool (2x `Standard_D4s_v6`), user workload node pool, availability zone distribution, and autoscaling quota constraints.
 - `modules/networking`: Provisions Azure Virtual Network, private subnets (apps, monitoring, private endpoints), Private DNS zones, and default-deny Network Security Groups (NSGs).
 - `modules/acr_attachment`: Grants decoupled `AcrPull` permissions to the AKS kubelet managed identity without hardcoding credentials.
-- `modules/observability`: Deploys Azure Monitor Log Analytics workspace, Data Collection Rules (DCR), and OpenTelemetry collector integration.
 
 **IaC Quality Controls:**
 - **Provider Pinning:** AzureRM provider constrained to `~> 5.0` with Terraform `>= 1.5`.
 - **Identity & State:** Authenticated via Azure OIDC Workload Identity; remote state stored in Azure Blob Storage (`stakssre` container `tfstate`) using Azure AD authentication (`use_azuread_auth = true`).
-- **Static & Unit Testing:** All 5 modules pass `terraform validate` and 15 native `terraform test` assertions verifying boundary isolation, autoscaler limits, and role assignments.
+- **Static & Unit Testing:** All 4 roots pass `terraform validate` and native `terraform test` assertions verifying boundary isolation, autoscaler limits, and role assignments.
 
 ### 4.2 Zero-Trust GitOps Delivery (Argo CD)
 - **Pinned Version:** Argo CD `v3.5.5` is pinned in a single canonical file (`platform/argocd/VERSION`) to eliminate drift across CI/CD scripts and manifests.
 - **Server-Side Apply:** Bootstrapped via Kubernetes server-side apply (`kubectl apply --server-side`) to prevent race conditions with large CustomResourceDefinitions (CRDs).
 - **Strict AppProject RBAC (`platform/argocd/appproject.yaml`):**
-  - **Zero Wildcard Repositories:** Source repositories are strictly whitelisted to explicit git URLs (`CreditFlow`, `AKS-SRE-Platform`, `QuanLyKho`). Wildcards (`*`) are prohibited.
+  - **Zero Wildcard Repositories:** Source repositories are strictly whitelisted to explicit git URLs (`CreditFlow`, `AKS-SRE-Platform`, `FlashSale-Backend`, `QuanLyKho`). Wildcards (`*`) are prohibited.
   - **Zero Wildcard Destinations:** Target namespaces are locked to `quanlykho`, `portfolio`, and `flashsale` on the in-cluster API server.
   - **Cluster-Resource Boundary:** Only `Namespace` resources may be created cluster-wide; all other cluster-scoped mutations (ClusterRole, CRDs) are blocked by the admission controller.
 - **Negative Controls:** The validation engine (`gitops/validate-gitops.py`) detects missing external checkouts and emits `EXTERNAL_REPO_NOT_PRESENT`, refusing to report false greens.
@@ -246,7 +245,7 @@ Every technical claim in this documentation is backed by concrete code, configur
 | :--- | :--- | :--- | :--- |
 | **AzureRM v5 & OIDC Auth** | `terraform/aks-foundation/versions.tf` | Lines 1–19 | `terraform -chdir=terraform/aks-foundation validate` → **Success! Valid.** |
 | **Remote Azure AD Backend** | `terraform/aks-foundation/backend-remote.tfbackend.example` | Lines 11–15 | Inspected configuration (`stakssre`, `use_azuread_auth=true`) |
-| **5 Modular IaC Roots** | `terraform/aks-foundation/main.tf`, `terraform/modules/*` | Lines 5–54 | `for d in terraform/modules/*; do terraform -chdir=$d validate; done` → **All Valid** |
+| **Modular IaC Roots** | `terraform/aks-foundation/main.tf`, `terraform/modules/*` | Lines 5–54 | `for d in terraform/modules/*; do terraform -chdir=$d validate; done` → **All Valid** |
 | **Argo CD Pinned Single-File** | `platform/argocd/VERSION` | Line 1 | `cat platform/argocd/VERSION` → `v3.5.5` |
 | **Zero-Wildcard AppProject** | `platform/argocd/appproject.yaml` | Lines 21–33 | `python3 gitops/validate-gitops.py` → **38 PASS, 0 FAIL** |
 | **6 Kustomize Roots Rendered**| `deploy/base`, `deploy/overlays/*` | Kustomization files | `kubectl kustomize deploy/overlays/prod` → Clean YAML render |
@@ -254,10 +253,10 @@ Every technical claim in this documentation is backed by concrete code, configur
 | **Probe Decoupling Pattern** | `app/sre-demo-api/src/server.js` | Lines 9–22, 58–69 | `npm --prefix app/sre-demo-api test` → **12/12 tests passed** |
 | **Constant-Time Crypto Auth** | `app/sre-demo-api/src/server.js` | Lines 114–142 | Verified via test `internal readiness rejected with wrong token` |
 | **Multi-Stage Non-Root Docker**| `app/sre-demo-api/Dockerfile` | Lines 16–58 | UID 10001, Alpine 3.20, `CMD ["node", "src/index.js"]` |
-| **SRE Agent 86.74% Coverage** | `app/sre_incident_agent/`, `pyproject.toml` | Lines 8–13 | `.venv/bin/python -m pytest tests/` → **52 passed, 86.74% coverage** |
+| **SRE Agent 86.74% Coverage** | `app/sre_incident_agent/`, `pyproject.toml` | Lines 8–13 | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` → **14 passed, 86.74% coverage** |
 | **Edge Routing & mTLS Ingress**| `platform/cloudflare/api-edge/` | Lines 1–65 | `node --test platform/cloudflare/api-edge/test/*.test.mjs` → **7 passed** |
 | **HPA & PDB Availability** | `deploy/base/autoscaling.yaml` | Lines 8–67 | `python3 -m unittest discover -s tests -p test_autoscaling_contract.py` → **5 passed** |
-| **Gate Regression Suite** | `tests/test_gates.py` | Matrix G1–G16 | `.venv/bin/python tests/test_gates.py` → **62 passed, 0 failed (62 assertions total)** |
+| **Gate Regression Suite** | `tests/test_gates.py` | Matrix G1–G16 | `.venv/bin/python tests/test_gates.py` → **61 passed, 1 failed (62 assertions total)** |
 | **Clean Stack (0 .NET Files)** | Monorepo Root Directory | Entire tree | `find . -type f \( -name "*.cs" -o -name "*.csproj" \) | wc -l` → **0** |
 
 ---
@@ -308,19 +307,20 @@ node --test platform/cloudflare/api-edge/test/*.test.mjs
 
 ### 6. Validate Terraform Infrastructure-as-Code Modules
 ```bash
-for root in terraform/aks-foundation terraform/modules/acr_attachment terraform/modules/aks_cluster terraform/modules/networking terraform/modules/observability; do
+for root in terraform/aks-foundation terraform/modules/acr_attachment terraform/modules/aks_cluster terraform/modules/networking; do
   terraform -chdir="$root" validate
 done
 # Expected output:
-# Success! The configuration is valid. (Repeated for all 5 modules)
+# Success! The configuration is valid. (Repeated for all 4 roots)
 ```
 
 ### 7. Run GitOps Gate Regression Suite (62 Assertions)
 ```bash
 .venv/bin/python tests/test_gates.py
 # Expected output:
-# 62 passed, 0 failed, 62 assertions total
+# 61 passed, 1 failed, 62 assertions total
 ```
+*(Note: Assertion G10 highlights the CI workflow synchronization gap for the pruned observability module).*
 
 ---
 
@@ -330,7 +330,7 @@ done
 In enterprise software engineering, production readiness is demonstrated by architecture, security controls, test coverage, and repeatable deployment automation. However, maintaining an active enterprise Kubernetes cluster running 24/7 in a public cloud incurring personal expenditure when no active user traffic requires it is poor engineering governance.
 
 - **Cloud Resource Reclamation:** The development AKS cluster (`aks-portfolio-dev`, Azure East Asia) was provisioned, configured via Terraform, and successfully captured baseline SLO performance (100% availability, 54.55ms p95 latency, 0.0% error rate).
-- **Cost & Quota Conservation:** Following SLO capture, the active Azure cluster was intentionally decommissioned and destroyed via reviewed Terraform plans (`docs/evidence/2026-10-30-resource-reclamation.md`, `ADR-012`). This conserved the regional 10 vCPU subscription ceiling and avoided ~$13/day in idle infrastructure costs.
+- **Cost & Quota Conservation:** Following SLO capture, the active Azure cluster was intentionally decommissioned and destroyed via reviewed Terraform plans (`docs/evidence/2026-11-06-temporary-aks-validation.md`, `ADR-012`). This conserved the regional 10 vCPU subscription ceiling and avoided ~$13/day in idle infrastructure costs.
 - **Deterministic Offline Parity:** A local 3-node `kind` cluster (`kind-local-platform`, Kubernetes v1.36.1) serves as the daily verification runtime (`ADR-013`). It executes identical Argo CD GitOps reconciliations, server-side manifests, and Prometheus telemetry without cloud mutations.
 - **Managed Public Mirrors:** Live interaction is provided via cost-free public tiers (Cloudflare Pages for the frontend and Render for the API preview), providing interactive visibility while respecting cloud economics.
 
@@ -363,7 +363,7 @@ AKS-SRE-Platform/
 │   └── log_scale_events.py         # HPA & cluster autoscaler event recorder
 ├── terraform/
 │   ├── aks-foundation/             # Root platform composition (AzureRM ~> 5.0, OIDC identity)
-│   └── modules/                    # Decoupled modules (aks_cluster, networking, acr_attachment, observability)
+│   └── modules/                    # Decoupled modules (aks_cluster, networking, acr_attachment)
 └── tests/
     ├── test_gates.py               # Gate regression matrix (G1–G16, 62 assertions)
     ├── test_sre_incident_agent*.py # SRE agent test suites
