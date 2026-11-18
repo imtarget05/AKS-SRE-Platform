@@ -23,7 +23,7 @@ docker build -t sre-demo-api:local-drill app/sre-demo-api
 kind create cluster --name sre-rollback --wait 120s
 kind load docker-image sre-demo-api:local-drill --name sre-rollback
 python3 scripts/kind_rollback_drill.py --context kind-sre-rollback \
-  --image sre-demo-api:local-drill --output demo-results/kind-rollback
+  --image sre-demo-api:local-drill
 kind delete cluster --name sre-rollback
 ```
 

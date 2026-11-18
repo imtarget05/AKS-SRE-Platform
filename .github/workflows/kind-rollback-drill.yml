@@ -39,8 +39,7 @@ jobs:
         run: |
           python3 scripts/kind_rollback_drill.py \
             --context kind-sre-rollback \
-            --image "sre-demo-api:drill-${GITHUB_SHA}" \
-            --output demo-results/kind-rollback
+            --image "sre-demo-api:drill-${GITHUB_SHA}"
       - name: Upload drill evidence
         if: always()
         uses: actions/upload-artifact@v4

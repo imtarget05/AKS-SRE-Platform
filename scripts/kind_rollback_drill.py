@@ -14,6 +14,9 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+OUTPUT = Path("demo-results/kind-rollback")
+DEPLOYMENT = "deployment/sre-demo-api"
+
 
 def now():
     return datetime.now(timezone.utc).isoformat()
@@ -34,14 +37,50 @@ def wait_for(predicate, seconds, description):
     raise TimeoutError(f"Timed out waiting for {description}")
 
 
+def http_status():
+    try:
+        with urllib.request.urlopen("http://127.0.0.1:18088/health/ready", timeout=2) as response:
+            return response.status
+    except (urllib.error.URLError, TimeoutError):
+        return 0
+
+
+def image_pull_failure(kube, namespace):
+    pods = json.loads(run(kube + ["-n", namespace, "get", "pods", "-l", "app=sre-demo-api", "-o", "json"]))
+    for pod in pods["items"]:
+        for state in pod.get("status", {}).get("containerStatuses", []):
+            reason = state.get("state", {}).get("waiting", {}).get("reason")
+            if reason in {"ErrImagePull", "ImagePullBackOff"}:
+                return {"pod": pod["metadata"]["name"], "reason": reason}
+    return None
+
+
+def collect_evidence(kube, namespace, evidence, port_forward):
+    evidence["finished_utc"] = now()
+    (OUTPUT / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
+    commands = {"pods.json": ["get", "pods", "-o", "json"],
+                "events.txt": ["get", "events", "--sort-by=.metadata.creationTimestamp"],
+                "deployment.yaml": ["get", "deployment", "sre-demo-api", "-o", "yaml"]}
+    for label, command in commands.items():
+        try:
+            (OUTPUT / label).write_text(run(kube + ["-n", namespace] + command, timeout=15))
+        except Exception:
+            pass
+    if port_forward is not None:
+        port_forward.terminate()
+        try:
+            port_forward.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            port_forward.kill()
+    run(kube + ["delete", "namespace", namespace, "--ignore-not-found=true", "--wait=false"], timeout=30)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--context", required=True)
     parser.add_argument("--image", required=True)
-    parser.add_argument("--output", default="demo-results/kind-rollback")
     args = parser.parse_args()
-    output = Path(args.output)
-    output.mkdir(parents=True, exist_ok=True)
+    OUTPUT.mkdir(parents=True, exist_ok=True)
     namespace = "sre-rollback-drill"
     bad_image = "invalid.local/sre-demo-api:deliberately-missing"
     kube = ["kubectl", "--context", args.context]
@@ -54,9 +93,6 @@ def main():
 
     def get_deployment():
         return json.loads(run(kube + ["-n", namespace, "get", "deployment", "sre-demo-api", "-o", "json"]))
-
-    def get_pods():
-        return json.loads(run(kube + ["-n", namespace, "get", "pods", "-l", "app=sre-demo-api", "-o", "json"]))
 
     port_forward = None
     try:
@@ -78,36 +114,21 @@ def main():
                                       "livenessProbe": {"httpGet": {"path": "/health/live", "port": 8080},
                                                         "periodSeconds": 5}}]}}}}
         run(kube + ["apply", "-f", "-"], input_text=json.dumps(manifest))
-        run(kube + ["-n", namespace, "rollout", "status", "deployment/sre-demo-api", "--timeout=180s"], timeout=190)
+        run(kube + ["-n", namespace, "rollout", "status", DEPLOYMENT, "--timeout=180s"], timeout=190)
         baseline = get_deployment()
         if baseline["status"].get("readyReplicas") != 2:
             raise AssertionError("Baseline needs two ready replicas")
         event("baseline_ready", ready_replicas=2)
 
-        port_forward = subprocess.Popen(kube + ["-n", namespace, "port-forward", "deployment/sre-demo-api", "18088:8080"],
-                                        stdout=(output / "port-forward.log").open("w"), stderr=subprocess.STDOUT)
-
-        def http_status():
-            try:
-                with urllib.request.urlopen("http://127.0.0.1:18088/health/ready", timeout=2) as response:
-                    return response.status
-            except (urllib.error.URLError, TimeoutError):
-                return 0
+        port_forward = subprocess.Popen(kube + ["-n", namespace, "port-forward", DEPLOYMENT, "18088:8080"],
+                                        stdout=(OUTPUT / "port-forward.log").open("w"), stderr=subprocess.STDOUT)
 
         wait_for(lambda: http_status() == 200, 30, "baseline HTTP 200")
         event("baseline_http_healthy", http_status=200)
-        run(kube + ["-n", namespace, "set", "image", "deployment/sre-demo-api", f"sre-demo-api={bad_image}"])
+        run(kube + ["-n", namespace, "set", "image", DEPLOYMENT, f"sre-demo-api={bad_image}"])
         event("bad_image_deployed")
 
-        def image_pull_failure():
-            for pod in get_pods()["items"]:
-                for state in pod.get("status", {}).get("containerStatuses", []):
-                    reason = state.get("state", {}).get("waiting", {}).get("reason")
-                    if reason in {"ErrImagePull", "ImagePullBackOff"}:
-                        return {"pod": pod["metadata"]["name"], "reason": reason}
-            return None
-
-        failure = wait_for(image_pull_failure, 120, "observed image pull failure")
+        failure = wait_for(lambda: image_pull_failure(kube, namespace), 120, "observed image pull failure")
         ready_during_fault = get_deployment()["status"].get("readyReplicas", 0)
         fault_http = http_status()
         event("fault_detected", **failure, ready_replicas=ready_during_fault, http_status=fault_http)
@@ -115,8 +136,8 @@ def main():
             raise AssertionError("Healthy replicas did not stay available during failed rollout")
 
         rollback_start = time.monotonic()
-        run(kube + ["-n", namespace, "rollout", "undo", "deployment/sre-demo-api"])
-        run(kube + ["-n", namespace, "rollout", "status", "deployment/sre-demo-api", "--timeout=180s"], timeout=190)
+        run(kube + ["-n", namespace, "rollout", "undo", DEPLOYMENT])
+        run(kube + ["-n", namespace, "rollout", "status", DEPLOYMENT, "--timeout=180s"], timeout=190)
         rollback_seconds = round(time.monotonic() - rollback_start, 3)
         restored = get_deployment()
         restored_image = restored["spec"]["template"]["spec"]["containers"][0]["image"]
@@ -131,22 +152,7 @@ def main():
         evidence["error"] = f"{type(exc).__name__}: {exc}"
         raise
     finally:
-        evidence["finished_utc"] = now()
-        (output / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
-        for label, command in {"pods.json": ["get", "pods", "-o", "json"],
-                               "events.txt": ["get", "events", "--sort-by=.metadata.creationTimestamp"],
-                               "deployment.yaml": ["get", "deployment", "sre-demo-api", "-o", "yaml"]}.items():
-            try:
-                (output / label).write_text(run(kube + ["-n", namespace] + command, timeout=15))
-            except Exception:
-                pass
-        if port_forward is not None:
-            port_forward.terminate()
-            try:
-                port_forward.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                port_forward.kill()
-        run(kube + ["delete", "namespace", namespace, "--ignore-not-found=true", "--wait=false"], timeout=30)
+        collect_evidence(kube, namespace, evidence, port_forward)
 
 
 if __name__ == "__main__":
