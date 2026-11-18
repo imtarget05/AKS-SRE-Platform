@@ -1,0 +1,52 @@
+name: Kind rollback drill
+
+on:
+  pull_request:
+    paths:
+      - app/sre-demo-api/**
+      - scripts/kind_rollback_drill.py
+      - .github/workflows/kind-rollback-drill.yml
+  push:
+    branches: [main]
+    paths:
+      - app/sre-demo-api/**
+      - scripts/kind_rollback_drill.py
+      - .github/workflows/kind-rollback-drill.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kind
+        run: go install sigs.k8s.io/kind@v0.27.0
+      - name: Test and build repo workload
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          docker build -t sre-demo-api:drill-${GITHUB_SHA} .
+        working-directory: app/sre-demo-api
+      - name: Create disposable cluster
+        run: |
+          "$(go env GOPATH)/bin/kind" create cluster --name sre-rollback --wait 120s
+          "$(go env GOPATH)/bin/kind" load docker-image "sre-demo-api:drill-${GITHUB_SHA}" --name sre-rollback
+      - name: Run measured rollback
+        run: |
+          python3 scripts/kind_rollback_drill.py \
+            --context kind-sre-rollback \
+            --image "sre-demo-api:drill-${GITHUB_SHA}"
+      - name: Upload drill evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kind-rollback-evidence
+          path: demo-results/kind-rollback/
+          if-no-files-found: warn
+      - name: Delete disposable cluster
+        if: always()
+        run: '"$(go env GOPATH)/bin/kind" delete cluster --name sre-rollback'
