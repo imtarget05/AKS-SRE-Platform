@@ -7,7 +7,7 @@
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "app/sre_incident_agent/tests"]
-addopts = ["--cov=app.sre_incident_agent", "--cov-report=term-missing", "--cov-fail-under=75", "-q"]
+addopts = ["--cov=app.sre_incident_agent", "--cov=scripts.kind_rollback_drill", "--cov-report=term-missing", "--cov-fail-under=75", "-q"]
 
 [tool.coverage.run]
 omit = ["app/sre_incident_agent/tests/*"]
