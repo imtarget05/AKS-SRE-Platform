@@ -1,0 +1,24 @@
+LAST SEEN   TYPE      REASON              OBJECT                               MESSAGE
+14s         Normal    Created             pod/sre-demo-api-d586b6c85-thcp5     Container created
+14s         Normal    Started             pod/sre-demo-api-d586b6c85-thcp5     Container started
+14s         Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled up replica set sre-demo-api-d586b6c85 from 0 to 2
+14s         Normal    SuccessfulCreate    replicaset/sre-demo-api-d586b6c85    Created pod: sre-demo-api-d586b6c85-thcp5
+14s         Normal    SuccessfulCreate    replicaset/sre-demo-api-d586b6c85    Created pod: sre-demo-api-d586b6c85-f5npd
+14s         Warning   Unhealthy           pod/sre-demo-api-d586b6c85-thcp5     Readiness probe failed: Get "http://10.244.0.5:8080/health/ready": dial tcp 10.244.0.5:8080: connect: connection refused
+14s         Normal    Created             pod/sre-demo-api-d586b6c85-f5npd     Container created
+14s         Warning   Unhealthy           pod/sre-demo-api-d586b6c85-f5npd     Readiness probe failed: Get "http://10.244.0.6:8080/health/ready": dial tcp 10.244.0.6:8080: connect: connection refused
+14s         Normal    Started             pod/sre-demo-api-d586b6c85-f5npd     Container started
+14s         Normal    Pulled              pod/sre-demo-api-d586b6c85-f5npd     Container image "sre-demo-api:local-drill" already present on machine and can be accessed by the pod
+14s         Normal    Pulled              pod/sre-demo-api-d586b6c85-thcp5     Container image "sre-demo-api:local-drill" already present on machine and can be accessed by the pod
+14s         Normal    Scheduled           pod/sre-demo-api-d586b6c85-f5npd     Successfully assigned sre-rollback-drill/sre-demo-api-d586b6c85-f5npd to sre-rollback-control-plane
+14s         Normal    Scheduled           pod/sre-demo-api-d586b6c85-thcp5     Successfully assigned sre-rollback-drill/sre-demo-api-d586b6c85-thcp5 to sre-rollback-control-plane
+10s         Normal    Pulling             pod/sre-demo-api-588b58c6f4-wf4tg    Pulling image "invalid.local/sre-demo-api:deliberately-missing"
+10s         Normal    Scheduled           pod/sre-demo-api-588b58c6f4-wf4tg    Successfully assigned sre-rollback-drill/sre-demo-api-588b58c6f4-wf4tg to sre-rollback-control-plane
+10s         Normal    SuccessfulCreate    replicaset/sre-demo-api-588b58c6f4   Created pod: sre-demo-api-588b58c6f4-wf4tg
+10s         Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled up replica set sre-demo-api-588b58c6f4 from 0 to 1
+2s          Warning   Failed              pod/sre-demo-api-588b58c6f4-wf4tg    Error: ImagePullBackOff
+2s          Normal    BackOff             pod/sre-demo-api-588b58c6f4-wf4tg    Back-off pulling image "invalid.local/sre-demo-api:deliberately-missing"
+2s          Warning   Failed              pod/sre-demo-api-588b58c6f4-wf4tg    Error: ErrImagePull
+2s          Warning   Failed              pod/sre-demo-api-588b58c6f4-wf4tg    Failed to pull image "invalid.local/sre-demo-api:deliberately-missing": failed to pull and unpack image "invalid.local/sre-demo-api:deliberately-missing": failed to resolve reference "invalid.local/sre-demo-api:deliberately-missing": failed to do request: Head "https://invalid.local/v2/sre-demo-api/manifests/deliberately-missing": dial tcp: lookup invalid.local on 192.168.65.254:53: server misbehaving
+1s          Normal    SuccessfulDelete    replicaset/sre-demo-api-588b58c6f4   Deleted pod: sre-demo-api-588b58c6f4-wf4tg
+1s          Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled down replica set sre-demo-api-588b58c6f4 from 1 to 0

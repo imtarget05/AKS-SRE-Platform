@@ -27,5 +27,7 @@ python3 scripts/kind_rollback_drill.py --context kind-sre-rollback \
 kind delete cluster --name sre-rollback
 ```
 
-Use the workflow artifact for a run tied to a specific Git commit. Local Docker
-was unavailable on 2026-11-18, so no local rollback metrics are claimed.
+Use the workflow artifact for a run tied to a specific Git commit. A local
+reproduction on 2026-11-19 passed; see the [timestamped evidence and command
+log](../evidence/local-kind-rollback-2026-11-19/README.md). The earlier Docker
+unavailability on 2026-11-18 no longer describes the current workstation.
