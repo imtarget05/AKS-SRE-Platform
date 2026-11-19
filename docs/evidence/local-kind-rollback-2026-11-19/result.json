@@ -1,0 +1,41 @@
+{
+  "scope": "isolated_kind_repo_workload",
+  "context": "kind-sre-rollback",
+  "good_image": "sre-demo-api:local-drill",
+  "bad_image": "invalid.local/sre-demo-api:deliberately-missing",
+  "started_utc": "2026-11-19T08:34:47.099376+00:00",
+  "events": [
+    {
+      "name": "baseline_ready",
+      "timestamp_utc": "2026-11-19T08:34:50.012351+00:00",
+      "ready_replicas": 2
+    },
+    {
+      "name": "baseline_http_healthy",
+      "timestamp_utc": "2026-11-19T08:34:51.075467+00:00",
+      "http_status": 200
+    },
+    {
+      "name": "bad_image_deployed",
+      "timestamp_utc": "2026-11-19T08:34:51.139985+00:00"
+    },
+    {
+      "name": "fault_detected",
+      "timestamp_utc": "2026-11-19T08:35:00.861486+00:00",
+      "pod": "sre-demo-api-588b58c6f4-wf4tg",
+      "reason": "ErrImagePull",
+      "ready_replicas": 2,
+      "http_status": 200
+    },
+    {
+      "name": "rollback_verified",
+      "timestamp_utc": "2026-11-19T08:35:01.073502+00:00",
+      "image": "sre-demo-api:local-drill",
+      "ready_replicas": 2,
+      "http_status": 200,
+      "duration_seconds": 0.143
+    }
+  ],
+  "status": "passed",
+  "finished_utc": "2026-11-19T08:35:01.073677+00:00"
+}

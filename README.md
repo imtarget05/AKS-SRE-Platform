@@ -1,4 +1,4 @@
-# AKS-SRE-Platform — Production-Ready Azure Kubernetes Platform Blueprint & SRE Operations
+# AKS-SRE-Platform — Kubernetes Platform Blueprint and SRE Operations
 
 [![Platform Tests](https://img.shields.io/badge/Gate%20Suite-62%20Assertions%20(G1--G16)-blue?style=flat-square)](tests/test_gates.py)
 [![SRE Incident Agent](https://img.shields.io/badge/SRE%20Incident%20Agent-86.74%25%20Coverage-success?style=flat-square)](app/sre_incident_agent/)
@@ -7,13 +7,13 @@
 [![Policy Gate](https://img.shields.io/badge/Policy%20Gate-121%20Objects%20Passed-teal?style=flat-square)](scripts/policy-gate.py)
 [![Terraform IaC](https://img.shields.io/badge/Terraform%20IaC-AzureRM%20~%3E%205.0%20(4%20Roots)-623CE4?style=flat-square)](terraform/)
 
-> **A production-engineered Azure Kubernetes Service (AKS) platform blueprint demonstrating cloud-native infrastructure, automated GitOps delivery, multi-layer admission policy gates, high-resilience backend API patterns, and an automated read-only SRE incident response agent.**
+> **An Azure Kubernetes Service (AKS) platform blueprint with tested local deployment and rollback drills, GitOps configuration, policy gates, backend health probes, and a read-only SRE incident agent. The current proof is a portfolio exercise; it does not establish a continuously running production platform.**
 
 ---
 
 ## 1. Quick Overview & Recruiter Highlights (60–90 Second Scan)
 
-- **Target Engineering Roles:** Senior Backend Software Engineer, Platform / DevOps Engineer, Site Reliability Engineer (SRE).
+- **Target Engineering Roles:** Fresher/Junior Platform Engineer, DevOps Engineer, Site Reliability Engineer (SRE).
 - **Core Engineering Philosophy:** Reliability is an architectural property, not an operational afterthought. Concurrency control, failure containment, zero-trust network boundaries, and deterministic policy gates must be enforced in code, verified by automated test suites, and audited before cloud deployment.
 - **What Was Built:**
   - **Modular Cloud Infrastructure:** Modular Terraform foundation (4 roots / 3 reusable modules: AKS cluster, virtual networking, ACR identity attachment) running on AzureRM provider `~> 5.0` with Azure AD-authenticated remote state and OIDC Workload Identity.
@@ -32,6 +32,7 @@
 | **Gate Regression** | **62 assertions total** (G1–G16 matrix, 61 passing, 1 known CI-root sync gap) | `.venv/bin/python tests/test_gates.py` (`tests/test_gates.py`) |
 | **SRE Agent Coverage** | **86.74% statement coverage** (14 unit tests) | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` |
 | **Microservice Suite** | **12/12 unit tests passing** (0 failures) | `npm --prefix app/sre-demo-api test` (`app/sre-demo-api/`) |
+| **Local rollback drill** | 2/2 replicas remained ready with HTTP 200 during an `ErrImagePull`; original image restored by `rollout undo` | [2026-11-19 timestamped kind evidence](docs/evidence/local-kind-rollback-2026-11-19/README.md) |
 | **Edge Router Contract**| **7/7 unit tests passing** (0 failures) | `node --test platform/cloudflare/api-edge/test/*.test.mjs` |
 | **Terraform Validity** | **4/4 roots validated** (AzureRM v5) | `terraform -chdir=terraform/<root> validate` |
 | **Legacy Tech Parity** | **0 .NET files** (`.cs`, `.csproj`, `.sln`) | Repository root static search (Clean stack) |
