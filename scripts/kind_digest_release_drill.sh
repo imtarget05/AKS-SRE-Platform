@@ -32,7 +32,14 @@ fi
 docker run -d --restart=always -p "127.0.0.1:${registry_port}:5000" \
   --name "$registry_name" registry:3 >/dev/null
 created_registry=1
-kind create cluster --name "$cluster_name" --wait 120s
+cat <<'KIND_CONFIG' | kind create cluster --name "$cluster_name" --config=- --wait 120s
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d"
+KIND_CONFIG
 created_cluster=1
 docker network connect kind "$registry_name"
 
