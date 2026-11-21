@@ -39,8 +39,8 @@ docker network connect kind "$registry_name"
 for node in $(kind get nodes --name "$cluster_name"); do
   registry_dir="/etc/containerd/certs.d/localhost:${registry_port}"
   docker exec "$node" mkdir -p "$registry_dir"
-  printf '[host."http://%s:5000"]\n' "$registry_name" |
-    docker exec -i "$node" tee "$registry_dir/hosts.toml" >/dev/null
+  # HTTP stays inside the disposable Docker kind network; no credentials are sent.
+  printf '[host."http://%s:5000"]\n' "$registry_name" | docker exec -i "$node" tee "$registry_dir/hosts.toml" >/dev/null # NOSONAR
 done
 
 image_tag="localhost:${registry_port}/sre-demo-api:${source_sha}"

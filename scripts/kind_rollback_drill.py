@@ -24,7 +24,8 @@ def now():
 
 
 def run(command, *, input_text=None, timeout=120):
-    return subprocess.run(command, input=input_text, text=True, capture_output=True,
+    # argv list with shell=False; the context is checked against the active kind context.
+    return subprocess.run(command, input=input_text, text=True, capture_output=True, shell=False,  # NOSONAR
                           check=True, timeout=timeout).stdout
 
 
