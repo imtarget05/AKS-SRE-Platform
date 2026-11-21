@@ -1,0 +1,45 @@
+{
+  "scope": "isolated_kind_repo_workload",
+  "context": "kind-sre-digest-drill",
+  "good_image": "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b",
+  "bad_image": "invalid.local/sre-demo-api:deliberately-missing",
+  "started_utc": "2026-11-21T14:03:26.303363+00:00",
+  "events": [
+    {
+      "name": "baseline_ready",
+      "timestamp_utc": "2026-11-21T14:03:30.414665+00:00",
+      "ready_replicas": 2,
+      "runtime_image_ids": [
+        "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b",
+        "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b"
+      ]
+    },
+    {
+      "name": "baseline_http_healthy",
+      "timestamp_utc": "2026-11-21T14:03:31.447614+00:00",
+      "http_status": 200
+    },
+    {
+      "name": "bad_image_deployed",
+      "timestamp_utc": "2026-11-21T14:03:31.515678+00:00"
+    },
+    {
+      "name": "fault_detected",
+      "timestamp_utc": "2026-11-21T14:03:41.173725+00:00",
+      "pod": "sre-demo-api-588b58c6f4-ht7sj",
+      "reason": "ErrImagePull",
+      "ready_replicas": 2,
+      "http_status": 200
+    },
+    {
+      "name": "rollback_verified",
+      "timestamp_utc": "2026-11-21T14:03:41.331629+00:00",
+      "image": "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b",
+      "ready_replicas": 2,
+      "http_status": 200,
+      "duration_seconds": 0.105
+    }
+  ],
+  "status": "passed",
+  "finished_utc": "2026-11-21T14:03:41.505829+00:00"
+}

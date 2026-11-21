@@ -62,6 +62,15 @@ def test_rejects_context_that_is_not_active_kind(tmp_path):
     assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
 
 
+def test_digest_drill_rejects_mutable_image_tag(tmp_path):
+    with patch.object(drill, "OUTPUT", tmp_path), \
+         patch.object(sys, "argv", ["drill", "--context", "kind-sre-rollback",
+                                    "--image", "localhost:5002/sre-demo-api:latest", "--require-digest"]):
+        with pytest.raises(ValueError, match="digest-pinned"):
+            drill.main()
+    assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
+
+
 def test_detects_actual_image_pull_failure():
     pods = {"items": [{"metadata": {"name": "good"}, "status": {"containerStatuses": []}},
                       {"metadata": {"name": "bad"}, "status": {"containerStatuses": [
@@ -70,6 +79,20 @@ def test_detects_actual_image_pull_failure():
         assert drill.image_pull_failure(["kubectl"], "ns") == {"pod": "bad", "reason": "ErrImagePull"}
     with patch.object(drill, "run", return_value=json.dumps({"items": []})):
         assert drill.image_pull_failure(["kubectl"], "ns") is None
+
+
+def test_ready_pods_must_run_the_pushed_digest():
+    digest = "sha256:" + "a" * 64
+    pods = {"items": [{"status": {"containerStatuses": [
+        {"ready": True, "imageID": "localhost:5002/sre-demo-api@" + digest},
+        {"ready": True, "imageID": "localhost:5002/sre-demo-api@" + digest},
+    ]}}]}
+    with patch.object(drill, "run", return_value=json.dumps(pods)):
+        assert len(drill.assert_ready_pods_use_digest(["kubectl"], "ns", digest)) == 2
+    pods["items"][0]["status"]["containerStatuses"][1]["imageID"] = "other@sha256:" + "b" * 64
+    with patch.object(drill, "run", return_value=json.dumps(pods)):
+        with pytest.raises(AssertionError, match="runtime image digest"):
+            drill.assert_ready_pods_use_digest(["kubectl"], "ns", digest)
 
 
 def test_wait_and_http_fail_closed():
