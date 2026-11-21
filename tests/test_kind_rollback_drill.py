@@ -71,6 +71,50 @@ def test_digest_drill_rejects_mutable_image_tag(tmp_path):
     assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
 
 
+def test_digest_drill_checks_running_pods_before_and_after_rollback(tmp_path):
+    digest = "sha256:" + "a" * 64
+    image = "localhost:5002/sre-demo-api@" + digest
+    state = {"image": image}
+
+    def fake_run(command, **_kwargs):
+        if command == ["kubectl", "config", "current-context"]:
+            return "kind-sre-rollback\n"
+        if "set" in command and "image" in command:
+            state["image"] = "invalid.local/sre-demo-api:deliberately-missing"
+        if "undo" in command:
+            state["image"] = image
+        if "deployment" in command and "-o" in command and "json" in command:
+            return deployment(state["image"])
+        if "pods" in command and "json" in command:
+            return json.dumps({"items": [{"status": {"containerStatuses": [
+                {"ready": True, "imageID": image}]}} for _ in range(2)]})
+        return "{}"
+
+    process = Mock()
+    process.wait.return_value = 0
+    with patch.object(drill, "OUTPUT", tmp_path), \
+         patch.object(drill, "run", side_effect=fake_run), \
+         patch.object(drill, "http_status", return_value=200), \
+         patch.object(drill, "image_pull_failure", return_value={"reason": "ErrImagePull"}), \
+         patch.object(drill.subprocess, "Popen", return_value=process), \
+         patch.object(sys, "argv", ["drill", "--context", "kind-sre-rollback",
+                                   "--image", image, "--require-digest"]):
+        drill.main()
+
+    result = json.loads((tmp_path / "result.json").read_text())
+    assert result["status"] == "passed"
+    assert result["events"][0]["runtime_image_ids"] == [image, image]
+    assert result["events"][-1]["image"] == image
+
+
+def test_pre_namespace_failure_does_not_query_cluster_evidence(tmp_path):
+    with patch.object(drill, "OUTPUT", tmp_path), patch.object(drill, "run") as command:
+        drill.collect_evidence(["kubectl"], "ns", {"status": "failed"}, None,
+                               namespace_created=False)
+    assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
+    command.assert_not_called()
+
+
 def test_detects_actual_image_pull_failure():
     pods = {"items": [{"metadata": {"name": "good"}, "status": {"containerStatuses": []}},
                       {"metadata": {"name": "bad"}, "status": {"containerStatuses": [
