@@ -15,12 +15,12 @@ The [2026-11-19 kind rollback drill](local-kind-rollback-2026-11-19/README.md) i
 
 `aks-deploy.yml` is an infrastructure-only Terraform workflow. Its former `sbom-scan` job referenced the removed `legacy-app` image and was not a dependency of `apply`; this branch removes that stale job. A green Terraform run is not an application image promotion gate. A separate Azure application release path and live AKS/ACR verification are still needed before making that claim.
 
-The [2026-11-21 local digest drill](local-kind-digest-2026-11-21/README.md) supplies that proof for the demo workload on kind: its build, registry reference, Deployment and ready pod `imageID` are tied to one digest. [CI run 44913052684](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/44913052684) passed at `bf24ae3`. It remains distinct from Azure application promotion.
+The [2026-11-21 local digest drill](local-kind-digest-2026-11-21/README.md) supplies that proof for the demo workload on kind. [CI run 44916032886](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/44916032886) passed at `0b873a8`: its fail-closed GitOps validation rendered both external sources before deployment, then the build, registry reference, Deployment, and both ready pod `imageID` values used `sha256:ee364b08713d773f542ad5c167400fcd83e5cb2f738e045f8e030846686b3b2d`. The raw `kind-rollback-evidence` artifact records the digest and rollback. [GitOps validation](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/44916032868) and [PR gates](https://github.com/imtarget05/AKS-SRE-Platform/actions/runs/44916033018) also passed on that commit. It remains distinct from Azure application promotion.
 
 The [workload failure triage runbook](../runbooks/workload-failure-triage.md) covers 502, crash loops, OOM, and database timeouts with evidence to collect and rollback criteria. Its database branch applies to external workloads; this repo's demo API has no database.
 
 ## Two-minute demo
 
 1. Show the policy gate and G10 result, including the commit SHA.
-2. Show the GitOps digest validation rules, then the timestamped kind rollback evidence and its tag-versus-digest limit.
+2. Show the GitOps source gate before deployment and the timestamped digest-pinned kind rollback evidence.
 3. Explain the failed deployment, the `ErrImagePull` symptom, the `rollout undo` action, and the limits of local evidence.
