@@ -15,6 +15,8 @@ The [2026-11-19 kind rollback drill](local-kind-rollback-2026-11-19/README.md) i
 
 `aks-deploy.yml` currently has a separate `sbom-scan` job that resolves an ACR digest, while the protected Terraform `apply` job depends on `plan` only and does not consume that digest. This is an infrastructure apply workflow, so its green status must not be presented as proof that an application image passed a digest-bound promotion gate. A separate deployment-path check is still needed before making that claim.
 
+The [workload failure triage runbook](../runbooks/workload-failure-triage.md) covers 502, crash loops, OOM, and database timeouts with evidence to collect and rollback criteria. Its database branch applies to external workloads; this repo's demo API has no database.
+
 ## Two-minute demo
 
 1. Show the policy gate and G10 result, including the commit SHA.
