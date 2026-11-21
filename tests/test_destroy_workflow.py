@@ -18,6 +18,11 @@ class DestroyWorkflowTests(unittest.TestCase):
     def setUp(self):
         self.jobs = yaml.safe_load(WORKFLOW.read_text())["jobs"]
 
+    def test_infrastructure_apply_has_no_stale_application_image_gate(self):
+        self.assertNotIn("sbom-scan", self.jobs)
+        self.assertNotIn("legacy-app", WORKFLOW.read_text())
+        self.assertEqual(self.jobs["apply"]["needs"], "plan")
+
     def test_destroy_plan_is_saved_before_protected_execution(self):
         plan_steps = self.jobs["plan"]["steps"]
         plan_commands = "\n".join(step.get("run", "") for step in plan_steps)
@@ -45,16 +50,14 @@ class DestroyWorkflowTests(unittest.TestCase):
 
     def test_no_raw_plan_artifact_or_auto_approve_escape(self):
         workflow = WORKFLOW.read_text()
-        # Allow SBOM artifact upload in sbom-scan job (required for supply chain gate)
-        # but forbid artifact uploads in plan/apply/destroy jobs
+        # Infrastructure jobs must not publish raw plan artifacts.
         uploads = [
             (job_name, step)
             for job_name, job in self.jobs.items()
             for step in job.get("steps", [])
             if step.get("uses", "").startswith("actions/upload-artifact@")
-            and job_name not in ("sbom-scan",)
         ]
-        self.assertEqual(uploads, [], f"Unexpected artifact uploads in non-sbom jobs: {uploads}")
+        self.assertEqual(uploads, [], f"Unexpected artifact uploads in infrastructure jobs: {uploads}")
         for name in ("plan", "apply", "destroy"):
             steps = self.jobs[name]["steps"]
             self.assertFalse(any("artifact@" in step.get("uses", "") for step in steps))
