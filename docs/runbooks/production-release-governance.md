@@ -70,9 +70,9 @@ In **Settings → Branches → Branch protection rules → Add rule for `main`**
 7. `pr-gate` / `origin mTLS positive and negative controls`
 8. `pr-gate` / `protected Terraform destroy contract`
 9. `pr-gate` / `Cloudflare API edge contract`
-10. `legacyapp-ci` / `test-and-scan` (when legacy paths changed)
-11. `legacyapp-ci` / `docker-build-scan` (when legacy paths changed)
-12. `legacyapp-ci` / `manifest-validation` (when legacy paths changed)
+
+The former `legacyapp-ci` workflow and application paths are absent from the
+current repository; they are not current required checks.
 
 ---
 
@@ -89,9 +89,6 @@ File: `.github/CODEOWNERS` (must exist at repository root)
 /platform/                        @platform-team
 /scripts/bootstrap.sh             @platform-team
 /scripts/check-production-environment.py @platform-team
-
-# Legacy application - requires legacy team review
-/apps/legacy-inventory/           @legacy-team
 
 # Observability & SRE - requires SRE team review
 /deploy/base/observability/       @sre-team
@@ -115,40 +112,31 @@ File: `.github/CODEOWNERS` (must exist at repository root)
 
 ### 5.1 AKS Infrastructure Release (`aks-deploy.yml`)
 
-**Trigger**: `workflow_dispatch` with `action: apply` or `destroy`
+**Trigger**: `workflow_dispatch` with `action: plan`, `apply`, or `destroy`.
 
-**Jobs**:
-1. `plan` — Terraform plan with fingerprint (reviewable artifact)
-2. `sbom-scan` — **NEW**: Verify image digest, generate SBOM, Trivy CRITICAL scan
-3. `apply` / `destroy` — Gated by `production` environment + manual approval
+The `plan` job fingerprints the Terraform plan. The protected `apply` and
+`destroy` jobs independently verify the production environment configuration
+and replan against that fingerprint before any Terraform mutation. This
+workflow does not build, scan, or deploy an application image.
 
-**Pre-conditions for `apply`/`destroy`**:
-- [ ] `plan` job completed with fingerprint recorded
-- [ ] `sbom-scan` job passed (image digest verified, no CRITICAL vulns)
-- [ ] Production environment approval granted by **independent reviewer**
-- [ ] `check-production-environment.py` passes (live config verified)
-- [ ] Current plan fingerprint matches reviewed fingerprint
+**Current blockers to a live apply (checked 2026-11-21)**:
+- Azure inventory returned no AKS cluster and no ACR in the active subscription.
+- The live GitHub `production` environment has one required reviewer; the
+  repository's guard requires two distinct reviewers and prevents self-review.
+- `AGENTS.md` requires explicit approval for each Azure `terraform apply`.
 
-### 5.2 Legacy Application Release (`legacyapp-ci.yml`)
+### 5.2 Application Image Release
 
-**Trigger**: Push to `main` with changes under `apps/legacy-inventory/**`
+The repository has no current Azure application image promotion workflow. The
+former `sbom-scan` in `aks-deploy.yml` referenced a removed `legacy-app` and did
+not gate Terraform `apply`; it has been removed. The [kind digest drill](../evidence/local-kind-digest-2026-11-21/README.md)
+proves build → registry digest → Deployment → running pod digest → rollback for
+`sre-demo-api` locally. It is not evidence of ACR or AKS promotion.
 
-**Jobs**:
-1. `test-and-scan` — npm test + Trivy fs (secrets, HIGH/CRITICAL vulns)
-2. `docker-build-scan` — Build image + Trivy image scan (HIGH/CRITICAL)
-3. `detect-changes` — Skip release for docs-only changes
-4. `release-push` — OIDC → ACR push `<sha>` → digest verify
-5. `gitops-update` — Pin prod overlay to `<sha>` → bot commit
-
-**Pre-conditions for `release-push`**:
-- [ ] All quality gates passed (`ci-gate` aggregate)
-- [ ] Changes are runtime changes (not docs-only)
-- [ ] Not triggered by `github-actions[bot]`
-
-**Pre-conditions for `gitops-update`**:
-- [ ] `release-push` succeeded (image digest verified)
-- [ ] Production environment approval granted by **independent reviewer**
-- [ ] `check-production-environment.py` passes (live config verified)
+Before claiming an Azure application release, implement a reviewed GitOps
+promotion that pins the actual ACR digest in the prod overlay, verifies the
+signature/SBOM/scan for that digest, syncs the reviewed revision, and records
+both the Deployment image and ready pod `imageID` from AKS.
 
 ### 5.3 PR Gate (`pr-gate.yml`)
 
@@ -171,22 +159,18 @@ File: `.github/CODEOWNERS` (must exist at repository root)
 |----------|--------|-----------|
 | Terraform plan fingerprint | `aks-deploy.yml` / `plan` job | 90 days (GitHub Actions) |
 | Terraform plan summary | `aks-deploy.yml` / `plan` job | 90 days |
-| Image digest (SHA256) | `legacyapp-ci.yml` / `release-push` job | Permanent (ACR) |
-| SBOM (SPDX JSON) | `aks-deploy.yml` / `sbom-scan` job | 90 days |
-| Trivy SARIF results | `aks-deploy.yml` / `sbom-scan` job | GitHub Security tab |
-| GitOps commit SHA | `legacyapp-ci.yml` / `gitops-update` job | Git history |
+| Local image digest and ready pod IDs | `kind-rollback-drill.yml` / `rollback` job | GitHub Actions artifact retention |
+| Azure image digest, SBOM, scan and GitOps revision | No current release workflow | Must be captured before an Azure application release claim |
 | Production approval record | GitHub Environment audit log | Permanent |
 
 ### Evidence Checklist (attach to release PR)
 
 - [ ] Terraform plan reviewed and fingerprint recorded
-- [ ] SBOM generated and uploaded as artifact
-- [ ] Trivy scan: **0 CRITICAL vulnerabilities**
-- [ ] Image digest matches released SHA
+- [ ] For application release: SBOM and image scan tied to the published digest
+- [ ] For application release: reviewed GitOps revision pins that digest
 - [ ] Production environment approval by **reviewer ≠ dispatcher**
 - [ ] `check-production-environment.py` passes at release SHA
-- [ ] GitOps overlay pinned to correct digest
-- [ ] Argo CD sync verified (if applicable)
+- [ ] For application release: AKS Deployment and ready pod `imageID` match the reviewed digest
 
 ---
 
@@ -219,10 +203,10 @@ File: `.github/CODEOWNERS` (must exist at repository root)
 
 ### Audit Trail
 All release evidence is discoverable via:
-- GitHub Actions run history (`aks-deploy.yml`, `legacyapp-ci.yml`)
+- GitHub Actions run history (`aks-deploy.yml`, `kind-rollback-drill.yml`)
 - GitHub Environment deployment history (`production`)
 - Git commit history (`main` branch, bot commits)
-- ACR manifest metadata (image digests)
+- ACR manifest metadata (once an Azure image release exists)
 - GitHub Security tab (Trivy SARIF uploads)
 
 ---

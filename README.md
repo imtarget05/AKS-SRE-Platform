@@ -29,7 +29,7 @@
 | :--- | :--- | :--- |
 | **Policy Enforcement** | **121 objects passed** across 6 Kustomize roots | `python3 scripts/policy-gate.py` (`scripts/policy-gate.py:70-160`) |
 | **GitOps Integrity** | **38 passed checks**, zero wildcard permissions | `python3 gitops/validate-gitops.py` (`platform/argocd/appproject.yaml`) |
-| **Gate Regression** | **62 assertions total** (G1–G16 matrix, 61 passing, 1 known CI-root sync gap) | `.venv/bin/python tests/test_gates.py` (`tests/test_gates.py`) |
+| **Gate Regression** | **62 passed, 0 failed** (G1–G16 matrix; verified at `4eaa0ec` on 2026-11-21) | `python3 tests/test_gates.py` (`tests/test_gates.py`) |
 | **SRE Agent Coverage** | **86.74% statement coverage** (14 unit tests) | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` |
 | **Microservice Suite** | **12/12 unit tests passing** (0 failures) | `npm --prefix app/sre-demo-api test` (`app/sre-demo-api/`) |
 | **Local rollback drill** | 2/2 replicas remained ready with HTTP 200 during an `ErrImagePull`; original image restored by `rollout undo` | [2026-11-19 timestamped kind evidence](docs/evidence/local-kind-rollback-2026-11-19/README.md) |
@@ -257,7 +257,7 @@ Every technical claim in this documentation is backed by concrete code, configur
 | **SRE Agent 86.74% Coverage** | `app/sre_incident_agent/`, `pyproject.toml` | Lines 8–13 | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` → **14 passed, 86.74% coverage** |
 | **Edge Routing & mTLS Ingress**| `platform/cloudflare/api-edge/` | Lines 1–65 | `node --test platform/cloudflare/api-edge/test/*.test.mjs` → **7 passed** |
 | **HPA & PDB Availability** | `deploy/base/autoscaling.yaml` | Lines 8–67 | `python3 -m unittest discover -s tests -p test_autoscaling_contract.py` → **5 passed** |
-| **Gate Regression Suite** | `tests/test_gates.py` | Matrix G1–G16 | `.venv/bin/python tests/test_gates.py` → **61 passed, 1 failed (62 assertions total)** |
+| **Gate Regression Suite** | `tests/test_gates.py` | Matrix G1–G16 | `python3 tests/test_gates.py` → **62 passed, 0 failed (62 assertions total)** at `4eaa0ec` |
 | **Clean Stack (0 .NET Files)** | Monorepo Root Directory | Entire tree | `find . -type f \( -name "*.cs" -o -name "*.csproj" \) | wc -l` → **0** |
 
 ---
@@ -319,9 +319,9 @@ done
 ```bash
 .venv/bin/python tests/test_gates.py
 # Expected output:
-# 61 passed, 1 failed, 62 assertions total
+# 62 passed, 0 failed, 62 assertions total
 ```
-*(Note: Assertion G10 highlights the CI workflow synchronization gap for the pruned observability module).*
+*G10 passes at commit `4eaa0ec`; see [recruiter evidence](docs/evidence/recruiter-evidence-2026-11-21.md) for the verification boundary.*
 
 ---
 

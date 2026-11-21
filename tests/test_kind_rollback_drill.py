@@ -62,6 +62,59 @@ def test_rejects_context_that_is_not_active_kind(tmp_path):
     assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
 
 
+def test_digest_drill_rejects_mutable_image_tag(tmp_path):
+    with patch.object(drill, "OUTPUT", tmp_path), \
+         patch.object(sys, "argv", ["drill", "--context", "kind-sre-rollback",
+                                    "--image", "localhost:5002/sre-demo-api:latest", "--require-digest"]):
+        with pytest.raises(ValueError, match="digest-pinned"):
+            drill.main()
+    assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
+
+
+def test_digest_drill_checks_running_pods_before_and_after_rollback(tmp_path):
+    digest = "sha256:" + "a" * 64
+    image = "localhost:5002/sre-demo-api@" + digest
+    state = {"image": image}
+
+    def fake_run(command, **_kwargs):
+        if command == ["kubectl", "config", "current-context"]:
+            return "kind-sre-rollback\n"
+        if "set" in command and "image" in command:
+            state["image"] = "invalid.local/sre-demo-api:deliberately-missing"
+        if "undo" in command:
+            state["image"] = image
+        if "deployment" in command and "-o" in command and "json" in command:
+            return deployment(state["image"])
+        if "pods" in command and "json" in command:
+            return json.dumps({"items": [{"status": {"containerStatuses": [
+                {"ready": True, "imageID": image}]}} for _ in range(2)]})
+        return "{}"
+
+    process = Mock()
+    process.wait.return_value = 0
+    with patch.object(drill, "OUTPUT", tmp_path), \
+         patch.object(drill, "run", side_effect=fake_run), \
+         patch.object(drill, "http_status", return_value=200), \
+         patch.object(drill, "image_pull_failure", return_value={"reason": "ErrImagePull"}), \
+         patch.object(drill.subprocess, "Popen", return_value=process), \
+         patch.object(sys, "argv", ["drill", "--context", "kind-sre-rollback",
+                                   "--image", image, "--require-digest"]):
+        drill.main()
+
+    result = json.loads((tmp_path / "result.json").read_text())
+    assert result["status"] == "passed"
+    assert result["events"][0]["runtime_image_ids"] == [image, image]
+    assert result["events"][-1]["image"] == image
+
+
+def test_pre_namespace_failure_does_not_query_cluster_evidence(tmp_path):
+    with patch.object(drill, "OUTPUT", tmp_path), patch.object(drill, "run") as command:
+        drill.collect_evidence(["kubectl"], "ns", {"status": "failed"}, None,
+                               namespace_created=False)
+    assert json.loads((tmp_path / "result.json").read_text())["status"] == "failed"
+    command.assert_not_called()
+
+
 def test_detects_actual_image_pull_failure():
     pods = {"items": [{"metadata": {"name": "good"}, "status": {"containerStatuses": []}},
                       {"metadata": {"name": "bad"}, "status": {"containerStatuses": [
@@ -70,6 +123,20 @@ def test_detects_actual_image_pull_failure():
         assert drill.image_pull_failure(["kubectl"], "ns") == {"pod": "bad", "reason": "ErrImagePull"}
     with patch.object(drill, "run", return_value=json.dumps({"items": []})):
         assert drill.image_pull_failure(["kubectl"], "ns") is None
+
+
+def test_ready_pods_must_run_the_pushed_digest():
+    digest = "sha256:" + "a" * 64
+    pods = {"items": [{"status": {"containerStatuses": [
+        {"ready": True, "imageID": "localhost:5002/sre-demo-api@" + digest},
+        {"ready": True, "imageID": "localhost:5002/sre-demo-api@" + digest},
+    ]}}]}
+    with patch.object(drill, "run", return_value=json.dumps(pods)):
+        assert len(drill.assert_ready_pods_use_digest(["kubectl"], "ns", digest)) == 2
+    pods["items"][0]["status"]["containerStatuses"][1]["imageID"] = "other@sha256:" + "b" * 64
+    with patch.object(drill, "run", return_value=json.dumps(pods)):
+        with pytest.raises(AssertionError, match="runtime image digest"):
+            drill.assert_ready_pods_use_digest(["kubectl"], "ns", digest)
 
 
 def test_wait_and_http_fail_closed():

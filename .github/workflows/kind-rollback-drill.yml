@@ -5,12 +5,14 @@ on:
     paths:
       - app/sre-demo-api/**
       - scripts/kind_rollback_drill.py
+      - scripts/kind_digest_release_drill.sh
       - .github/workflows/kind-rollback-drill.yml
   push:
     branches: [main]
     paths:
       - app/sre-demo-api/**
       - scripts/kind_rollback_drill.py
+      - scripts/kind_digest_release_drill.sh
       - .github/workflows/kind-rollback-drill.yml
   workflow_dispatch:
 
@@ -24,22 +26,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install kind
-        run: go install sigs.k8s.io/kind@v0.27.0
-      - name: Test and build repo workload
+        run: |
+          go install sigs.k8s.io/kind@v0.27.0
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: Test repo workload
         run: |
           npm ci --ignore-scripts
           npm test
-          docker build -t sre-demo-api:drill-${GITHUB_SHA} .
         working-directory: app/sre-demo-api
-      - name: Create disposable cluster
-        run: |
-          "$(go env GOPATH)/bin/kind" create cluster --name sre-rollback --wait 120s
-          "$(go env GOPATH)/bin/kind" load docker-image "sre-demo-api:drill-${GITHUB_SHA}" --name sre-rollback
-      - name: Run measured rollback
-        run: |
-          python3 scripts/kind_rollback_drill.py \
-            --context kind-sre-rollback \
-            --image "sre-demo-api:drill-${GITHUB_SHA}"
+      - name: Check out CreditFlow at its pinned Application revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: imtarget05/CreditFlow
+          ref: c74d61ef2991a4055fd6c3f2d706b4bbb210492a
+          path: external/CreditFlow
+      - name: Check out QuanLyKho at its pinned Application revision
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: imtarget05/QuanLyKho
+          ref: 37f4774ca5a423deeef53f695089be8422272356
+          path: external/QuanLyKho
+      - name: Install GitOps validator dependencies
+        run: pip install --require-hashes --only-binary ':all:' -r requirements.lock
+      - name: Validate GitOps controls and rendered external sources before deployment
+        run: python3 gitops/validate-gitops.py --repo-map gitops/repo-map.ci.yaml --require-external
+      - name: Build, push, deploy and roll back digest-pinned image
+        run: bash scripts/kind_digest_release_drill.sh
       - name: Upload drill evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -47,6 +59,3 @@ jobs:
           name: kind-rollback-evidence
           path: demo-results/kind-rollback/
           if-no-files-found: warn
-      - name: Delete disposable cluster
-        if: always()
-        run: '"$(go env GOPATH)/bin/kind" delete cluster --name sre-rollback'

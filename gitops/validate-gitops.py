@@ -177,7 +177,13 @@ def checkout_origin_matches(checkout, expected_url):
         ["git", "-C", checkout, "config", "--get", "remote.origin.url"],
         capture_output=True, text=True, timeout=15, shell=False, check=False,
     )
-    return origin.returncode == 0 and origin.stdout.strip() == expected_url
+    def canonical_github_url(url):
+        # actions/checkout omits the optional .git suffix from HTTPS remotes.
+        return url.rstrip("/").removesuffix(".git")
+
+    return (origin.returncode == 0
+            and canonical_github_url(origin.stdout.strip())
+            == canonical_github_url(expected_url))
 
 
 def fetched_release_contains(checkout, commit):

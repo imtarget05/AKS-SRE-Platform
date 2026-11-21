@@ -1,0 +1,26 @@
+LAST SEEN   TYPE      REASON              OBJECT                               MESSAGE
+15s         Normal    Scheduled           pod/sre-demo-api-6b8dd77f84-6hsts    Successfully assigned sre-rollback-drill/sre-demo-api-6b8dd77f84-6hsts to sre-digest-drill-control-plane
+15s         Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled up replica set sre-demo-api-6b8dd77f84 from 0 to 2
+15s         Normal    SuccessfulCreate    replicaset/sre-demo-api-6b8dd77f84   Created pod: sre-demo-api-6b8dd77f84-6hsts
+15s         Normal    SuccessfulCreate    replicaset/sre-demo-api-6b8dd77f84   Created pod: sre-demo-api-6b8dd77f84-p425n
+15s         Normal    Pulling             pod/sre-demo-api-6b8dd77f84-p425n    Pulling image "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b"
+15s         Normal    Scheduled           pod/sre-demo-api-6b8dd77f84-p425n    Successfully assigned sre-rollback-drill/sre-demo-api-6b8dd77f84-p425n to sre-digest-drill-control-plane
+15s         Normal    Pulling             pod/sre-demo-api-6b8dd77f84-6hsts    Pulling image "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b"
+13s         Normal    Started             pod/sre-demo-api-6b8dd77f84-p425n    Container started
+13s         Normal    Pulled              pod/sre-demo-api-6b8dd77f84-p425n    Successfully pulled image "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b" in 19ms (1.963s including waiting). Image size: 69481776 bytes.
+12s         Warning   Unhealthy           pod/sre-demo-api-6b8dd77f84-p425n    Readiness probe failed: Get "http://10.244.0.5:8080/health/ready": dial tcp 10.244.0.5:8080: connect: connection refused
+13s         Normal    Pulled              pod/sre-demo-api-6b8dd77f84-6hsts    Successfully pulled image "localhost:5002/sre-demo-api@sha256:a60c527f84d9b7d3dd77ba7bcb60879193b2fbcf2b2d7114c2e791eec35ba97b" in 1.945s (1.945s including waiting). Image size: 69481776 bytes.
+13s         Normal    Created             pod/sre-demo-api-6b8dd77f84-6hsts    Container created
+13s         Normal    Started             pod/sre-demo-api-6b8dd77f84-6hsts    Container started
+12s         Warning   Unhealthy           pod/sre-demo-api-6b8dd77f84-6hsts    Readiness probe failed: Get "http://10.244.0.6:8080/health/ready": dial tcp 10.244.0.6:8080: connect: connection refused
+13s         Normal    Created             pod/sre-demo-api-6b8dd77f84-p425n    Container created
+10s         Normal    Scheduled           pod/sre-demo-api-588b58c6f4-ht7sj    Successfully assigned sre-rollback-drill/sre-demo-api-588b58c6f4-ht7sj to sre-digest-drill-control-plane
+10s         Normal    SuccessfulCreate    replicaset/sre-demo-api-588b58c6f4   Created pod: sre-demo-api-588b58c6f4-ht7sj
+10s         Normal    Pulling             pod/sre-demo-api-588b58c6f4-ht7sj    Pulling image "invalid.local/sre-demo-api:deliberately-missing"
+10s         Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled up replica set sre-demo-api-588b58c6f4 from 0 to 1
+2s          Warning   Failed              pod/sre-demo-api-588b58c6f4-ht7sj    Error: ErrImagePull
+2s          Warning   Failed              pod/sre-demo-api-588b58c6f4-ht7sj    Failed to pull image "invalid.local/sre-demo-api:deliberately-missing": failed to pull and unpack image "invalid.local/sre-demo-api:deliberately-missing": failed to resolve reference "invalid.local/sre-demo-api:deliberately-missing": failed to do request: Head "https://invalid.local/v2/sre-demo-api/manifests/deliberately-missing": dial tcp: lookup invalid.local on 192.168.65.254:53: server misbehaving
+1s          Normal    BackOff             pod/sre-demo-api-588b58c6f4-ht7sj    Back-off pulling image "invalid.local/sre-demo-api:deliberately-missing"
+1s          Warning   Failed              pod/sre-demo-api-588b58c6f4-ht7sj    Error: ImagePullBackOff
+0s          Normal    SuccessfulDelete    replicaset/sre-demo-api-588b58c6f4   Deleted pod: sre-demo-api-588b58c6f4-ht7sj
+0s          Normal    ScalingReplicaSet   deployment/sre-demo-api              Scaled down replica set sre-demo-api-588b58c6f4 from 1 to 0

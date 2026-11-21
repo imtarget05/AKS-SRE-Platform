@@ -7,6 +7,7 @@ temporary namespace. It records Kubernetes state and live HTTP observations.
 
 import argparse
 import json
+import re
 import subprocess
 import time
 import urllib.error
@@ -23,7 +24,8 @@ def now():
 
 
 def run(command, *, input_text=None, timeout=120):
-    return subprocess.run(command, input=input_text, text=True, capture_output=True,
+    # argv list with shell=False; the context is checked against the active kind context.
+    return subprocess.run(command, input=input_text, text=True, capture_output=True, shell=False,  # NOSONAR
                           check=True, timeout=timeout).stdout
 
 
@@ -55,9 +57,21 @@ def image_pull_failure(kube, namespace):
     return None
 
 
-def collect_evidence(kube, namespace, evidence, port_forward):
+def assert_ready_pods_use_digest(kube, namespace, digest):
+    pods = json.loads(run(kube + ["-n", namespace, "get", "pods", "-l", "app=sre-demo-api", "-o", "json"]))
+    image_ids = [state.get("imageID", "") for pod in pods["items"]
+                 for state in pod.get("status", {}).get("containerStatuses", [])
+                 if state.get("ready")]
+    if len(image_ids) != 2 or any(not image_id.endswith("@" + digest) for image_id in image_ids):
+        raise AssertionError(f"ready pods do not run the pushed runtime image digest {digest}: {image_ids}")
+    return image_ids
+
+
+def collect_evidence(kube, namespace, evidence, port_forward, *, namespace_created=True):
     evidence["finished_utc"] = now()
     (OUTPUT / "result.json").write_text(json.dumps(evidence, indent=2) + "\n")
+    if not namespace_created:
+        return
     commands = {"pods.json": ["get", "pods", "-o", "json"],
                 "events.txt": ["get", "events", "--sort-by=.metadata.creationTimestamp"],
                 "deployment.yaml": ["get", "deployment", "sre-demo-api", "-o", "yaml"]}
@@ -79,6 +93,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--context", required=True)
     parser.add_argument("--image", required=True)
+    parser.add_argument("--require-digest", action="store_true")
     args = parser.parse_args()
     OUTPUT.mkdir(parents=True, exist_ok=True)
     namespace = "sre-rollback-drill"
@@ -95,11 +110,15 @@ def main():
         return json.loads(run(kube + ["-n", namespace, "get", "deployment", "sre-demo-api", "-o", "json"]))
 
     port_forward = None
+    namespace_created = False
     try:
+        if args.require_digest and not re.fullmatch(r"[^@]+@sha256:[0-9a-f]{64}", args.image):
+            raise ValueError("digest-pinned image is required for the release drill")
         current_context = run(["kubectl", "config", "current-context"]).strip()
         if args.context != current_context or not args.context.startswith("kind-"):
             raise ValueError("Explicit context must be the active kind context")
         run(kube + ["create", "namespace", namespace])
+        namespace_created = True
         manifest = {
             "apiVersion": "apps/v1", "kind": "Deployment",
             "metadata": {"name": "sre-demo-api", "namespace": namespace},
@@ -118,7 +137,9 @@ def main():
         baseline = get_deployment()
         if baseline["status"].get("readyReplicas") != 2:
             raise AssertionError("Baseline needs two ready replicas")
-        event("baseline_ready", ready_replicas=2)
+        runtime_ids = assert_ready_pods_use_digest(kube, namespace, args.image.rsplit("@", 1)[1]) \
+            if args.require_digest else []
+        event("baseline_ready", ready_replicas=2, runtime_image_ids=runtime_ids)
 
         port_forward = subprocess.Popen(kube + ["-n", namespace, "port-forward", DEPLOYMENT, "18088:8080"],
                                         stdout=(OUTPUT / "port-forward.log").open("w"), stderr=subprocess.STDOUT)
@@ -147,12 +168,15 @@ def main():
               http_status=200 if restored_http else 0, duration_seconds=rollback_seconds)
         if restored_image != args.image or restored_ready != 2:
             raise AssertionError("Rollback did not restore the exact image and two ready replicas")
+        if args.require_digest:
+            assert_ready_pods_use_digest(kube, namespace, args.image.rsplit("@", 1)[1])
         evidence["status"] = "passed"
     except Exception as exc:
         evidence["error"] = f"{type(exc).__name__}: {exc}"
         raise
     finally:
-        collect_evidence(kube, namespace, evidence, port_forward)
+        collect_evidence(kube, namespace, evidence, port_forward,
+                         namespace_created=namespace_created)
 
 
 if __name__ == "__main__":
