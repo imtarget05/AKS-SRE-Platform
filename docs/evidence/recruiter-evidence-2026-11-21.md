@@ -13,6 +13,8 @@ Public CI at the same SHA: [pr-gate](https://github.com/imtarget05/AKS-SRE-Platf
 
 The [2026-11-19 kind rollback drill](local-kind-rollback-2026-11-19/README.md) is historical evidence, separate from the checks rerun above. Its build digest is recorded, but the restored Deployment records the tag `sre-demo-api:local-drill` and the pod runtime reports an imported kind digest. Thus this drill proves restoration of the original image reference and ready replicas; it does not independently prove that a deploy pipeline promoted the exact build digest. The Azure cluster is not kept running for this portfolio demo.
 
+`aks-deploy.yml` currently has a separate `sbom-scan` job that resolves an ACR digest, while the protected Terraform `apply` job depends on `plan` only and does not consume that digest. This is an infrastructure apply workflow, so its green status must not be presented as proof that an application image passed a digest-bound promotion gate. A separate deployment-path check is still needed before making that claim.
+
 ## Two-minute demo
 
 1. Show the policy gate and G10 result, including the commit SHA.
