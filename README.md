@@ -255,6 +255,7 @@ Every technical claim in this documentation is backed by concrete code, configur
 | **Constant-Time Crypto Auth** | `app/sre-demo-api/src/server.js` | Lines 114–142 | Verified via test `internal readiness rejected with wrong token` |
 | **Multi-Stage Non-Root Docker**| `app/sre-demo-api/Dockerfile` | Lines 16–58 | UID 10001, Alpine 3.20, `CMD ["node", "src/index.js"]` |
 | **SRE Agent 86.74% Coverage** | `app/sre_incident_agent/`, `pyproject.toml` | Lines 8–13 | `.venv/bin/python -m pytest tests/test_sre_incident_agent.py` → **14 passed, 86.74% coverage** |
+| **SRE Evidence Next.js App** | `apps/sre-evidence-next/` | `test/routes.test.ts` | `npm --prefix apps/sre-evidence-next test` → **13/13 passed**; static export verified for Cloudflare Workers preview |
 | **Edge Routing & mTLS Ingress**| `platform/cloudflare/api-edge/` | Lines 1–65 | `node --test platform/cloudflare/api-edge/test/*.test.mjs` → **7 passed** |
 | **HPA & PDB Availability** | `deploy/base/autoscaling.yaml` | Lines 8–67 | `python3 -m unittest discover -s tests -p test_autoscaling_contract.py` → **5 passed** |
 | **Gate Regression Suite** | `tests/test_gates.py` | Matrix G1–G16 | `python3 tests/test_gates.py` → **62 passed, 0 failed (62 assertions total)** at `4eaa0ec` |
