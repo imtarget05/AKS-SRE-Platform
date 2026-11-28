@@ -1,5 +1,11 @@
 # AKS-SRE-Platform — Kubernetes Platform Blueprint and SRE Operations
 
+## Local verification — 2026-11-28
+
+The local GitOps validator recorded 62 passing assertions. In a separate three-node kind recovery drill, the payment Deployment was scaled to zero and then back to two replicas. Both replicas reached Ready after approximately 70 seconds, and create, refund and replay checks passed after recovery.
+
+The drill used locally loaded images and a runtime Redis TLS configuration change. The 70-second observation applies to that kind drill. Azure and AWS infrastructure evidence for this round consists of Terraform validation and mock plans. Cloud failover and GitOps promotion require runtime validation.
+
 [![Platform Tests](https://img.shields.io/badge/Gate%20Suite-62%20Assertions%20(G1--G16)-blue?style=flat-square)](tests/test_gates.py)
 [![SRE Incident Agent](https://img.shields.io/badge/SRE%20Incident%20Agent-86.74%25%20Coverage-success?style=flat-square)](app/sre_incident_agent/)
 [![Microservice Tests](https://img.shields.io/badge/API%20Tests-12%2F12%20Passed-brightgreen?style=flat-square)](app/sre-demo-api/)
